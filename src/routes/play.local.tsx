@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
+import { HelpCircle, User, ShieldAlert, Sparkles } from "lucide-react";
 import { PACKS } from "@/lib/mcp/packs";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
 
@@ -447,7 +448,7 @@ export function PassPhoneGame() {
             </span>
             
             <div
-              className="relative mx-auto mt-6 w-72 h-84 cursor-pointer"
+              className="relative mx-auto mt-6 w-72 h-[390px] cursor-pointer"
               style={{ perspective: 1000 }}
               onClick={handleCardFlip}
             >
@@ -459,57 +460,66 @@ export function PassPhoneGame() {
               >
                 {/* Card Front (Step 1) */}
                 <div
-                  className="absolute inset-0 backface-hidden bg-charcoal border-2 border-white/20 rounded-3xl flex flex-col items-center justify-center p-6 text-center brutal-shadow-pink"
+                  className="absolute inset-0 backface-hidden bg-[#12121A] border-2 border-white/10 rounded-3xl flex flex-col items-center justify-center p-6 text-center shadow-[0_0_20px_rgba(255,255,255,0.03)] hover:border-white/20 transition-colors"
                   style={{ backfaceVisibility: "hidden" }}
                 >
-                  <p className="text-off-white text-xl font-title uppercase tracking-widest">Who is the</p>
-                  <p className="text-electric-pink text-5xl font-title uppercase drop-shadow-lg mt-1">Fraud?</p>
-                  <div className="mt-6 grid size-16 place-items-center rounded-2xl bg-white/5 border border-white/10 text-4xl text-off-white/60 font-title">
-                    ?
+                  <HelpCircle size={48} className="text-muted-foreground/30 animate-pulse" />
+                  <p className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/80">Tap to Reveal</p>
+                  <h2 className="mt-1 text-3xl font-title uppercase tracking-widest text-foreground">SECRET ROLE</h2>
+                  <div className="absolute bottom-4 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/45">
+                    PASS PHONE SECURELY
                   </div>
-                  <p className="mt-6 text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                    Tap to Flip & Reveal Role
-                  </p>
                 </div>
 
                 {/* Card Back (Step 3 & 4) */}
                 <div
-                  className={`absolute inset-0 backface-hidden rounded-3xl p-6 flex flex-col items-center justify-between text-center border-2 border-void ${
+                  className={`absolute inset-0 backface-hidden rounded-3xl p-6 flex flex-col items-center justify-between text-center border-2 bg-[#12121A]/95 backdrop-blur-md ${
                     isFraud
-                      ? "bg-electric-pink text-charcoal shadow-glow-pink"
-                      : "bg-cyber-yellow text-charcoal shadow-glow-yellow"
+                      ? "border-magenta/75 shadow-[0_0_25px_rgba(255,45,85,0.22)]"
+                      : "border-lime/75 shadow-[0_0_25px_rgba(255,214,0,0.22)]"
                   }`}
                   style={{
                     backfaceVisibility: "hidden",
                     transform: "rotateY(180deg)",
                   }}
                 >
-                  <div className="w-full text-left">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/80">
-                      Topic: {categoryName}
-                    </span>
+                  <div className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    <span>TOPIC</span>
+                    <span className={isFraud ? "text-magenta text-glitch" : "text-lime"}>{categoryName}</span>
                   </div>
 
                   <div className="my-auto text-center flex flex-col items-center">
-                    <img src="/split-mask.png" alt="Dual Mask" className="size-20 rounded-2xl brutal-shadow-pink mb-3" />
-                    <span className="text-[11px] font-black uppercase tracking-widest text-charcoal/80">
-                      You are the
+                    <div className={`p-4.5 rounded-full border-2 mb-3 bg-surface shadow-inner ${
+                      isFraud ? "border-magenta text-magenta animate-pulse" : "border-lime text-lime"
+                    }`}>
+                      {isFraud ? <ShieldAlert size={36} /> : <User size={36} />}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      YOU ARE THE
                     </span>
-                    <h2 className="text-5xl font-title uppercase tracking-wide mt-0.5 text-charcoal">
+                    <h2 className={`text-4xl font-black uppercase tracking-wide mt-1.5 font-title ${
+                      isFraud ? "text-magenta text-glitch" : "text-lime"
+                    }`}>
                       {isFraud ? "FRAUD!" : "BRO!"}
                     </h2>
                   </div>
 
-                  <div className="w-full rounded-xl bg-charcoal/10 p-3 border border-charcoal/20">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/80 block">
+                  <div className={`w-full rounded-2xl p-4 border bg-surface/90 ${
+                    isFraud ? "border-magenta/30 shadow-[0_0_15px_rgba(255,45,85,0.05)]" : "border-lime/30 shadow-[0_0_15px_rgba(255,214,0,0.05)]"
+                  }`}>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block">
                       {isFraud ? "Secret Word Hint" : "Secret Word"}
                     </span>
-                    <h3 className="text-2xl font-title uppercase tracking-wider text-charcoal mt-0.5">
+                    <h3 className="text-3xl font-black uppercase tracking-widest text-foreground mt-1 font-title">
                       {isFraud ? getWordHint(targetWord) : targetWord}
                     </h3>
-                    {isFraud && (
-                      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-widest text-charcoal/60">
+                    {isFraud ? (
+                      <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-magenta/90">
                         ({targetWord.length} letters · starts with '{targetWord[0]}')
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-lime/90 flex items-center justify-center gap-1">
+                        <Sparkles size={10} className="inline" /> DO NOT SHOW OTHERS <Sparkles size={10} className="inline" />
                       </p>
                     )}
                   </div>
