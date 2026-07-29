@@ -37,8 +37,8 @@ export function PlaySetup() {
   const [newPlayerName, setNewPlayerName] = useState("");
   const [impostorsCount, setImpostorsCount] = useState(1);
   const [selectedPacks, setSelectedPacks] = useState<string[]>(["hostel-life"]);
-  const [timerSeconds, setTimerSeconds] = useState(30); // 30, 60, 90, 0 (No Limit)
-  const [chaosMode, setChaosMode] = useState(false);
+  const timerSeconds = 0; // No Limit
+  const chaosMode = false;
 
   // Custom Packs State
   const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
@@ -246,10 +246,13 @@ export function PlaySetup() {
       bluffWord = randomPair[1];
     }
 
-    // Shuffle roles (frauds indices)
-    const shuffledIndices = Array.from({ length: players.length }, (_, i) => i)
-      .sort(() => Math.random() - 0.5);
-    const fraudsIndices = shuffledIndices.slice(0, impostorsCount);
+    // Shuffle roles (frauds indices) using Fisher-Yates
+    const indices = Array.from({ length: players.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    const fraudsIndices = indices.slice(0, impostorsCount);
 
     const matchConfig = {
       players,
@@ -476,55 +479,7 @@ export function PlaySetup() {
           </div>
         </section>
 
-        {/* 4. Gameplay Modifiers */}
-        <section className="mt-6 space-y-3">
-          <h2 className="text-xs font-black uppercase tracking-[0.2em]">// Match Modifiers</h2>
 
-          {/* Timer */}
-          <div className="rounded-2xl border-2 border-white/10 bg-surface p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-wide">Discussion Timer</h3>
-                <p className="text-[10px] text-muted-foreground uppercase mt-0.5">Time limit for debate</p>
-              </div>
-              <div className="grid grid-cols-4 gap-1 rounded-xl bg-void p-1 border-2 border-white/5">
-                {[30, 60, 90, 0].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => { buzz(15); setTimerSeconds(t); }}
-                    className={`rounded-lg px-2.5 py-1.5 text-center text-xs font-black uppercase ${
-                      timerSeconds === t ? "bg-lime text-void" : "text-muted-foreground"
-                    }`}
-                  >
-                    {t === 0 ? "∞" : `${t}s`}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Chaos Mode Toggle */}
-          <div className="rounded-2xl border-2 border-white/10 bg-surface p-4 flex items-center justify-between">
-            <div className="max-w-[70%]">
-              <h3 className="text-sm font-black uppercase tracking-wide">Chaos Modifiers</h3>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-                Assigns 1 bluff hint word to Frauds instead of just Category
-              </p>
-            </div>
-            <button
-              onClick={() => { buzz(15); setChaosMode(!chaosMode); }}
-              className={`relative h-6 w-11 rounded-full border-2 border-border transition-colors duration-200 ${
-                chaosMode ? "bg-magenta" : "bg-void"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 size-4 rounded-full bg-white transition-transform duration-200 ${
-                  chaosMode ? "left-5" : "left-0.5"
-                }`}
-              />
-            </button>
-          </div>
-        </section>
 
       </div>
 

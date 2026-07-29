@@ -53,6 +53,21 @@ const ROASTS_LOSE = [
   "Bros are certified clowns. You got absolutely cooked 🤡",
 ];
 
+// Generates a masked letter hint for the Fraud
+function getWordHint(word: string): string {
+  if (!word) return "";
+  return word
+    .split(" ")
+    .map((w) => {
+      if (w.length <= 2) return w;
+      const first = w[0];
+      const last = w[w.length - 1];
+      const middle = "_ ".repeat(w.length - 2).trim();
+      return `${first} ${middle} ${last}`;
+    })
+    .join("   ");
+}
+
 export function PassPhoneGame() {
   const navigate = useNavigate();
   const [config, setConfig] = useState<MatchConfig | null>(null);
@@ -80,6 +95,9 @@ export function PassPhoneGame() {
   const [roastCopy, setRoastCopy] = useState("");
   const [scoreChanges, setScoreChanges] = useState<Record<string, number>>({});
   
+  // Discussion Starter (Phase 3)
+  const [discussionStarter, setDiscussionStarter] = useState<number | null>(null);
+
   // Fetch custom packs list just in case we need to roll next round
   const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
 
@@ -195,7 +213,9 @@ export function PassPhoneGame() {
       setPhase("pass");
       setCardFlipped(false);
     } else {
-      // Last player seen card, start discussion
+      // Last player seen card, select a random discussion starter
+      const starterIdx = Math.floor(Math.random() * players.length);
+      setDiscussionStarter(starterIdx);
       setPhase("discussion");
       if (config.timerSeconds > 0) {
         setSecondsLeft(config.timerSeconds);
@@ -253,6 +273,21 @@ export function PassPhoneGame() {
     setPhase("verdict");
   };
 
+  // Instant reveal action
+  const handleInstantReveal = () => {
+    buzz([40, 20, 40]);
+    setBroWon(false);
+    setRoastCopy("Instant reveal triggered! Here are the answers.");
+    
+    // Set score changes to 0 for this instant reveal
+    const changes: Record<string, number> = {};
+    players.forEach((p) => {
+      changes[p.name] = 0;
+    });
+    setScoreChanges(changes);
+    setPhase("verdict");
+  };
+
   // Start Next Round with same settings but fresh words & roles
   const handleNextRound = () => {
     buzz(30);
@@ -306,10 +341,13 @@ export function PassPhoneGame() {
 
     const updatedUsedWords = [...usedWords, newTarget];
 
-    // Shuffle roles
-    const shuffledIndices = Array.from({ length: players.length }, (_, i) => i)
-      .sort(() => Math.random() - 0.5);
-    const newFrauds = shuffledIndices.slice(0, config.impostorsCount);
+    // Shuffle roles using Fisher-Yates
+    const indices = Array.from({ length: players.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    const newFrauds = indices.slice(0, config.impostorsCount);
 
     const newConfig: MatchConfig = {
       ...config,
@@ -332,6 +370,7 @@ export function PassPhoneGame() {
     setVotedPlayerIndex(null);
     setSecondsLeft(config.timerSeconds);
     setTimerActive(false);
+    setDiscussionStarter(null);
   };
 
   const currentSecondsFormatted = `0:${secondsLeft.toString().padStart(2, "0")}`;
@@ -463,11 +502,16 @@ export function PassPhoneGame() {
 
                   <div className="w-full rounded-xl bg-charcoal/10 p-3 border border-charcoal/20">
                     <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/80 block">
-                      {isFraud ? "Bluff Word" : "Secret Word"}
+                      {isFraud ? "Secret Word Hint" : "Secret Word"}
                     </span>
                     <h3 className="text-2xl font-title uppercase tracking-wider text-charcoal mt-0.5">
-                      {isFraud ? (chaosMode ? bluffWord : "???") : targetWord}
+                      {isFraud ? getWordHint(targetWord) : targetWord}
                     </h3>
+                    {isFraud && (
+                      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-widest text-charcoal/60">
+                        ({targetWord.length} letters · starts with '{targetWord[0]}')
+                      </p>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -503,6 +547,17 @@ export function PassPhoneGame() {
             <p className="mt-2 text-sm text-muted-foreground max-w-[28ch]">
               Take turns giving one-word clues about the secret. Detect who is bluffing.
             </p>
+
+            {discussionStarter !== null && (
+              <div className="mt-6 w-full rounded-2xl border-2 border-magenta bg-magenta/10 p-4 brutal-shadow-pink animate-[bounce_2s_infinite]">
+                <span className="text-[9px] font-black uppercase tracking-widest text-magenta block">
+                  📢 Discussion Starter
+                </span>
+                <p className="mt-1 text-lg font-black uppercase text-foreground">
+                  {players[discussionStarter].emoji} {players[discussionStarter].name} starts the debate!
+                </p>
+              </div>
+            )}
 
             {/* Countdown Clock */}
             {config.timerSeconds > 0 ? (
@@ -561,6 +616,13 @@ export function PassPhoneGame() {
             >
               Vote the Fraud Now →
             </button>
+
+            <button
+              onClick={handleInstantReveal}
+              className="mt-4 text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-magenta underline transition-colors cursor-pointer"
+            >
+              Reveal Word & Fraud 👁️
+            </button>
           </div>
         )}
 
@@ -616,6 +678,15 @@ export function PassPhoneGame() {
                 className="w-full rounded-xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-white tactile tactile-press"
               >
                 Confirm Nominations →
+              </button>
+            </div>
+
+            <div className="text-center mt-4">
+              <button
+                onClick={handleInstantReveal}
+                className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-magenta underline transition-colors cursor-pointer"
+              >
+                Reveal Word & Fraud 👁️
               </button>
             </div>
           </div>
