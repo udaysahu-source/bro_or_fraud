@@ -1,0 +1,242 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-track: var(--track);
+  --color-lime: var(--lime);
+  --color-magenta: var(--magenta);
+  --color-void: var(--void);
+  --color-charcoal: #0D0D12;
+  --color-cyber-yellow: #FFD600;
+  --color-electric-pink: #FF2D55;
+  --color-off-white: #F5F5F7;
+  --font-display: "Anton", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-title: "Anton", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-tagline: "Space Grotesk", sans-serif;
+}
+
+:root {
+  --radius: 0.875rem;
+  /* Charcoal #0D0D12 */
+  --void: #0D0D12;
+  /* Dark Surface #15151F */
+  --surface: #15151F;
+  /* Track surface #12121A */
+  --track: #12121A;
+  --background: #0D0D12;
+  --foreground: #F5F5F7;
+  --card: #15151F;
+  --card-foreground: #F5F5F7;
+  --popover: #15151F;
+  --popover-foreground: #F5F5F7;
+  /* Cyber Yellow #FFD600 */
+  --lime: #FFD600;
+  /* Electric Pink #FF2D55 */
+  --magenta: #FF2D55;
+  --primary: var(--lime);
+  --primary-foreground: var(--void);
+  --secondary: #1C1C28;
+  --secondary-foreground: #F5F5F7;
+  --muted: #1C1C28;
+  --muted-foreground: #A0A0B0;
+  --accent: var(--magenta);
+  --accent-foreground: #F5F5F7;
+  --destructive: var(--magenta);
+  --destructive-foreground: #F5F5F7;
+  /* Stroke #252533 */
+  --border: #252533;
+  --input: #252533;
+  --ring: var(--lime);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility text-glitch {
+  text-shadow:
+    2px 0 var(--color-magenta),
+    -2px 0 var(--color-lime);
+}
+
+@utility brutal-shadow {
+  box-shadow: 6px 6px 0 0 var(--color-lime);
+}
+@utility brutal-shadow-magenta {
+  box-shadow: 6px 6px 0 0 var(--color-magenta);
+}
+@utility brutal-shadow-white {
+  box-shadow: 6px 6px 0 0 rgba(255,255,255,0.9);
+}
+@utility brutal-shadow-pink {
+  box-shadow: 4px 4px 0 0 var(--color-magenta);
+}
+
+@utility shadow-glow-pink {
+  box-shadow: 0 0 24px rgba(255, 45, 85, 0.6);
+}
+
+@utility shadow-glow-yellow {
+  box-shadow: 0 0 24px rgba(255, 214, 0, 0.6);
+}
+
+@utility font-title {
+  font-family: "Anton", "Space Grotesk", sans-serif;
+}
+
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+
+@utility backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+@utility brutal-shadow-yellow {
+  box-shadow: 4px 4px 0 0 var(--color-lime);
+}
+
+@utility tactile {
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+@utility tactile-press {
+  &:active {
+    transform: translate(4px, 4px);
+    box-shadow: none !important;
+  }
+}
+
+@keyframes glitch-pulse {
+  0%, 100% { text-shadow: 2px 0 var(--color-magenta), -2px 0 var(--color-lime); transform: translate(0,0); }
+  20% { text-shadow: -2px 0 var(--color-magenta), 2px 0 var(--color-lime); transform: translate(1px,-1px); }
+  40% { text-shadow: 2px 2px 0 var(--color-magenta), -2px -2px 0 var(--color-lime); transform: translate(-1px,1px); }
+  60% { text-shadow: 0 2px 0 var(--color-magenta), 0 -2px 0 var(--color-lime); }
+}
+@utility animate-glitch {
+  animation: glitch-pulse 4s infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(200%); }
+}
+@utility animate-scan {
+  animation: scan 3s linear infinite;
+}
+
+@keyframes timer-warn {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@utility animate-timer-warn {
+  animation: timer-warn 0.6s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@utility skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 0%,
+    color-mix(in oklab, var(--color-surface) 70%, var(--color-lime) 15%) 50%,
+    var(--color-surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@utility text-hero {
+  font-size: clamp(2.75rem, 13vw, 4.5rem);
+  line-height: 0.82;
+  letter-spacing: -0.035em;
+}
+@utility text-tagline {
+  font-size: clamp(0.8125rem, 3.4vw, 1rem);
+  line-height: 1.3;
+}
+
+@utility pack-card {
+  transition: transform 180ms cubic-bezier(.2,.9,.3,1.2), box-shadow 180ms ease, border-color 180ms ease;
+  will-change: transform;
+  &:hover {
+    transform: translate(-2px, -3px);
+    box-shadow: 6px 8px 0 0 var(--color-magenta), 0 0 24px -4px color-mix(in oklab, var(--color-lime) 60%, transparent);
+    border-color: var(--color-lime);
+  }
+  &:active {
+    transform: translate(3px, 3px);
+    box-shadow: none;
+  }
+}
+
+@keyframes badge-shine {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(240%) skewX(-20deg); }
+}
+@utility badge-shine {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
+    transform: translateX(-120%) skewX(-20deg);
+    animation: badge-shine 3.4s ease-in-out infinite;
+    pointer-events: none;
+  }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
