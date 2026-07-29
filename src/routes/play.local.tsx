@@ -69,6 +69,60 @@ function getWordHint(word: string): string {
     .join("   ");
 }
 
+// Renders the secret word as a series of premium neon character blocks
+function renderWordBlocks(word: string) {
+  if (!word) return null;
+  return (
+    <div className="flex flex-wrap justify-center gap-1.5 mt-2.5">
+      {word.split("").map((char, idx) => {
+        const isSpace = char === " ";
+        if (isSpace) {
+          return <div key={idx} className="w-3" />;
+        }
+        return (
+          <div
+            key={idx}
+            className="grid size-9 place-items-center rounded-lg border bg-lime text-void border-lime font-mono text-sm font-black uppercase shadow-[0_0_8px_rgba(255,214,0,0.35)]"
+          >
+            {char}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Renders the word hint for the Fraud in premium character blocks, keeping only first and last letters visible
+function renderWordHintBlocks(word: string) {
+  if (!word) return null;
+  return (
+    <div className="flex flex-wrap justify-center gap-1.5 mt-2.5">
+      {word.split("").map((char, idx) => {
+        const isFirst = idx === 0;
+        const isLast = idx === word.length - 1;
+        const isSpace = char === " ";
+        
+        if (isSpace) {
+          return <div key={idx} className="w-3" />;
+        }
+        
+        return (
+          <div
+            key={idx}
+            className={`grid size-9 place-items-center rounded-lg border font-mono text-sm font-black uppercase transition-all duration-300 ${
+              isFirst || isLast
+                ? "bg-magenta text-white border-magenta shadow-[0_0_8px_rgba(255,45,85,0.45)]"
+                : "bg-void/50 text-muted-foreground/35 border-white/10"
+            }`}
+          >
+            {isFirst || isLast ? char : "?"}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PassPhoneGame() {
   const navigate = useNavigate();
   const [config, setConfig] = useState<MatchConfig | null>(null);
@@ -473,10 +527,10 @@ export function PassPhoneGame() {
 
                 {/* Card Back (Step 3 & 4) */}
                 <div
-                  className={`absolute inset-0 backface-hidden rounded-3xl p-6 flex flex-col items-center justify-between text-center border-2 bg-[#12121A]/95 backdrop-blur-md ${
+                  className={`absolute inset-0 backface-hidden rounded-3xl p-6 flex flex-col items-center justify-between text-center border-2 bg-gradient-to-b from-[#12121A] ${
                     isFraud
-                      ? "border-magenta/75 shadow-[0_0_25px_rgba(255,45,85,0.22)]"
-                      : "border-lime/75 shadow-[0_0_25px_rgba(255,214,0,0.22)]"
+                      ? "to-[#1E1218] border-magenta/75 shadow-[0_0_25px_rgba(255,45,85,0.22)]"
+                      : "to-[#181812] border-lime/75 shadow-[0_0_25px_rgba(255,214,0,0.22)]"
                   }`}
                   style={{
                     backfaceVisibility: "hidden",
@@ -485,20 +539,24 @@ export function PassPhoneGame() {
                 >
                   <div className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                     <span>TOPIC</span>
-                    <span className={isFraud ? "text-magenta text-glitch" : "text-lime"}>{categoryName}</span>
+                    <span className={isFraud ? "text-magenta font-black" : "text-lime font-black"}>{categoryName}</span>
                   </div>
 
                   <div className="my-auto text-center flex flex-col items-center">
-                    <div className={`p-4.5 rounded-full border-2 mb-3 bg-surface shadow-inner ${
-                      isFraud ? "border-magenta text-magenta animate-pulse" : "border-lime text-lime"
+                    <div className={`p-4.5 rounded-full border-2 mb-3 bg-surface shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] ${
+                      isFraud
+                        ? "border-magenta/40 text-magenta bg-magenta/5 shadow-[0_0_15px_rgba(255,45,85,0.12)] animate-pulse"
+                        : "border-lime/40 text-lime bg-lime/5 shadow-[0_0_15px_rgba(255,214,0,0.12)]"
                     }`}>
                       {isFraud ? <ShieldAlert size={36} /> : <User size={36} />}
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80">
                       YOU ARE THE
                     </span>
                     <h2 className={`text-4xl font-black uppercase tracking-wide mt-1.5 font-title ${
-                      isFraud ? "text-magenta text-glitch" : "text-lime"
+                      isFraud
+                        ? "text-magenta drop-shadow-[0_2px_10px_rgba(255,45,85,0.45)]"
+                        : "text-lime drop-shadow-[0_2px_10px_rgba(255,214,0,0.45)]"
                     }`}>
                       {isFraud ? "FRAUD!" : "BRO!"}
                     </h2>
@@ -510,15 +568,15 @@ export function PassPhoneGame() {
                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block">
                       {isFraud ? "Secret Word Hint" : "Secret Word"}
                     </span>
-                    <h3 className="text-3xl font-black uppercase tracking-widest text-foreground mt-1 font-title">
-                      {isFraud ? getWordHint(targetWord) : targetWord}
-                    </h3>
+                    
+                    {isFraud ? renderWordHintBlocks(targetWord) : renderWordBlocks(targetWord)}
+
                     {isFraud ? (
-                      <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-magenta/90">
+                      <p className="mt-2.5 text-[9px] font-bold uppercase tracking-widest text-magenta/90">
                         ({targetWord.length} letters · starts with '{targetWord[0]}')
                       </p>
                     ) : (
-                      <p className="mt-2 text-[9px] font-bold uppercase tracking-widest text-lime/90 flex items-center justify-center gap-1">
+                      <p className="mt-2.5 text-[9px] font-bold uppercase tracking-widest text-lime/90 flex items-center justify-center gap-1">
                         <Sparkles size={10} className="inline" /> DO NOT SHOW OTHERS <Sparkles size={10} className="inline" />
                       </p>
                     )}
