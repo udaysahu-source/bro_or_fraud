@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, User, ShieldAlert, Sparkles } from "lucide-react";
+import { HelpCircle, User, ShieldAlert, Sparkles, Fingerprint } from "lucide-react";
 import { PACKS } from "@/lib/mcp/packs";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
+import { renderAvatar } from "./play.setup";
 
 export const Route = createFileRoute("/play/local")({
   component: PassPhoneGame,
@@ -69,56 +70,18 @@ function getWordHint(word: string): string {
     .join("   ");
 }
 
-// Renders the secret word as a series of premium neon character blocks
-function renderWordBlocks(word: string) {
+// Renders the secret word as a clean, highly-legible text block
+function renderCleanWord(word: string, isFraud: boolean) {
   if (!word) return null;
   return (
-    <div className="flex flex-wrap justify-center gap-1.5 mt-2.5">
-      {word.split("").map((char, idx) => {
-        const isSpace = char === " ";
-        if (isSpace) {
-          return <div key={idx} className="w-3" />;
-        }
-        return (
-          <div
-            key={idx}
-            className="grid size-9 place-items-center rounded-lg border bg-lime text-void border-lime font-mono text-sm font-black uppercase shadow-[0_0_8px_rgba(255,214,0,0.35)]"
-          >
-            {char}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// Renders the word hint for the Fraud in premium character blocks, keeping only first and last letters visible
-function renderWordHintBlocks(word: string) {
-  if (!word) return null;
-  return (
-    <div className="flex flex-wrap justify-center gap-1.5 mt-2.5">
-      {word.split("").map((char, idx) => {
-        const isFirst = idx === 0;
-        const isLast = idx === word.length - 1;
-        const isSpace = char === " ";
-        
-        if (isSpace) {
-          return <div key={idx} className="w-3" />;
-        }
-        
-        return (
-          <div
-            key={idx}
-            className={`grid size-9 place-items-center rounded-lg border font-mono text-sm font-black uppercase transition-all duration-300 ${
-              isFirst || isLast
-                ? "bg-magenta text-white border-magenta shadow-[0_0_8px_rgba(255,45,85,0.45)]"
-                : "bg-void/50 text-muted-foreground/35 border-white/10"
-            }`}
-          >
-            {isFirst || isLast ? char : "?"}
-          </div>
-        );
-      })}
+    <div className="my-2 py-2.5 px-4 rounded-xl bg-void/80 border border-white/5 flex flex-col items-center justify-center min-h-[60px] w-full">
+      <div className={`text-2xl font-black tracking-widest uppercase font-mono select-none ${
+        isFraud 
+          ? "text-magenta drop-shadow-[0_0_10px_rgba(255,45,85,0.4)]" 
+          : "text-lime drop-shadow-[0_0_10px_rgba(255,214,0,0.4)]"
+      }`}>
+        {word}
+      </div>
     </div>
   );
 }
@@ -150,6 +113,10 @@ export function PassPhoneGame() {
   const [roastCopy, setRoastCopy] = useState("");
   const [scoreChanges, setScoreChanges] = useState<Record<string, number>>({});
   
+  // Physical Voting states
+  const [votingCountdown, setVotingCountdown] = useState<number | null>(null);
+  const [voteTallies, setVoteTallies] = useState<Record<number, number>>({});
+
   // Discussion Starter (Phase 3)
   const [discussionStarter, setDiscussionStarter] = useState<number | null>(null);
 
@@ -219,7 +186,7 @@ export function PassPhoneGame() {
       setSecondsLeft((prev) => {
         const next = prev - 1;
         // Haptic feedback below 10s
-        if (next <= 10 && next > 0) {
+        if (next <= 10 && next >= 0) {
           buzz(15);
         }
         if (next === 0) {
@@ -227,12 +194,37 @@ export function PassPhoneGame() {
           setTimerActive(false);
           // Auto go to voting when time runs out
           setPhase("voting");
+          setVotingCountdown(5);
         }
         return next;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [timerActive, secondsLeft]);
+
+  // Physical point vote countdown ticker
+  useEffect(() => {
+    if (phase === "voting" && votingCountdown !== null) {
+      if (votingCountdown > 0) {
+        const timer = setTimeout(() => {
+          setVotingCountdown((c) => (c !== null ? c - 1 : null));
+          buzz(15);
+        }, 1000);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => {
+          setVotingCountdown(null);
+          // Initialize vote tallies to 0
+          const initialTallies: Record<number, number> = {};
+          players.forEach((_, idx) => {
+            initialTallies[idx] = 0;
+          });
+          setVoteTallies(initialTallies);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [phase, votingCountdown]);
 
   if (!config) {
     return (
@@ -348,20 +340,15 @@ export function PassPhoneGame() {
     buzz(30);
 
     // Determine packs to choose words from
-    const packsToUse: { title: string; pairs: [string, string][] }[] = [];
+    const packsToUse: { id: string; title: string; words: string[] }[] = [];
     config.selectedPacks.forEach((packId) => {
       const builtIn = PACKS.find((p) => p.id === packId);
       if (builtIn) {
-        packsToUse.push({ title: builtIn.name, pairs: builtIn.pairs });
+        packsToUse.push({ id: builtIn.id, title: builtIn.name, words: builtIn.words });
       } else {
         const custom = customPacks.find((p) => p.id === packId);
         if (custom) {
-          const virtualPairs: [string, string][] = custom.words.map((word, i) => {
-            const otherIdx = (i + 1) % custom.words.length;
-            const otherWord = custom.words[otherIdx] || "???";
-            return [word, otherWord];
-          });
-          packsToUse.push({ title: custom.title, pairs: virtualPairs });
+          packsToUse.push({ id: custom.id, title: custom.title, words: custom.words });
         }
       }
     });
@@ -373,25 +360,35 @@ export function PassPhoneGame() {
 
     if (packsToUse.length === 1) {
       newCategory = packsToUse[0].title;
-      let availablePairs = packsToUse[0].pairs.filter((pair) => !usedWords.includes(pair[0]));
-      if (availablePairs.length === 0) {
-        availablePairs = packsToUse[0].pairs;
+      let availableWords = packsToUse[0].words.filter((w) => !usedWords.includes(w));
+      if (availableWords.length === 0) {
+        availableWords = packsToUse[0].words;
         usedWords.splice(0, usedWords.length);
       }
-      const randomPair = availablePairs[Math.floor(Math.random() * availablePairs.length)] || ["Chai", "Coffee"];
-      newTarget = randomPair[0];
-      newBluff = randomPair[1];
+      newTarget = availableWords[Math.floor(Math.random() * availableWords.length)] || "Chai";
+      
+      // Pick decoy word from a different pack
+      const otherPacks = PACKS.filter((p) => p.id !== packsToUse[0].id);
+      const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
+      newBluff = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     } else if (packsToUse.length >= 2) {
       newCategory = `${packsToUse[0].title} + ${packsToUse[1].title}`;
-      const allPairs = [...packsToUse[0].pairs, ...packsToUse[1].pairs];
-      let availablePairs = allPairs.filter((pair) => !usedWords.includes(pair[0]));
-      if (availablePairs.length === 0) {
-        availablePairs = allPairs;
+      // Flatten all selected words for availability
+      const allSelectedWords: string[] = [];
+      packsToUse.forEach((pack) => allSelectedWords.push(...pack.words));
+      
+      let availableWords = allSelectedWords.filter((w) => !usedWords.includes(w));
+      if (availableWords.length === 0) {
+        availableWords = allSelectedWords;
         usedWords.splice(0, usedWords.length);
       }
-      const randomPair = availablePairs[Math.floor(Math.random() * availablePairs.length)] || ["Chai", "Coffee"];
-      newTarget = randomPair[0];
-      newBluff = randomPair[1];
+      newTarget = availableWords[Math.floor(Math.random() * availableWords.length)] || "Chai";
+      
+      // Pick decoy word from a different pack (not selected)
+      const selectedIds = packsToUse.map((p) => p.id);
+      const otherPacks = PACKS.filter((p) => !selectedIds.includes(p.id));
+      const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
+      newBluff = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     }
 
     const updatedUsedWords = [...usedWords, newTarget];
@@ -460,8 +457,8 @@ export function PassPhoneGame() {
             </span>
             <h1 className="mt-8 text-5xl font-black uppercase leading-[0.9]">
               Pass Phone to<br />
-              <span className="text-lime text-glitch inline-block mt-2">
-                {players[currentPlayer].emoji} {players[currentPlayer].name}
+              <span className="text-lime text-glitch inline-flex items-center gap-2 mt-2">
+                {renderAvatar(players[currentPlayer].emoji, "size-10 text-lime")} {players[currentPlayer].name}
               </span>
             </h1>
             <p className="mt-6 text-sm text-muted-foreground max-w-[28ch]">
@@ -562,24 +559,26 @@ export function PassPhoneGame() {
                     </h2>
                   </div>
 
-                  <div className={`w-full rounded-2xl p-4 border bg-surface/90 ${
+                  <div className={`w-full rounded-2xl p-4 border bg-surface/90 flex flex-col justify-center items-center ${
                     isFraud ? "border-magenta/30 shadow-[0_0_15px_rgba(255,45,85,0.05)]" : "border-lime/30 shadow-[0_0_15px_rgba(255,214,0,0.05)]"
                   }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block">
-                      {isFraud ? "Secret Word Hint" : "Secret Word"}
-                    </span>
-                    
-                    {isFraud ? renderWordHintBlocks(targetWord) : renderWordBlocks(targetWord)}
+                    <div className="w-full text-center">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground block">
+                        {isFraud ? "Your Decoy Word" : "Secret Word"}
+                      </span>
+                      
+                      {renderCleanWord(isFraud ? bluffWord : targetWord, isFraud)}
 
-                    {isFraud ? (
-                      <p className="mt-2.5 text-[9px] font-bold uppercase tracking-widest text-magenta/90">
-                        ({targetWord.length} letters · starts with '{targetWord[0]}')
-                      </p>
-                    ) : (
-                      <p className="mt-2.5 text-[9px] font-bold uppercase tracking-widest text-lime/90 flex items-center justify-center gap-1">
-                        <Sparkles size={10} className="inline" /> DO NOT SHOW OTHERS <Sparkles size={10} className="inline" />
-                      </p>
-                    )}
+                      {isFraud ? (
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-magenta/90 leading-tight">
+                          Try to blend in with this word!
+                        </p>
+                      ) : (
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-lime/90 leading-tight flex items-center justify-center gap-1">
+                          <Sparkles size={10} className="inline shrink-0" /> DO NOT SHOW OTHERS <Sparkles size={10} className="inline shrink-0" />
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -621,8 +620,8 @@ export function PassPhoneGame() {
                 <span className="text-[9px] font-black uppercase tracking-widest text-magenta block">
                   📢 Discussion Starter
                 </span>
-                <p className="mt-1 text-lg font-black uppercase text-foreground">
-                  {players[discussionStarter].emoji} {players[discussionStarter].name} starts the debate!
+                <p className="mt-1 text-lg font-black uppercase text-foreground flex items-center justify-center gap-2">
+                  {renderAvatar(players[discussionStarter].emoji, "size-6 text-magenta")} {players[discussionStarter].name} starts!
                 </p>
               </div>
             )}
@@ -669,7 +668,7 @@ export function PassPhoneGame() {
               <div className="mt-2 grid grid-cols-2 gap-2">
                 {players.map((p, idx) => (
                   <div key={idx} className="flex items-center gap-2 rounded-xl bg-surface/50 border border-white/5 px-3 py-2 text-xs">
-                    <span>{p.emoji}</span>
+                    {renderAvatar(p.emoji, "size-4 text-lime")}
                     <span className="font-bold uppercase truncate">{p.name}</span>
                   </div>
                 ))}
@@ -679,84 +678,134 @@ export function PassPhoneGame() {
             <div className="flex-1" />
 
             <button
-              onClick={() => { buzz(25); setTimerActive(false); setPhase("voting"); }}
+              onClick={() => { buzz(25); setTimerActive(false); setPhase("voting"); setVotingCountdown(5); }}
               className="w-full rounded-xl bg-magenta px-6 py-5 text-lg font-black uppercase tracking-wide text-white border-2 border-void brutal-shadow-white tactile tactile-press"
             >
               Vote the Fraud Now →
             </button>
+          </div>
+        )}
+
+        {phase === "voting" && votingCountdown !== null && (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-magenta animate-pulse">
+              [ PHYSICAL POINT VOTE ]
+            </span>
+            
+            <h1 className="mt-6 text-4xl font-black uppercase leading-none text-off-white">
+              Get Ready to Point! 👆
+            </h1>
+            <p className="mt-3 text-xs text-muted-foreground max-w-[28ch] mx-auto leading-relaxed">
+              On ZERO, everyone points to the person they want to vote out simultaneously!
+            </p>
+
+            <div className="my-12 flex items-center justify-center min-h-[140px]">
+              <motion.div
+                key={votingCountdown}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1.2, opacity: 1 }}
+                className={`font-display text-8xl font-black ${
+                  votingCountdown === 0 ? "text-magenta scale-150 animate-bounce" : "text-lime"
+                }`}
+              >
+                {votingCountdown === 0 ? "POINT! 👉" : votingCountdown}
+              </motion.div>
+            </div>
 
             <button
-              onClick={handleInstantReveal}
-              className="mt-4 text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-magenta underline transition-colors cursor-pointer"
+              onClick={() => setVotingCountdown(null)}
+              className="px-4 py-2 border border-white/10 rounded-xl bg-surface/50 text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-white"
             >
-              Reveal Word & Fraud 👁️
+              Skip Countdown ⏩
             </button>
           </div>
         )}
 
-        {/* PHASE 4: VOTING GRID */}
-        {phase === "voting" && (
+        {phase === "voting" && votingCountdown === null && (
           <div className="flex flex-1 flex-col">
             <div className="text-center">
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-magenta">
-                [ CAST BALOTS ]
+                [ VOTE COUNT TALLY ]
               </span>
-              <h1 className="mt-3 text-4xl font-black uppercase leading-[0.9]">
-                Who is the<br />
-                <span className="text-magenta text-glitch">FRAUD? 🕵️</span>
+              <h1 className="mt-3 text-3xl font-black uppercase leading-[0.9] text-off-white">
+                Input Vote Tallies 📊
               </h1>
-              <p className="mt-2 text-xs text-muted-foreground max-w-[28ch] mx-auto">
-                Discuss as a group and nominate the most sus player.
+              <p className="mt-2 text-xs text-muted-foreground max-w-[30ch] mx-auto">
+                Enter the number of physical points/votes received by each player.
               </p>
             </div>
 
-            {/* Grid of Players */}
-            <div className="mt-6 grid grid-cols-2 gap-3 max-h-72 overflow-y-auto pr-1">
+            {/* Grid of Players with tally counter controls */}
+            <div className="mt-6 space-y-3 max-h-80 overflow-y-auto pr-1">
               {players.map((p, idx) => {
-                const active = selectedSuspect === idx;
+                const currentTally = voteTallies[idx] || 0;
+                // Calculate if they have the most votes (excluding 0)
+                const maxTally = Math.max(...Object.values(voteTallies));
+                const isLeader = currentTally > 0 && currentTally === maxTally;
+
                 return (
-                  <button
+                  <div
                     key={idx}
-                    onClick={() => { setSelectedSuspect(idx); buzz(20); }}
-                    className={`relative rounded-2xl border-2 p-4 text-left bg-surface transition-all duration-100 tactile ${
-                      active ? "border-magenta bg-magenta/10 scale-98 brutal-shadow-pink" : "border-white/10"
+                    className={`flex items-center justify-between rounded-2xl border-2 p-4 bg-surface transition-all duration-200 ${
+                      isLeader ? "border-magenta bg-magenta/5 shadow-[0_0_15px_rgba(255,45,85,0.1)]" : "border-white/10"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl">{p.emoji}</span>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                        P{idx + 1}
+                    <div className="flex items-center gap-3">
+                      {renderAvatar(p.emoji, "size-10 text-magenta shrink-0")}
+                      <div>
+                        <div className="text-base font-black uppercase text-off-white">{p.name}</div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                          {isLeader ? "🔥 MOST SUSPECTED" : `Player ${idx + 1}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Tally Controls */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          buzz(10);
+                          setVoteTallies((prev) => ({
+                            ...prev,
+                            [idx]: Math.max(0, (prev[idx] || 0) - 1),
+                          }));
+                        }}
+                        className="size-8 rounded-lg border border-white/10 bg-void text-off-white text-lg font-black hover:border-magenta active:scale-95 flex items-center justify-center"
+                      >
+                        -
+                      </button>
+                      <span className="w-6 text-center text-lg font-black text-lime font-mono">
+                        {currentTally}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          buzz(10);
+                          setVoteTallies((prev) => ({
+                            ...prev,
+                            [idx]: (prev[idx] || 0) + 1,
+                          }));
+                        }}
+                        className="size-8 rounded-lg border border-white/10 bg-void text-off-white text-lg font-black hover:border-lime active:scale-95 flex items-center justify-center"
+                      >
+                        +
+                      </button>
                     </div>
-                    <div className="mt-4 text-base font-black uppercase truncate">{p.name}</div>
-                    <div className="mt-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {active ? "NOMINATED 🚨" : "SELECT SUSPECT"}
-                    </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
 
             <div className="flex-1" />
 
-            {/* Sliding Confirm Overlay */}
-            <div className={`transition-all duration-200 ${selectedSuspect === null ? "opacity-30 pointer-events-none" : ""}`}>
-              <button
-                onClick={handleConfirmVote}
-                className="w-full rounded-xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-white tactile tactile-press"
-              >
-                Confirm Nominations →
-              </button>
-            </div>
-
-            <div className="text-center mt-4">
-              <button
-                onClick={handleInstantReveal}
-                className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 hover:text-magenta underline transition-colors cursor-pointer"
-              >
-                Reveal Word & Fraud 👁️
-              </button>
-            </div>
+            {/* Confirm Votes button */}
+            <button
+              onClick={handleConfirmVote}
+              className="w-full rounded-xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-white tactile tactile-press"
+            >
+              Submit Votes & Reveal Verdict →
+            </button>
           </div>
         )}
 
@@ -822,7 +871,7 @@ export function PassPhoneGame() {
                         className="flex items-center justify-between rounded-xl bg-void px-3 py-2 border border-white/5 text-xs font-bold"
                       >
                         <div className="flex items-center gap-2">
-                          <span>{p.emoji}</span>
+                          {renderAvatar(p.emoji, "size-4 text-lime")}
                           <span className="uppercase text-off-white">{p.name}</span>
                           {isPlayerFraud && (
                             <span className="text-[8px] font-black bg-magenta/20 text-magenta px-1.5 py-0.5 rounded uppercase">

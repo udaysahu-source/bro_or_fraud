@@ -244,7 +244,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
-        setTimeout(() => navigate({ to: "/vote" }), 550);
+        setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
         setPending((p) =>
@@ -257,7 +257,7 @@ function Home() {
   }
 
   function handleJoinSubmit() {
-    const code = joinDigits.join("");
+    const code = joinDigits.join("").toUpperCase(); // Convert code to uppercase for consistency
     if (code.length !== 4) return;
     buzz([20, 20]);
     const { room, confirmed } = joinRoomOptimistic(code);
@@ -266,7 +266,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
-        setTimeout(() => navigate({ to: "/vote" }), 550);
+        setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
         setPending((p) =>

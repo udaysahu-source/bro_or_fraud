@@ -92,10 +92,9 @@ function Vote() {
                   setSelected(i);
                   buzz(20);
                 }}
-                className={`relative rounded-2xl border-2 bg-gradient-to-br ${p.color} bg-surface p-4 text-left tactile tactile-press ${
-                  active ? "border-magenta" : "border-white/10"
+                className={`relative rounded-2xl border-3 bg-gradient-to-br ${p.color} bg-surface p-5 text-left transition-all duration-200 tactile tactile-press ${
+                  active ? "border-magenta scale-105 shadow-[0_0_25px_rgba(255,45,85,0.45)] z-10" : "border-white/10 opacity-70"
                 }`}
-                style={active ? { boxShadow: "0 0 0 3px oklch(0.65 0.29 5 / 0.35)" } : undefined}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-3xl">{p.emoji}</span>

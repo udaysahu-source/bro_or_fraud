@@ -1,4 +1,4 @@
-// Shared pack data used by MCP tools. Includes a small curated word-pair
+// Shared pack data used by MCP tools. Includes a small curated word
 // set per pack for `roll_match` — the app's UI carries only pack metadata.
 
 export type PackMeta = {
@@ -9,337 +9,246 @@ export type PackMeta = {
   description: string;
 };
 
-type WordPair = [string, string]; // [secret, fraudGuess]
-
-type PackData = PackMeta & { pairs: WordPair[] };
+export type PackData = PackMeta & { words: string[] };
 
 export const PACKS: PackData[] = [
   {
-    id: "indian-internet",
-    name: "Indian Internet",
-    tag: "IN.NET",
-    wordCount: 120,
-    description: "Desi memes, viral moments, and internet culture from India.",
-    pairs: [
-      ["Binod", "Bhuvan"],
-      ["Jio", "Airtel"],
-      ["Rasode Mein Kaun Tha", "Kacha Badam"],
-      ["Zomato", "Swiggy"],
-      ["CarryMinati", "BB Ki Vines"],
-    ],
+    id: "college-life",
+    name: "College Life",
+    tag: "COLLEGE",
+    wordCount: 20,
+    description: "Assignment, exams, canteen chill, and backlog anxiety.",
+    words: [
+      "Assignment", "Attendance", "Proxy", "Backbench", "Frontbench",
+      "Semester", "Backlog", "CGPA", "Viva", "Lab",
+      "Professor", "HOD", "Project", "Exam", "Notes",
+      "Canteen", "Hostel", "Library", "Placement", "Internship"
+    ]
   },
   {
-    id: "hostel-life",
-    name: "Hostel Life",
-    tag: "HOSTEL",
-    wordCount: 96,
-    description: "Mess food, warden raids, and 3 AM Maggi runs.",
-    pairs: [
-      ["Maggi", "Ramen"],
-      ["Warden", "Watchman"],
-      ["Bunk Bed", "Roommate"],
-      ["Canteen", "Mess"],
-      ["Proxy Attendance", "Sleeping in Class"],
-    ],
+    id: "relationships",
+    name: "Relationships",
+    tag: "RELATION",
+    wordCount: 20,
+    description: "Crushes, breakups, flirting, and red flags.",
+    words: [
+      "Crush", "Ex", "Proposal", "Date", "Ghosting",
+      "Friendzone", "Breakup", "Heartbreak", "Love", "Marriage",
+      "Jealous", "Cheating", "Soulmate", "Wedding", "Flirting",
+      "Kiss", "Hug", "Single", "Situationship", "Red Flag"
+    ]
   },
   {
-    id: "gen-z-slang",
-    name: "Gen Z Slang",
-    tag: "MEME",
-    wordCount: 110,
-    description: "Slay, rizz, delulu, and the rest of the vocabulary.",
-    pairs: [
-      ["Rizz", "Skibidi"],
-      ["Delulu", "Bussin"],
-      ["Slay", "Serve"],
-      ["No Cap", "Fr Fr"],
-      ["Mid", "Cringe"],
-    ],
+    id: "gen-z",
+    name: "Gen Z",
+    tag: "GENZ",
+    wordCount: 20,
+    description: "Rizz, aura, cooked, cap, and brainrot terms.",
+    words: [
+      "Rizz", "Sigma", "Aura", "Delulu", "NPC",
+      "GOAT", "Cooked", "Cringe", "POV", "Flex",
+      "Simp", "Meme", "Viral", "Ratio", "Reels",
+      "Trending", "Brainrot", "Locked In", "Touch Grass", "Glow Up"
+    ]
   },
   {
-    id: "bollywood-tropes",
-    name: "Bollywood Tropes",
-    tag: "BOLLY",
-    wordCount: 108,
-    description: "Slow-mo entries, item songs, and the angry maa scene.",
-    pairs: [
-      ["Item Song", "Dance Number"],
-      ["SRK Pose", "Salman Shirt Rip"],
-      ["Angry Maa", "Sassy Dadi"],
-      ["Baarish Scene", "Rain Dance"],
-      ["Villain Ka Adda", "Don Ka Ghar"],
-    ],
-  },
-  {
-    id: "cricket-bros",
-    name: "Cricket Bros",
-    tag: "CRICKET",
-    wordCount: 88,
-    description: "IPL debates, Dhoni finishes, and gully cricket rules.",
-    pairs: [
-      ["Dhoni Helicopter", "Kohli Cover Drive"],
-      ["Yorker", "Bouncer"],
-      ["Gully Cricket", "Street Cricket"],
-      ["Umpire Call", "Third Umpire"],
-      ["Six", "Boundary"],
-    ],
-  },
-  {
-    id: "insta-reels",
-    name: "Insta Reels",
-    tag: "REELS",
-    wordCount: 105,
-    description: "Trending audios, transitions, and outfit-change reels.",
-    pairs: [
-      ["Transition", "Jump Cut"],
-      ["Trending Audio", "Viral Sound"],
-      ["OOTD", "GRWM"],
-      ["Story Ping", "DM Slide"],
-      ["Filter", "Preset"],
-    ],
-  },
-  {
-    id: "indian-family",
-    name: "Indian Family",
-    tag: "DESI",
-    wordCount: 90,
-    description: "Nosy relatives, shaadi drama, and the log kya kahenge saga.",
-    pairs: [
-      ["Sharma Ji Ka Beta", "Gupta Ji Ki Beti"],
-      ["Chai", "Coffee"],
-      ["Shaadi", "Sagai"],
-      ["Log Kya Kahenge", "Shaadi Kab Karoge"],
-      ["Bua", "Mausi"],
-    ],
-  },
-  {
-    id: "indian-dad",
-    name: "Indian Dad",
-    tag: "DAD",
-    wordCount: 80,
-    description: "Chappal throws, newspaper rustles, and the eternal 'lights off' saga.",
-    pairs: [
-      ["Chappal", "Belt"],
-      ["Newspaper", "Chai"],
-      ["Sharma Ji", "Verma Ji"],
-      ["Beta Kya Kar Raha Hai", "Padhai Kar"],
-      ["Lights Off", "AC Off"],
-    ],
+    id: "indian-parents",
+    name: "Indian Parents",
+    tag: "PARENTS",
+    wordCount: 20,
+    description: "Chappals, curfew lectures, and Sharma Ji ka beta comparison.",
+    words: [
+      "Chappal", "Belt", "Remote", "Electricity Bill", "Sharma Ji",
+      "Doctor", "Engineer", "Tuition", "Homework", "Savings",
+      "LIC", "FD", "Relatives", "Marriage", "Marks",
+      "Curfew", "Lecture", "Newspaper", "TV", "Scooter"
+    ]
   },
   {
     id: "food",
     name: "Food",
     tag: "FOOD",
-    wordCount: 100,
-    description: "Street food, mess plates, and midnight biryani cravings.",
-    pairs: [
-      ["Biryani", "Pulao"],
-      ["Samosa", "Kachori"],
-      ["Maggi", "Pasta"],
-      ["Dosa", "Uttapam"],
-      ["Vada Pav", "Pav Bhaji"],
-    ],
+    wordCount: 20,
+    description: "Midnight Maggi runs, pani puri, and biryani cravings.",
+    words: [
+      "Pizza", "Burger", "Biryani", "Momos", "Maggi",
+      "Paneer", "Dosa", "Idli", "Samosa", "Chai",
+      "Coffee", "Ice Cream", "Chocolate", "Pasta", "Sandwich",
+      "Paratha", "Jalebi", "Pani Puri", "Cake", "Noodles"
+    ]
   },
   {
-    id: "anime",
-    name: "Anime",
-    tag: "ANIME",
-    wordCount: 95,
-    description: "Shonen debates, filler arcs, and Crunchyroll subscriptions.",
-    pairs: [
-      ["Naruto", "Boruto"],
-      ["One Piece", "Bleach"],
-      ["Attack on Titan", "Demon Slayer"],
-      ["Goku", "Vegeta"],
-      ["Luffy", "Zoro"],
-    ],
-  },
-  {
-    id: "bikes",
-    name: "Bikes",
-    tag: "BIKES",
-    wordCount: 70,
-    description: "Bullet thumps, KTM revs, and Activa daily drivers.",
-    pairs: [
-      ["Bullet", "Classic 350"],
-      ["KTM Duke", "RC 390"],
-      ["Splendor", "Passion"],
-      ["Activa", "Jupiter"],
-      ["R15", "MT 15"],
-    ],
-  },
-  {
-    id: "engineering",
-    name: "Engineering",
-    tag: "ENGG",
-    wordCount: 92,
-    description: "Backlogs, xerox shops, and 'placement season' anxiety.",
-    pairs: [
-      ["CS Branch", "IT Branch"],
-      ["Backlog", "Supply"],
-      ["Xerox", "Photocopy"],
-      ["Viva", "Practical"],
-      ["Placement", "Internship"],
-    ],
-  },
-  {
-    id: "dating",
-    name: "Dating",
-    tag: "DATE",
-    wordCount: 85,
-    description: "Situationships, ghosting, and the ick.",
-    pairs: [
-      ["Situationship", "Talking Stage"],
-      ["Ghosted", "Left on Read"],
-      ["Red Flag", "Ick"],
-      ["Crush", "Fling"],
-      ["First Date", "Blind Date"],
-    ],
+    id: "cricket",
+    name: "Cricket",
+    tag: "CRICKET",
+    wordCount: 20,
+    description: "Dhoni finishes, yorkers, and IPL group debates.",
+    words: [
+      "Kohli", "Dhoni", "Rohit", "Sachin", "Bat",
+      "Ball", "Wicket", "Six", "Four", "Catch",
+      "Bowler", "Batsman", "Spinner", "Yorker", "IPL",
+      "World Cup", "Umpire", "Helmet", "Stumps", "Boundary"
+    ]
   },
   {
     id: "gaming",
     name: "Gaming",
     tag: "GAME",
-    wordCount: 90,
-    description: "BGMI squads, Valorant ranks, and Minecraft nostalgia.",
-    pairs: [
-      ["BGMI", "Free Fire"],
-      ["Valorant", "CS2"],
-      ["Minecraft", "Roblox"],
-      ["FIFA", "eFootball"],
-      ["GTA", "Watch Dogs"],
-    ],
+    wordCount: 20,
+    description: "Valorant ranks, BGMI loot, and pro vs noob squabbles.",
+    words: [
+      "BGMI", "Free Fire", "Minecraft", "Valorant", "Roblox",
+      "PlayStation", "Xbox", "Noob", "Pro", "Sniper",
+      "Loot", "Skin", "Rank", "Victory", "Headshot",
+      "Camping", "Respawn", "Controller", "Keyboard", "Mouse"
+    ]
+  },
+  {
+    id: "anime",
+    name: "Anime",
+    tag: "ANIME",
+    wordCount: 20,
+    description: "Ninja paths, devil fruits, shoujo and shonen tropes.",
+    words: [
+      "Naruto", "Luffy", "Zoro", "Gojo", "Sukuna",
+      "Titan", "Sharingan", "Rasengan", "Bankai", "Hokage",
+      "Pirate", "Marine", "Hero", "Villain", "Sensei",
+      "Ninja", "Samurai", "Devil Fruit", "Curse", "Anime"
+    ]
   },
   {
     id: "movies",
     name: "Movies",
     tag: "MOVIE",
-    wordCount: 100,
-    description: "Cult classics, mass entertainers, and the K-Jo universe.",
-    pairs: [
-      ["3 Idiots", "PK"],
-      ["KGF", "Pushpa"],
-      ["RRR", "Baahubali"],
-      ["Sholay", "Deewar"],
-      ["DDLJ", "K3G"],
-    ],
+    wordCount: 20,
+    description: "Climax scenes, popcorn buckets, and K-Jo blockbusters.",
+    words: [
+      "Hero", "Villain", "Director", "Actor", "Cinema",
+      "Popcorn", "Interval", "Trailer", "Comedy", "Horror",
+      "Thriller", "Romance", "Action", "Oscar", "Netflix",
+      "OTT", "Bollywood", "Hollywood", "Climax", "Sequel"
+    ]
   },
   {
-    id: "festivals",
-    name: "Festivals",
-    tag: "FEST",
-    wordCount: 88,
-    description: "Diyas, dhol, and the shared plate of prasad.",
-    pairs: [
-      ["Diwali", "Dussehra"],
-      ["Holi", "Rangpanchami"],
-      ["Eid", "Bakrid"],
-      ["Ganesh Chaturthi", "Navratri"],
-      ["Rakhi", "Bhai Dooj"],
-    ],
+    id: "bikes",
+    name: "Bikes",
+    tag: "BIKES",
+    wordCount: 20,
+    description: "Royal Enfield classic thumps and KTM revs.",
+    words: [
+      "Royal Enfield", "KTM", "Yamaha", "Honda", "Helmet",
+      "Clutch", "Brake", "Gear", "Engine", "Exhaust",
+      "Petrol", "Mileage", "ABS", "Ride", "Wheelie",
+      "Chain", "Tyre", "Mirror", "Speed", "Highway"
+    ]
   },
   {
     id: "travel",
     name: "Travel",
     tag: "TRAVEL",
-    wordCount: 82,
-    description: "Goa plans, Manali escapes, and sleeper-bus horror stories.",
-    pairs: [
-      ["Goa", "Pondicherry"],
-      ["Manali", "Shimla"],
-      ["Backpacking", "Roadtrip"],
-      ["Sleeper Bus", "General Coach"],
-      ["Hostel Stay", "Airbnb"],
-    ],
+    wordCount: 20,
+    description: "Goa trips, Manali escapes, and backpack maps.",
+    words: [
+      "Goa", "Manali", "Kashmir", "Beach", "Mountain",
+      "Train", "Flight", "Passport", "Visa", "Hotel",
+      "Resort", "Camping", "Backpack", "Suitcase", "Taxi",
+      "Metro", "Map", "Road Trip", "Sunrise", "Sunset"
+    ]
   },
   {
-    id: "brainrot",
-    name: "Brainrot",
-    tag: "ROT",
-    wordCount: 96,
-    description: "Skibidi, gyatt, and the algorithm-melted vocabulary.",
-    pairs: [
-      ["Skibidi Toilet", "Gyatt"],
-      ["Fanum Tax", "Rizzler"],
-      ["Ohio", "Sigma"],
-      ["Mewing", "Looksmaxing"],
-      ["Baby Gronk", "Livvy Dunne"],
-    ],
+    id: "body-parts",
+    name: "Body Parts",
+    tag: "BODY",
+    wordCount: 20,
+    description: "Instantly recognizable anatomy names.",
+    words: [
+      "Head", "Hair", "Forehead", "Eye", "Eyebrow",
+      "Ear", "Nose", "Mouth", "Tongue", "Teeth",
+      "Neck", "Shoulder", "Chest", "Heart", "Stomach",
+      "Hand", "Finger", "Knee", "Foot", "Toe"
+    ]
   },
   {
-    id: "goat-debate",
-    name: "GOAT Debate",
-    tag: "GOAT",
-    wordCount: 75,
-    description: "Messi vs Ronaldo, Kohli vs Sachin, and endless group-chat wars.",
-    pairs: [
-      ["Messi", "Ronaldo"],
-      ["Kohli", "Sachin"],
-      ["MJ", "LeBron"],
-      ["Federer", "Nadal"],
-      ["Dhoni", "Rohit"],
-    ],
+    id: "animals",
+    name: "Animals",
+    tag: "ANIMAL",
+    wordCount: 20,
+    description: "Wild cats, domestic pets, and common farm creatures.",
+    words: [
+      "Lion", "Tiger", "Elephant", "Monkey", "Dog",
+      "Cat", "Horse", "Cow", "Buffalo", "Snake",
+      "Rabbit", "Bear", "Fox", "Wolf", "Camel",
+      "Goat", "Hen", "Eagle", "Parrot", "Fish"
+    ]
   },
   {
-    id: "dark-but-funny",
-    name: "Dark but Funny",
-    tag: "DARK",
-    wordCount: 78,
-    description: "The tiny daily horrors we bond over.",
-    pairs: [
-      ["Monday", "Sunday Night"],
-      ["Alarm", "Snooze"],
-      ["Interview", "Rejection Email"],
-      ["Exam", "Viva"],
-      ["Dentist", "Root Canal"],
-      ["Rejection", "Ghosted"],
-      ["Mosquito", "Cockroach"],
-      ["Power Cut", "Wifi Down"],
-      ["Traffic", "Signal Red"],
-      ["Low Battery", "No Charger"],
-    ],
+    id: "vehicles",
+    name: "Vehicles",
+    tag: "VEHICLES",
+    wordCount: 20,
+    description: "Trains, cycles, tractors, and emergency engines.",
+    words: [
+      "Car", "Bike", "Bus", "Truck", "Train",
+      "Metro", "Plane", "Helicopter", "Boat", "Ship",
+      "Scooter", "Auto", "Cycle", "Tractor", "Ambulance",
+      "Police Car", "Fire Truck", "Taxi", "Rickshaw", "Bulldozer"
+    ]
   },
   {
-    id: "indian-nostalgia",
-    name: "Indian Nostalgia",
-    tag: "NOST",
-    wordCount: 98,
-    description: "Pogo mornings, Natraj pencils, and gully cricket summers.",
-    pairs: [
-      ["Ben 10", "Generator Rex"],
-      ["Doraemon", "Ninja Hattori"],
-      ["Shinchan", "Kiteretsu"],
-      ["Chacha Chaudhary", "Suppandi"],
-      ["Natraj Pencil", "Apsara Pencil"],
-      ["PT Period", "Games Period"],
-      ["Tiffin", "Lunchbox"],
-      ["Summer Vacation", "Winter Break"],
-      ["Ludo", "Snakes and Ladders"],
-      ["Cricket Gully", "Book Cricket"],
-    ],
+    id: "tech",
+    name: "Tech",
+    tag: "TECH",
+    wordCount: 20,
+    description: "Smartphones, chargers, wifi routers, and AI services.",
+    words: [
+      "Phone", "Laptop", "Computer", "Keyboard", "Mouse",
+      "Monitor", "WiFi", "Bluetooth", "Camera", "Charger",
+      "Power Bank", "Headphones", "Smartwatch", "Instagram", "YouTube",
+      "Google", "ChatGPT", "Netflix", "USB", "Printer"
+    ]
   },
   {
-    id: "chaotic-pack",
-    name: "Chaotic Pack",
-    tag: "CHAOS",
-    wordCount: 84,
-    description: "Every friend group has these certified specimens.",
-    pairs: [
-      ["That One Friend", "Backup Friend"],
-      ["Late Guy", "No Show"],
-      ["Fake Rich", "Broke Flex"],
-      ["Simp", "Pick Me"],
-      ["Meme Dealer", "Reel Sender"],
-      ["Gossip King", "Drama Queen"],
-      ["Photographer", "Videographer"],
-      ["DJ", "Aux King"],
-      ["Third Wheeler", "Fifth Wheel"],
-      ["Sleepy Head", "Nap King"],
-    ],
+    id: "jobs",
+    name: "Jobs",
+    tag: "JOBS",
+    wordCount: 20,
+    description: "Doctors, pilots, chefs, and daily professions.",
+    words: [
+      "Doctor", "Engineer", "Teacher", "Police", "Lawyer",
+      "Pilot", "Chef", "Farmer", "Driver", "Singer",
+      "Actor", "Plumber", "Electrician", "Soldier", "Judge",
+      "Scientist", "Photographer", "Journalist", "Barber", "Mechanic"
+    ]
   },
+  {
+    id: "brands",
+    name: "Brands",
+    tag: "BRANDS",
+    wordCount: 20,
+    description: "Global fashion, fast food chains, and local operators.",
+    words: [
+      "Apple", "Samsung", "Nike", "Adidas", "Puma",
+      "Amazon", "Flipkart", "Zomato", "Swiggy", "Jio",
+      "Airtel", "Coca-Cola", "Pepsi", "McDonald's", "KFC",
+      "Domino's", "BMW", "Mercedes", "Toyota", "Tata"
+    ]
+  },
+  {
+    id: "daily-life",
+    name: "Daily Life",
+    tag: "DAILY",
+    wordCount: 20,
+    description: "Alarms, toothbrush scrubs, AC remotes, and door keys.",
+    words: [
+      "Alarm", "Wallet", "Money", "UPI", "ATM",
+      "Fan", "AC", "Mirror", "Toothbrush", "Soap",
+      "Shampoo", "Towel", "Bed", "Pillow", "Chair",
+      "Bottle", "Clock", "Door", "Window", "Key"
+    ]
+  }
 ];
 
-export const PACK_META: PackMeta[] = PACKS.map(({ pairs: _p, ...meta }) => meta);
+export const PACK_META: PackMeta[] = PACKS.map(({ words: _w, ...meta }) => meta);
 
 export function findPack(id: string): PackData | undefined {
   return PACKS.find((p) => p.id === id);

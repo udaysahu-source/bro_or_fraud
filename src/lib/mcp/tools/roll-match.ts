@@ -6,7 +6,7 @@ export default defineTool({
   name: "roll_match",
   title: "Roll a match",
   description:
-    "Roll a Bro or Fraud? round: returns a secret word for the bros and a similar fraud word for the impostor. Optionally pick a pack by id (use list_packs to see ids).",
+    "Roll a Bro or Fraud? round: returns a secret word for the bros and an unrelated/different fraud word from another pack for the impostor. Optionally pick a pack by id (use list_packs to see ids).",
   inputSchema: {
     packId: z
       .string()
@@ -22,7 +22,13 @@ export default defineTool({
         isError: true,
       };
     }
-    const [secret, fraud] = pack.pairs[Math.floor(Math.random() * pack.pairs.length)];
+    const secret = pack.words[Math.floor(Math.random() * pack.words.length)];
+    
+    // Choose fraud word from a completely different pack
+    const otherPacks = PACKS.filter((p) => p.id !== pack.id);
+    const otherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
+    const fraud = otherPack.words[Math.floor(Math.random() * otherPack.words.length)];
+
     const payload = { pack: pack.id, packName: pack.name, secret, fraud };
     return {
       content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
