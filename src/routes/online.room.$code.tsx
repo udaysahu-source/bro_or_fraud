@@ -105,7 +105,7 @@ export function OnlineRoom() {
   const [selectedSuspectId, setSelectedSuspectId] = useState<string | null>(null);
   const [submittedVote, setSubmittedVote] = useState(false);
 
-  const isHost = gameState.hostId === myPlayerId || gameState.hostId === "";
+  const isHost = typeof window !== "undefined" && localStorage.getItem("bof:hosting") === roomCode.toUpperCase();
 
   // 1. Save Profile
   const handleSaveProfile = () => {

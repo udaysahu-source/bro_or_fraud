@@ -48,7 +48,8 @@ export function OnlineLobby() {
     hapticReveal();
     
     // Simulate optimistic room creation, then navigate to room
-    const code = generateRoomCode();
+    const code = generateRoomCode().toUpperCase();
+    localStorage.setItem("bof:hosting", code); // Tag this client as the host for this code
     setTimeout(() => {
       hapticSuccess();
       navigate({
@@ -65,6 +66,7 @@ export function OnlineLobby() {
     buzz([20, 20]);
     setIsJoining(true);
 
+    localStorage.removeItem("bof:hosting"); // Ensure this client joins as a guest
     setTimeout(() => {
       hapticSuccess();
       navigate({
