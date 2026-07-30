@@ -244,6 +244,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
+        sessionStorage.setItem("bof:hosting", r.code.toUpperCase()); // Tag this client as the host for this code
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
@@ -266,6 +267,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
+        sessionStorage.removeItem("bof:hosting"); // Ensure this client joins as a guest
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
