@@ -99,6 +99,7 @@ export function OnlineRoom() {
 
   // Local game states
   const [cardFlipped, setCardFlipped] = useState(false);
+  const [hasRevealed, setHasRevealed] = useState(false);
   const [myClue, setMyClue] = useState("");
   const [submittedClue, setSubmittedClue] = useState(false);
   const [selectedSuspectId, setSelectedSuspectId] = useState<string | null>(null);
@@ -354,6 +355,7 @@ export function OnlineRoom() {
   useEffect(() => {
     if (gameState.phase === "ROLE_REVEAL") {
       setCardFlipped(false);
+      setHasRevealed(false);
       setMyClue("");
       setSubmittedClue(false);
       setSelectedSuspectId(null);
@@ -697,7 +699,14 @@ export function OnlineRoom() {
             <div
               className="relative mx-auto mt-6 w-72 h-[380px] cursor-pointer"
               style={{ perspective: 1000 }}
-              onClick={() => { buzz(20); setCardFlipped(!cardFlipped); }}
+            onClick={() => {
+              buzz(20);
+              const nextFlipped = !cardFlipped;
+              setCardFlipped(nextFlipped);
+              if (nextFlipped) {
+                setHasRevealed(true);
+              }
+            }}
             >
               <motion.div
                 className="w-full h-full relative preserve-3d"
@@ -800,7 +809,7 @@ export function OnlineRoom() {
             <div className="flex-1" />
 
             <button
-              disabled={!cardFlipped || myPlayer?.isReady}
+              disabled={!hasRevealed || myPlayer?.isReady}
               onClick={toggleReady}
               className="w-full rounded-xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-white tactile tactile-press disabled:opacity-50 disabled:pointer-events-none"
             >

@@ -101,6 +101,7 @@ export function PassPhoneGame() {
   
   // Card flip (Phase 2)
   const [cardFlipped, setCardFlipped] = useState(false);
+  const [hasRevealed, setHasRevealed] = useState(false);
   
   // Timer state (Phase 3)
   const [secondsLeft, setSecondsLeft] = useState(30);
@@ -249,7 +250,11 @@ export function PassPhoneGame() {
   // Trigger role reveal haptics
   const handleCardFlip = () => {
     buzz(20);
-    setCardFlipped(!cardFlipped);
+    const nextFlipped = !cardFlipped;
+    setCardFlipped(nextFlipped);
+    if (nextFlipped) {
+      setHasRevealed(true);
+    }
   };
 
   // Move from Card Reveal to next state
@@ -259,6 +264,7 @@ export function PassPhoneGame() {
       setCurrentPlayer(currentPlayer + 1);
       setPhase("pass");
       setCardFlipped(false);
+      setHasRevealed(false); // Reset reveal tracker for next player
     } else {
       // Last player seen card, select a random discussion starter
       const starterIdx = Math.floor(Math.random() * players.length);
@@ -273,12 +279,21 @@ export function PassPhoneGame() {
 
   // Submit Suspect Vote
   const handleConfirmVote = () => {
-    if (selectedSuspect === null) return;
+    // Determine which player has the highest votes from the physical tally
+    let maxVotes = -1;
+    let suspectedIdx = 0;
+    Object.entries(voteTallies).forEach(([idxStr, count]) => {
+      if (count > maxVotes) {
+        maxVotes = count;
+        suspectedIdx = Number(idxStr);
+      }
+    });
+
     buzz([40, 20, 60]);
-    setVotedPlayerIndex(selectedSuspect);
+    setVotedPlayerIndex(suspectedIdx);
 
     // Is the voted player a fraud?
-    const isVotedFraud = fraudsIndices.includes(selectedSuspect);
+    const isVotedFraud = fraudsIndices.includes(suspectedIdx);
     const win = isVotedFraud;
     setBroWon(win);
 
@@ -418,6 +433,7 @@ export function PassPhoneGame() {
     setPhase("pass");
     setCurrentPlayer(0);
     setCardFlipped(false);
+    setHasRevealed(false); // Reset reveal tracker
     setSelectedSuspect(null);
     setVotedPlayerIndex(null);
     setSecondsLeft(config.timerSeconds);
@@ -591,7 +607,7 @@ export function PassPhoneGame() {
             <div className="flex-1" />
 
             <button
-              disabled={!cardFlipped}
+              disabled={!hasRevealed}
               onClick={handleDoneReveal}
               className="w-full rounded-xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-white tactile tactile-press disabled:opacity-30 disabled:pointer-events-none"
             >
