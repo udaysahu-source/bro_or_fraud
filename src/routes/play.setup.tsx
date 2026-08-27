@@ -47,6 +47,7 @@ export function PlaySetup() {
   const [newPlayerName, setNewPlayerName] = useState("");
   const [impostorsCount, setImpostorsCount] = useState(1);
   const [selectedPacks, setSelectedPacks] = useState<string[]>(["hostel-life"]);
+  const [votingMode, setVotingMode] = useState<"pointing" | "secret">("pointing");
   const timerSeconds = 0; // No Limit
   const chaosMode = false;
   const [showHelp, setShowHelp] = useState(false);
@@ -146,17 +147,13 @@ export function PlaySetup() {
     }
   }, [players.length, maxImpostors]);
 
-  // Pack Selection (Allow up to 2 packs)
+  // Pack Selection (Allow multiple packs)
   const togglePack = (id: string) => {
     buzz(20);
     setSelectedPacks((prev) => {
       if (prev.includes(id)) {
         if (prev.length === 1) return prev; // Must have at least one pack selected
         return prev.filter((p) => p !== id);
-      }
-      if (prev.length >= 2) {
-        // Replace the second selected pack
-        return [prev[0], id];
       }
       return [...prev, id];
     });
@@ -336,23 +333,58 @@ export function PlaySetup() {
       const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
       bluffWord = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     } else if (packsToUse.length >= 2) {
-      categoryName = `${packsToUse[0].title} + ${packsToUse[1].title}`;
+      if (packsToUse.length === 2) {
+        categoryName = `${packsToUse[0].title} + ${packsToUse[1].title}`;
+      } else {
+        categoryName = `${packsToUse[0].title} + ${packsToUse.length - 1} Packs`;
+      }
       const chosenPack = packsToUse[Math.floor(Math.random() * packsToUse.length)];
       targetWord = chosenPack.words[Math.floor(Math.random() * chosenPack.words.length)] || "Chai";
       
       const selectedIds = packsToUse.map((p) => p.id);
       const otherPacks = PACKS.filter((p) => !selectedIds.includes(p.id));
-      const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
+      const randomOtherPack = otherPacks.length > 0 
+        ? (otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0])
+        : PACKS[0];
       bluffWord = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     }
 
-    // Shuffle roles (frauds indices) using Fisher-Yates
-    const indices = Array.from({ length: players.length }, (_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
+    // Assign frauds indices avoiding recent frauds (session-persistent history)
+    const recentFrauds: string[] = [];
+    try {
+      const saved = sessionStorage.getItem("bof_recent_frauds");
+      if (saved) recentFrauds.push(...JSON.parse(saved));
+    } catch (e) {
+      console.error(e);
     }
-    const fraudsIndices = indices.slice(0, impostorsCount);
+
+    const nonRecentIndices: number[] = [];
+    const recentIndices: number[] = [];
+    players.forEach((p, index) => {
+      if (recentFrauds.includes(p.name)) {
+        recentIndices.push(index);
+      } else {
+        nonRecentIndices.push(index);
+      }
+    });
+
+    const shuffleArray = (arr: number[]) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    };
+    shuffleArray(nonRecentIndices);
+    shuffleArray(recentIndices);
+
+    const combinedIndices = [...nonRecentIndices, ...recentIndices];
+    const fraudsIndices = combinedIndices.slice(0, impostorsCount);
+
+    // Keep track of recent frauds to prevent repetition
+    const newFraudNames = fraudsIndices.map(idx => players[idx].name);
+    const maxRecentWindow = Math.max(1, players.length - impostorsCount);
+    const updatedRecent = [...newFraudNames, ...recentFrauds.filter(name => !newFraudNames.includes(name))].slice(0, maxRecentWindow);
+    sessionStorage.setItem("bof_recent_frauds", JSON.stringify(updatedRecent));
 
     const matchConfig = {
       players,
@@ -367,6 +399,7 @@ export function PlaySetup() {
       currentRound: 1,
       scores: players.reduce((acc, p) => ({ ...acc, [p.name]: 0 }), {}),
       usedWords: [targetWord],
+      votingMode,
     };
 
     sessionStorage.setItem("bof_match_config", JSON.stringify(matchConfig));
@@ -515,12 +548,56 @@ export function PlaySetup() {
           </div>
         </section>
 
+        {/* Voting Mode Selector */}
+        <section className="mt-6 rounded-2xl border-2 border-white/10 bg-surface p-4">
+          <div className="flex flex-col gap-3">
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-wide">Voting Mechanism</h2>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+                Choose how players cast their votes
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/10 p-1 bg-void">
+              <button
+                type="button"
+                onClick={() => { buzz(15); setVotingMode("pointing"); }}
+                className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  votingMode === "pointing" 
+                    ? "bg-lime text-void font-bold" 
+                    : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                👉 Show of Hands
+              </button>
+              <button
+                type="button"
+                onClick={() => { buzz(15); setVotingMode("secret"); }}
+                className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                  votingMode === "secret" 
+                    ? "bg-lime text-void font-bold" 
+                    : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                🤫 Secret Ballot
+              </button>
+            </div>
+            
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider leading-relaxed">
+              {votingMode === "pointing" 
+                ? "Simultaneous pointing on zero. Fast and loud, ideal for large groups." 
+                : "Pass the phone secretly to cast individual votes. Maximum deception!"
+              }
+            </p>
+          </div>
+        </section>
+
         {/* 3. Topic & Pack Selector */}
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">// Select Packs</h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Select up to 2 packs to blend word pools</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Select 1 or more packs to blend word pools</p>
             </div>
             <button
               onClick={() => { buzz(15); setShowCreatePack(true); }}

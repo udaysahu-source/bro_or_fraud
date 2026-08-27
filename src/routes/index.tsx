@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
 import { createRoomOptimistic, joinRoomOptimistic, type Room } from "@/lib/room";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
+import { PACKS as BUILTIN_PACKS } from "@/lib/mcp/packs";
 
 
 
@@ -31,30 +32,33 @@ type Pack = {
   accent: string;
 };
 
-const PACKS: Pack[] = [
-  { id: "indian-internet", name: "Indian Internet", tag: "IN.NET", badge: "IN", words: 120, bg: "bg-lime", ink: "text-void", pattern: "grid", accent: "var(--color-magenta)" },
-  { id: "hostel-life", name: "Hostel Life", tag: "HOSTEL", badge: "HL", words: 96, bg: "bg-magenta", ink: "text-white", pattern: "stripes", accent: "var(--color-lime)" },
-  { id: "gen-z-slang", name: "Gen Z Slang", tag: "MEME", badge: "GZ", words: 110, bg: "bg-white", ink: "text-void", pattern: "dots", accent: "var(--color-magenta)" },
-  { id: "bollywood-tropes", name: "Bollywood Tropes", tag: "BOLLY", badge: "BW", words: 108, bg: "bg-magenta", ink: "text-white", pattern: "glitch", accent: "var(--color-lime)" },
-  { id: "cricket-bros", name: "Cricket Bros", tag: "CRICKET", badge: "CR", words: 88, bg: "bg-lime", ink: "text-void", pattern: "bars", accent: "var(--color-magenta)" },
-  { id: "insta-reels", name: "Insta Reels", tag: "REELS", badge: "IG", words: 105, bg: "bg-white", ink: "text-void", pattern: "stripes", accent: "var(--color-magenta)" },
-  { id: "indian-family", name: "Indian Family", tag: "DESI", badge: "FM", words: 90, bg: "bg-lime", ink: "text-void", pattern: "bars", accent: "var(--color-magenta)" },
-  { id: "indian-dad", name: "Indian Dad", tag: "DAD", badge: "DD", words: 80, bg: "bg-magenta", ink: "text-white", pattern: "bars", accent: "var(--color-lime)" },
-  { id: "food", name: "Food", tag: "FOOD", badge: "FD", words: 100, bg: "bg-lime", ink: "text-void", pattern: "dots", accent: "var(--color-magenta)" },
-  { id: "anime", name: "Anime", tag: "ANIME", badge: "AN", words: 95, bg: "bg-white", ink: "text-void", pattern: "glitch", accent: "var(--color-magenta)" },
-  { id: "bikes", name: "Bikes", tag: "BIKES", badge: "BK", words: 70, bg: "bg-magenta", ink: "text-white", pattern: "stripes", accent: "var(--color-lime)" },
-  { id: "engineering", name: "Engineering", tag: "ENGG", badge: "EN", words: 92, bg: "bg-lime", ink: "text-void", pattern: "grid", accent: "var(--color-magenta)" },
-  { id: "dating", name: "Dating", tag: "DATE", badge: "DT", words: 85, bg: "bg-white", ink: "text-void", pattern: "dots", accent: "var(--color-magenta)" },
-  { id: "gaming", name: "Gaming", tag: "GAME", badge: "GM", words: 90, bg: "bg-magenta", ink: "text-white", pattern: "glitch", accent: "var(--color-lime)" },
-  { id: "movies", name: "Movies", tag: "MOVIE", badge: "MV", words: 100, bg: "bg-lime", ink: "text-void", pattern: "stripes", accent: "var(--color-magenta)" },
-  { id: "festivals", name: "Festivals", tag: "FEST", badge: "FS", words: 88, bg: "bg-white", ink: "text-void", pattern: "bars", accent: "var(--color-magenta)" },
-  { id: "travel", name: "Travel", tag: "TRAVEL", badge: "TV", words: 82, bg: "bg-magenta", ink: "text-white", pattern: "dots", accent: "var(--color-lime)" },
-  { id: "brainrot", name: "Brainrot", tag: "ROT", badge: "BR", words: 96, bg: "bg-lime", ink: "text-void", pattern: "glitch", accent: "var(--color-magenta)" },
-  { id: "goat-debate", name: "GOAT Debate", tag: "GOAT", badge: "GT", words: 75, bg: "bg-white", ink: "text-void", pattern: "grid", accent: "var(--color-magenta)" },
-  { id: "dark-but-funny", name: "Dark but Funny", tag: "DARK", badge: "DK", words: 78, bg: "bg-magenta", ink: "text-white", pattern: "glitch", accent: "var(--color-lime)" },
-  { id: "indian-nostalgia", name: "Indian Nostalgia", tag: "NOST", badge: "NS", words: 98, bg: "bg-lime", ink: "text-void", pattern: "dots", accent: "var(--color-magenta)" },
-  { id: "chaotic-pack", name: "Chaotic Pack", tag: "CHAOS", badge: "CH", words: 84, bg: "bg-magenta", ink: "text-white", pattern: "bars", accent: "var(--color-lime)" },
+const PACK_STYLES = [
+  { bg: "bg-lime", ink: "text-void", pattern: "grid" as const, accent: "var(--color-magenta)" },
+  { bg: "bg-magenta", ink: "text-white", pattern: "stripes" as const, accent: "var(--color-lime)" },
+  { bg: "bg-white", ink: "text-void", pattern: "dots" as const, accent: "var(--color-magenta)" },
+  { bg: "bg-magenta", ink: "text-white", pattern: "glitch" as const, accent: "var(--color-lime)" },
+  { bg: "bg-lime", ink: "text-void", pattern: "bars" as const, accent: "var(--color-magenta)" },
+  { bg: "bg-white", ink: "text-void", pattern: "stripes" as const, accent: "var(--color-magenta)" },
 ];
+
+const PACKS: Pack[] = BUILTIN_PACKS.map((bp, i) => {
+  const style = PACK_STYLES[i % PACK_STYLES.length];
+  const initials = bp.name
+    .split(/[\s-]+/)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return {
+    id: bp.id,
+    name: bp.name,
+    tag: bp.tag,
+    badge: initials || bp.name.slice(0, 2).toUpperCase(),
+    words: bp.words.length,
+    ...style,
+  };
+});
+
 
 function PatternLayer({ pattern, accent }: { pattern: Pack["pattern"]; accent: string }) {
   switch (pattern) {
