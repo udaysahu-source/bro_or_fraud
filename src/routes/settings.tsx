@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { buzz } from "@/lib/haptics";
+import { playDiscussionStartSound } from "@/lib/audio";
 import {
   DEFAULT_SETTINGS,
   loadSettings,
@@ -135,6 +136,47 @@ function Settings() {
               );
             })}
           </div>
+        </Section>
+
+        {/* Sound Effects */}
+        <Section label="Sound Effects" hint="Audio cues & alerts">
+          <button
+            onClick={() => {
+              const nextVal = !s.soundEnabled;
+              update("soundEnabled", nextVal);
+              if (nextVal) {
+                playDiscussionStartSound();
+              }
+            }}
+            className={`flex w-full items-center gap-4 rounded-2xl border-2 p-4 text-left tactile tactile-press ${
+              s.soundEnabled !== false
+                ? "border-lime bg-lime/10"
+                : "border-white/10 bg-surface"
+            }`}
+          >
+            <div
+              className={`grid size-12 shrink-0 place-items-center rounded-xl text-2xl ${
+                s.soundEnabled !== false ? "bg-lime/20" : "bg-white/5"
+              }`}
+            >
+              {s.soundEnabled !== false ? "🔊" : "🔇"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-black uppercase tracking-wide">
+                {s.soundEnabled !== false ? "Sound FX Enabled" : "Sound Muted"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {s.soundEnabled !== false
+                  ? "Cues for secret reveals, player pass & discussion start"
+                  : "Silent gameplay without audio synthesizer"}
+              </div>
+            </div>
+            <div
+              className={`size-5 shrink-0 rounded-full border-2 ${
+                s.soundEnabled !== false ? "border-lime bg-lime" : "border-white/20"
+              }`}
+            />
+          </button>
         </Section>
 
         {/* Estimate */}

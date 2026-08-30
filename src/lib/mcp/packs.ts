@@ -1,4 +1,4 @@
-// Shared pack data used by MCP tools. Includes a small curated word
+// Shared pack data used by MCP tools. Includes a large curated word
 // set per pack for `roll_match` — the app's UI carries only pack metadata.
 
 export type PackMeta = {
@@ -16,7 +16,7 @@ export const PACKS: PackData[] = [
     id: "college-life",
     name: "College Life",
     tag: "COLLEGE",
-    wordCount: 40,
+    wordCount: 85,
     description: "Assignment, exams, canteen chill, and backlog anxiety.",
     words: [
       "Assignment", "Attendance", "Proxy", "Backbench", "Frontbench",
@@ -26,14 +26,23 @@ export const PACKS: PackData[] = [
       "Bunking", "Mass Bunk", "Deans List", "Syllabus", "Rusticate",
       "Scholarship", "Convocation", "Senior", "Junior", "Ragging",
       "Freshers", "Fest", "Symposium", "Workshop", "Club",
-      "Societies", "Hostel Warden", "Night Out", "Maggi Run", "Exam Fee"
+      "Societies", "Hostel Warden", "Night Out", "Maggi Run", "Exam Fee",
+      "Hall Ticket", "Sessional", "Cheat Sheet", "All-Nighter", "Group Study",
+      "Department", "Chai Tapri", "Photocopy", "Re-evaluation", "KT",
+      "Gate Pass", "Mess Food", "Mess Bill", "Curfew", "Induction",
+      "Tech Fest", "Cultural Night", "DJ Night", "Farewell", "Yearbook",
+      "CR", "Lab Manual", "Record Note", "Pen Drive", "Presentation",
+      "Seminar", "Internship Stipend", "Offer Letter", "Notice Board", "Water Cooler",
+      "Attendance Shortage", "Detention", "Roll Call", "Question Paper", "Answer Sheet",
+      "Formula Sheet", "Late Entry", "Common Room", "Gymkhana", "Alumni",
+      "Fest Committee", "Fresher Party", "Campus Gate", "Hostel Room", "Cooler"
     ]
   },
   {
     id: "relationships",
     name: "Relationships",
     tag: "RELATION",
-    wordCount: 40,
+    wordCount: 85,
     description: "Crushes, breakups, flirting, and red flags.",
     words: [
       "Crush", "Ex", "Proposal", "Date", "Ghosting",
@@ -43,14 +52,23 @@ export const PACKS: PackData[] = [
       "Green Flag", "Hard Launch", "Soft Launch", "Date Night", "Valentine",
       "Anniversary", "Long Distance", "Match", "Swipe Right", "Swipe Left",
       "Block", "Unfollow", "Seen Zone", "Typing...", "Spark",
-      "Commitment", "Heart Eyes", "Toxic", "Heartbreaker", "Puppy Love"
+      "Commitment", "Heart Eyes", "Toxic", "Heartbreaker", "Puppy Love",
+      "Honeymoon", "Love Letter", "Candlelight Dinner", "Blind Date", "Third Wheel",
+      "Rebound", "Mixed Signals", "Love Bombing", "Gaslighting", "Talking Stage",
+      "Secret Admirer", "Bae", "Boo", "Holding Hands", "Matching Outfits",
+      "Anniversary Gift", "Ring", "Engagement", "Stalking", "Instagram Story",
+      "Close Friends", "Late Night Call", "Forever", "Promise", "Forgiveness",
+      "Flirtatious Look", "Pick-Up Line", "Butterflies in Stomach", "Simping", "Soul Connection",
+      "Heart to Heart", "Breakup Playlist", "Mutual Friend", "Romantic Movie", "Serenade",
+      "Double Date", "Coffee Date", "Sunset Walk", "Rooftop Date", "Midnight Drive",
+      "Sweetheart", "Darling", "Cuddle", "Forehead Kiss", "Wedding Vows"
     ]
   },
   {
     id: "gen-z",
     name: "Gen Z",
     tag: "GENZ",
-    wordCount: 40,
+    wordCount: 85,
     description: "Rizz, aura, cooked, cap, and brainrot terms.",
     words: [
       "Rizz", "Sigma", "Aura", "Delulu", "NPC",
@@ -60,14 +78,23 @@ export const PACKS: PackData[] = [
       "Ate", "Left No Crumbs", "Slay", "Bet", "No Cap",
       "Bruh", "Salty", "Ghosted", "Main Character", "Tea",
       "Spill the Tea", "Bussin", "Sheesh", "Skibidi", "W",
-      "L", "Opp", "Periodt", "Understood the Assignment", "Finna"
+      "L", "Opp", "Periodt", "Understood the Assignment", "Finna",
+      "Mewing", "Looksmaxxing", "Fanum Tax", "Gyatt", "Gyatt Rizz",
+      "Rizzer", "Chad", "Gigachad", "Based", "Mid",
+      "Cap", "Lowkey", "Highkey", "Living Rent Free", "Valid",
+      "Drip", "Fit Check", "Clout", "Clout Chaser", "Unc",
+      "Sus", "Impostor", "Glazing", "Yapping", "Yapfest",
+      "Real", "Big W", "Huge L", "Certified", "Down Bad",
+      "Ick", "Core Memory", "Roman Empire", "Chronically Online", "Doomscrolling",
+      "Subtweet", "Stan", "Gatekeep", "Gaslight", "Girlboss",
+      "Sneaky Link", "Side Eye", "Bombastic Side Eye", "Brat", "Demure"
     ]
   },
   {
     id: "indian-parents",
     name: "Indian Parents",
     tag: "PARENTS",
-    wordCount: 40,
+    wordCount: 85,
     description: "Chappals, curfew lectures, and Sharma Ji ka beta comparison.",
     words: [
       "Chappal", "Belt", "Remote", "Electricity Bill", "Sharma Ji",
@@ -77,14 +104,23 @@ export const PACKS: PackData[] = [
       "WhatsApp University", "Good Morning Message", "Beta", "Gold Biscuit", "Sarkari Naukri",
       "Fixed Deposit", "Cousins", "Sanskari", "Blessings", "Almanac",
       "Yoga", "Vegetable Market", "Bargaining", "Tupperware", "Pickle",
-      "Karela", "Warm Water", "Amla Juice", "Chyawanprash", "Beti"
+      "Karela", "Warm Water", "Amla Juice", "Chyawanprash", "Beti",
+      "Astrologer", "Kundali", "Rishta", "Haldi Milk", "Almonds",
+      "Badam", "Tulsi", "Agarbatti", "Pooja Room", "Pressure Cooker",
+      "Steel Dabba", "Tata Sky", "Morning Walk", "Tea Strainer", "Belan",
+      "Chimta", "Tiffin Box", "Handkerchief", "Vicks Vaporub", "Zandu Balm",
+      "Mustard Oil", "Sweaters", "Thermals", "Shawl", "Gold Chain",
+      "Bank Passbook", "Ration Card", "Aadhaar Card", "Cousin Comparison", "Board Exam",
+      "Rank 1", "Pocket Money", "Saving Envelope", "Old Newspaper Stack", "Steel Glass",
+      "Brass Thali", "Godrej Almirah", "Bajaj Chetak", "Maruti 800", "Ceiling Fan Dusting",
+      "WhatsApp Status", "Family Group", "Samosa for Guests", "Cold Drink for Guests", "Remote Cover"
     ]
   },
   {
     id: "food",
     name: "Food",
     tag: "FOOD",
-    wordCount: 40,
+    wordCount: 85,
     description: "Midnight Maggi runs, pani puri, and biryani cravings.",
     words: [
       "Pizza", "Burger", "Biryani", "Momos", "Maggi",
@@ -94,14 +130,23 @@ export const PACKS: PackData[] = [
       "Shawarma", "Butter Chicken", "Waffles", "Pancakes", "Pav Bhaji",
       "Chole Bhature", "Lassi", "Cold Coffee", "Momo Chutney", "Sushi",
       "Tacos", "Ramen", "Garlic Bread", "French Fries", "Mocktail",
-      "Gulab Jamun", "Rasgulla", "Tandoori Chicken", "Kebab", "Nachos"
+      "Gulab Jamun", "Rasgulla", "Tandoori Chicken", "Kebab", "Nachos",
+      "Peda", "Kaju Katli", "Rasmalai", "Rabdi", "Falooda",
+      "Sev Puri", "Dahi Puri", "Bhel Puri", "Vada Pav", "Misal Pav",
+      "Medu Vada", "Uttapam", "Upma", "Poha", "Aloo Tikki",
+      "Rajma Chawal", "Dal Makhani", "Kadai Paneer", "Shahi Paneer", "Garlic Naan",
+      "Rumali Roti", "Frankie", "Kathi Roll", "Spring Roll", "Manchurian",
+      "Fried Rice", "Hakka Noodles", "Dim Sum", "Donut", "Brownie",
+      "Cupcake", "Cheesecake", "Churros", "Tiramisu", "Milkshake",
+      "Mango Shake", "Lemonade", "Nimbu Pani", "Jaljeera", "Sugarcane Juice",
+      "Sweet Corn", "Roasted Peanuts", "Choco Lava Cake", "Hot Chocolate", "Kulfi"
     ]
   },
   {
     id: "cricket",
     name: "Cricket",
     tag: "CRICKET",
-    wordCount: 40,
+    wordCount: 85,
     description: "Dhoni finishes, yorkers, and IPL group debates.",
     words: [
       "Kohli", "Dhoni", "Rohit", "Sachin", "Bat",
@@ -111,14 +156,23 @@ export const PACKS: PackData[] = [
       "Free Hit", "No Ball", "Wide", "Super Over", "Century",
       "Duck", "Clean Bowled", "LBW", "Run Out", "Stumped",
       "Powerplay", "Toss", "Pitch", "Pavilion", "Cheerleaders",
-      "Trophy", "All-rounder", "Hat-trick", "Appeal", "DRS"
+      "Trophy", "All-rounder", "Hat-trick", "Appeal", "DRS",
+      "Bouncer", "Googly", "Carrom Ball", "Knuckle Ball", "Doosra",
+      "Reverse Swing", "Inswinger", "Outswinger", "Cover Drive", "Pull Shot",
+      "Hook Shot", "Helicopter Shot", "Straight Drive", "Sweep Shot", "Reverse Sweep",
+      "Upper Cut", "Slog Sweep", "Maiden Over", "Dot Ball", "Third Umpire",
+      "Snickometer", "UltraEdge", "Hawk-Eye", "Duckworth-Lewis", "Semi Final",
+      "Final", "Orange Cap", "Purple Cap", "Dugout", "Boundary Rope",
+      "Sight Screen", "Leather Ball", "Tennis Ball", "Gully Cricket", "Box Cricket",
+      "Overthrow", "Bye", "Leg Bye", "Mankad", "Captain",
+      "Vice Captain", "Coach", "Drinks Break", "Stadium", "Bleachers"
     ]
   },
   {
     id: "gaming",
     name: "Gaming",
     tag: "GAME",
-    wordCount: 40,
+    wordCount: 85,
     description: "Valorant ranks, BGMI loot, and pro vs noob squabbles.",
     words: [
       "BGMI", "Free Fire", "Minecraft", "Valorant", "Roblox",
@@ -128,14 +182,23 @@ export const PACKS: PackData[] = [
       "Steam", "Discord", "Ping", "Lag", "Clutch",
       "Gamer Girl", "RGB Lights", "Graphics Card", "Headset", "Joystick",
       "Boss Fight", "Speedrun", "NPC", "Mod", "Easter Egg",
-      "Glitch", "Save Game", "Skins", "Console", "Level Up"
+      "Glitch", "Save Game", "Skins", "Console", "Level Up",
+      "Airdrop", "Flare Gun", "Revive", "Medkit", "Energy Drink",
+      "Frag Grenade", "Smoke Grenade", "Red Zone", "Blue Zone", "Safe Zone",
+      "Chicken Dinner", "Booyah", "Ace", "Radiant", "Immortal",
+      "Smurf", "Crouch Spam", "Jiggle Peek", "Quickscope", "Reload",
+      "Ammo", "Inventory", "Battle Pass", "V-Bucks", "Robux",
+      "Quest", "Side Quest", "Guild", "Clan", "Co-op",
+      "Multiplayer", "Singleplayer", "Hitbox", "FPS", "Frame Drop",
+      "High Ping", "AFK", "Rage Quit", "GG", "GGWP",
+      "Spawn", "Despawn", "Aim Bot", "Wall Hack", "Custom Room"
     ]
   },
   {
     id: "anime",
     name: "Anime",
     tag: "ANIME",
-    wordCount: 40,
+    wordCount: 85,
     description: "Ninja paths, devil fruits, shoujo and shonen tropes.",
     words: [
       "Naruto", "Luffy", "Zoro", "Gojo", "Sukuna",
@@ -145,14 +208,23 @@ export const PACKS: PackData[] = [
       "Otaku", "Manga", "Cosplay", "Waifu", "Husbando",
       "Subbed", "Dubbed", "Chibi", "Shonen", "Shojo",
       "Isekai", "Kawaii", "Kamehameha", "Death Note", "Super Saiyan",
-      "One Piece", "Attack on Titan", "Demon Slayer", "Jujutsu Kaisen", "My Hero Academia"
+      "One Piece", "Attack on Titan", "Demon Slayer", "Jujutsu Kaisen", "My Hero Academia",
+      "Goku", "Vegeta", "Tanjiro", "Nezuko", "Eren Yeager",
+      "Levi", "Mikasa", "Light Yagami", "L", "Saitama",
+      "Deku", "Bakugo", "Itachi", "Kakashi", "Sasuke",
+      "Madara", "All Might", "Senpai", "Kouhai", "Tsundere",
+      "Yandere", "Kuudere", "Shuriken", "Kunai", "Katana",
+      "Domain Expansion", "Hollow Purple", "Chidori", "Shadow Clone", "Gear 5",
+      "Spirit Bomb", "Dragon Ball", "Hunter x Hunter", "Bleach", "Tokyo Ghoul",
+      "Fullmetal Alchemist", "Chainsaw Man", "Solo Leveling", "Spy x Family", "Anya",
+      "Opening Theme", "Filler Episode", "Crunchyroll", "Studio Ghibli", "Totoro"
     ]
   },
   {
     id: "movies",
     name: "Movies",
     tag: "MOVIE",
-    wordCount: 40,
+    wordCount: 85,
     description: "Climax scenes, popcorn buckets, and K-Jo blockbusters.",
     words: [
       "Hero", "Villain", "Director", "Actor", "Cinema",
@@ -162,14 +234,23 @@ export const PACKS: PackData[] = [
       "Blockbuster", "Casting", "Box Office", "Screenplay", "Stunt",
       "Dialogue", "Autograph", "Celebrity", "Red Carpet", "Sci-Fi",
       "Documentary", "Indie Film", "Spoiler", "Plot Twist", "Dubbing",
-      "Soundtrack", "Cinephile", "Review", "Rating", "Fan Club"
+      "Soundtrack", "Cinephile", "Review", "Rating", "Fan Club",
+      "Superstar", "Heroine", "Cameo", "Prequel", "Trilogy",
+      "Cinematography", "Background Score", "Song", "Item Song", "Flashback",
+      "Premiere", "Film Festival", "Green Screen", "CGI", "VFX",
+      "Stunt Double", "Producer", "Editor", "Sound Effects", "Mic",
+      "Camera Lens", "Clapperboard", "Re-take", "Bloopers", "Post-Credits Scene",
+      "Intermission", "Ticket Counter", "IMAX", "3D Glasses", "Dolby Atmos",
+      "Houseful", "Screen 1", "Front Row", "Balcony", "Filmfare",
+      "National Award", "Cult Classic", "Binge Watch", "Teaser", "Poster",
+      "Villain Monologue", "Romantic Montage", "Car Chase", "Explosion Scene", "Slow Motion"
     ]
   },
   {
     id: "bikes",
     name: "Bikes",
     tag: "BIKES",
-    wordCount: 40,
+    wordCount: 85,
     description: "Royal Enfield classic thumps and KTM revs.",
     words: [
       "Royal Enfield", "KTM", "Yamaha", "Honda", "Helmet",
@@ -179,14 +260,23 @@ export const PACKS: PackData[] = [
       "Superbike", "Cruiser", "Dirt Bike", "Pillion", "Throttle",
       "Accelerator", "Kickstart", "Key", "Headlight", "Tail Light",
       "Indicator", "Shock Absorber", "Mudguard", "Chain Lube", "Jacket",
-      "Gloves", "Biker Gang", "Track Day", "Roadside Assistance", "Fuel Tank"
+      "Gloves", "Biker Gang", "Track Day", "Roadside Assistance", "Fuel Tank",
+      "Hayabusa", "Harley Davidson", "Duke 390", "Classic 350", "Hunter 350",
+      "Bullet", "Splendor", "Pulsar", "Apache", "R15",
+      "MT-15", "Ninja", "Ducati", "BMW Motorrad", "Triumph",
+      "Cafe Racer", "Scrambler", "Touring Bike", "Off-Road", "Burnout",
+      "Stoppie", "Cornering", "Lean Angle", "Knee Down", "Visor",
+      "Riding Boots", "Knee Guard", "Chest Protector", "Tank Bag", "Saddlebag",
+      "Exhaust Note", "Loud Silencer", "Fuel Injection", "Spark Plug", "Disc Brake",
+      "Brake Pad", "Alloy Wheels", "Tubeless Tyre", "Puncture Kit", "Air Pump",
+      "Bike Wash", "Side Stand", "Center Stand", "Speedometer", "RPM Meter"
     ]
   },
   {
     id: "travel",
     name: "Travel",
     tag: "TRAVEL",
-    wordCount: 40,
+    wordCount: 85,
     description: "Goa trips, Manali escapes, and backpack maps.",
     words: [
       "Goa", "Manali", "Kashmir", "Beach", "Mountain",
@@ -196,14 +286,23 @@ export const PACKS: PackData[] = [
       "Wanderlust", "Souvenir", "Luggage", "Boarding Pass", "Duty Free",
       "Hostel", "Airbnb", "Local Guide", "Itinerary", "Sightseeing",
       "Adventure", "Hiking", "Trekking", "Cruise", "Island",
-      "Waterfall", "Forest", "Desert", "Camera", "Postcard"
+      "Waterfall", "Forest", "Desert", "Camera", "Postcard",
+      "Ladakh", "Rishikesh", "Kerala", "Jaipur", "Udaipur",
+      "Paris", "London", "New York", "Tokyo", "Dubai",
+      "Bali", "Switzerland", "Bangkok", "Singapore", "Maldives",
+      "Tent", "Sleeping Bag", "Campfire", "Bonfire", "Compass",
+      "GPS", "Travel Vlog", "Travel Pillow", "Eye Mask", "Luggage Tag",
+      "Currency Exchange", "Forex Card", "Layover", "Connecting Flight", "Window Seat",
+      "Aisle Seat", "Overhead Bin", "Travel Adapter", "Sunscreen", "Sunglasses",
+      "Hiking Pole", "Camel Safari", "Scuba Diving", "Snorkeling", "Paragliding",
+      "Bungee Jumping", "River Rafting", "Zip Line", "Cable Car", "Sand Dunes"
     ]
   },
   {
     id: "body-parts",
     name: "Body Parts",
     tag: "BODY",
-    wordCount: 40,
+    wordCount: 85,
     description: "Instantly recognizable anatomy names.",
     words: [
       "Head", "Hair", "Forehead", "Eye", "Eyebrow",
@@ -213,14 +312,23 @@ export const PACKS: PackData[] = [
       "Brain", "Skull", "Lip", "Chin", "Cheek",
       "Eyelash", "Throat", "Elbow", "Wrist", "Palm",
       "Thumb", "Nail", "Waist", "Hip", "Leg",
-      "Ankle", "Heel", "Skin", "Blood", "Bone"
+      "Ankle", "Heel", "Skin", "Blood", "Bone",
+      "Rib", "Spine", "Lungs", "Liver", "Kidney",
+      "Intestine", "Muscle", "Nerve", "Vein", "Artery",
+      "Jaw", "Collarbone", "Shoulder Blade", "Bicep", "Tricep",
+      "Forearm", "Knuckle", "Fingernail", "Toenail", "Belly Button",
+      "Thigh", "Calf", "Shin", "Pelvis", "Nostril",
+      "Iris", "Pupil", "Earlobe", "Gums", "Tonsil",
+      "Vocal Cord", "Joint", "Cartilage", "Ligament", "Tendon",
+      "Fingerprint", "Eyelid", "Cheekbone", "Sideburns", "Moustache",
+      "Beard", "Dimple", "Freckles", "Mole", "Achilles Tendon"
     ]
   },
   {
     id: "animals",
     name: "Animals",
     tag: "ANIMAL",
-    wordCount: 40,
+    wordCount: 85,
     description: "Wild cats, domestic pets, and common farm creatures.",
     words: [
       "Lion", "Tiger", "Elephant", "Monkey", "Dog",
@@ -230,14 +338,23 @@ export const PACKS: PackData[] = [
       "Giraffe", "Zebra", "Kangaroo", "Panda", "Koala",
       "Deer", "Squirrel", "Leopard", "Cheetah", "Shark",
       "Dolphin", "Whale", "Octopus", "Owl", "Penguin",
-      "Duck", "Frog", "Crocodile", "Turtle", "Butterfly"
+      "Duck", "Frog", "Crocodile", "Turtle", "Butterfly",
+      "Gorilla", "Chimpanzee", "Hippopotamus", "Rhinoceros", "Hyena",
+      "Jaguar", "Panther", "Polar Bear", "Grizzly Bear", "Red Panda",
+      "Sloth", "Lemur", "Meerkat", "Hedgehog", "Porcupine",
+      "Beaver", "Otter", "Raccoon", "Llama", "Alpaca",
+      "Donkey", "Sheep", "Bull", "Rooster", "Peacock",
+      "Flamingo", "Swan", "Pelican", "Seagull", "Kingfisher",
+      "Woodpecker", "Vulture", "Falcon", "Hawk", "Crow",
+      "Pigeon", "Sparrow", "Bat", "Cobra", "Python",
+      "Chameleon", "Iguana", "Komodo Dragon", "Alligator", "Crab"
     ]
   },
   {
     id: "vehicles",
     name: "Vehicles",
     tag: "VEHICLES",
-    wordCount: 40,
+    wordCount: 85,
     description: "Trains, cycles, tractors, and emergency engines.",
     words: [
       "Car", "Bike", "Bus", "Truck", "Train",
@@ -247,14 +364,22 @@ export const PACKS: PackData[] = [
       "Sports Car", "Convertible", "Limousine", "SUV", "Van",
       "Minivan", "Cargo Ship", "Submarine", "Yacht", "Hot Air Balloon",
       "Glider", "Space Shuttle", "Rocket", "Skateboard", "Segway",
-      "Forklift", "Crane", "Cement Mixer", "Garbage Truck", "Golf Cart"
+      "Forklift", "Crane", "Cement Mixer", "Garbage Truck", "Golf Cart",
+      "Double Decker Bus", "School Bus", "Tour Bus", "Bullet Train", "Steam Engine",
+      "Monorail", "Tram", "Freight Train", "Cable Car", "Ferry",
+      "Speedboat", "Canoe", "Kayak", "Rowboat", "Sailboat",
+      "Jet Ski", "Hovercraft", "Aircraft Carrier", "Battleship", "Tank",
+      "Monster Truck", "Dump Truck", "Tow Truck", "Snowmobile", "Quad Bike",
+      "ATV", "Go-Kart", "Electric Scooter", "E-Bike", "Tandem Bike",
+      "Rickshaw Van", "Bullock Cart", "Horse Carriage", "Drone", "Parachute",
+      "Hang Glider", "Spacecraft", "Lunar Rover", "Hoverboard", "Excavator"
     ]
   },
   {
     id: "tech",
     name: "Tech",
     tag: "TECH",
-    wordCount: 40,
+    wordCount: 85,
     description: "Smartphones, chargers, wifi routers, and AI services.",
     words: [
       "Phone", "Laptop", "Computer", "Keyboard", "Mouse",
@@ -264,14 +389,23 @@ export const PACKS: PackData[] = [
       "AI", "Robot", "Virtual Reality", "Augmented Reality", "Server",
       "Database", "Cloud", "App", "Website", "Domain",
       "IP Address", "Router", "Modem", "Ethernet", "Sim Card",
-      "Microchip", "Processor", "RAM", "Hard Drive", "Software"
+      "Microchip", "Processor", "RAM", "Hard Drive", "Software",
+      "Tablet", "iPad", "Stylus", "Web Camera", "Microphone",
+      "Earbuds", "Airpods", "Smart TV", "Projector", "Soundbar",
+      "Smart Speaker", "Alexa", "Siri", "Smart Bulb", "Gaming PC",
+      "Motherboard", "GPU", "SSD", "Flash Drive", "SD Card",
+      "HDMI Cable", "Type-C", "Lightning Cable", "Power Strip", "Firewall",
+      "Cybersecurity", "Antivirus", "Hacker", "Python", "JavaScript",
+      "Algorithm", "Machine Learning", "Neural Network", "Quantum Computer", "Blockchain",
+      "Cryptocurrency", "NFT", "Metaverse", "5G", "Optical Fiber",
+      "Push Notification", "API", "Bug", "Cache", "Browser"
     ]
   },
   {
     id: "jobs",
     name: "Jobs",
     tag: "JOBS",
-    wordCount: 40,
+    wordCount: 85,
     description: "Doctors, pilots, chefs, and daily professions.",
     words: [
       "Doctor", "Engineer", "Teacher", "Police", "Lawyer",
@@ -281,14 +415,23 @@ export const PACKS: PackData[] = [
       "Nurse", "Dentist", "Pharmacist", "Vet", "Architect",
       "Designer", "Programmer", "Writer", "Artist", "Musician",
       "Dancer", "Model", "Athlete", "Coach", "Manager",
-      "Accountant", "Cashier", "Waiter", "Receptionist", "Security Guard"
+      "Accountant", "Cashier", "Waiter", "Receptionist", "Security Guard",
+      "Surgeon", "Paramedic", "Firefighter", "Detective", "Flight Attendant",
+      "Air Traffic Controller", "Captain", "Sailor", "Deep Sea Diver", "Astronaut",
+      "Astronomer", "Geologist", "Biologist", "Chemist", "Mathematician",
+      "Historian", "Archaeologist", "Librarian", "Curator", "Professor",
+      "Principal", "School Counselor", "Social Worker", "Politician", "Diplomat",
+      "Real Estate Agent", "Stock Broker", "Financial Advisor", "Auditor", "Banker",
+      "CEO", "Founder", "Entrepreneur", "Product Manager", "UX Designer",
+      "Graphic Designer", "Animator", "Video Editor", "Sound Engineer", "Voice Actor",
+      "Tour Guide", "Event Planner", "Florist", "Tailor", "Carpenter"
     ]
   },
   {
     id: "brands",
     name: "Brands",
     tag: "BRANDS",
-    wordCount: 40,
+    wordCount: 85,
     description: "Global fashion, fast food chains, and local operators.",
     words: [
       "Apple", "Samsung", "Nike", "Adidas", "Puma",
@@ -298,14 +441,23 @@ export const PACKS: PackData[] = [
       "Microsoft", "Google", "Sony", "Nintendo", "Intel",
       "Dell", "HP", "Lenovo", "Asus", "Netflix",
       "Spotify", "Uber", "Ola", "Starbucks", "Subway",
-      "Pizza Hut", "Honda", "Hyundai", "Audi", "Ferrari"
+      "Pizza Hut", "Honda", "Hyundai", "Audi", "Ferrari",
+      "Rolex", "Casio", "Titan", "Fastrack", "Gucci",
+      "Louis Vuitton", "Zara", "H&M", "Levi's", "Reebok",
+      "New Balance", "Under Armour", "Vans", "Converse", "Crocs",
+      "OnePlus", "Xiaomi", "Realme", "Oppo", "Vivo",
+      "LG", "Bose", "JBL", "Sennheiser", "Canon",
+      "Nikon", "GoPro", "Tesla", "Lamborghini", "Porsche",
+      "Mustang", "Rolls-Royce", "Bentley", "Jaguar", "Land Rover",
+      "Jeep", "Mahindra", "Maruti Suzuki", "Royal Enfield", "Red Bull",
+      "Monster Energy", "Sprite", "Lays", "Doritos", "Cadbury"
     ]
   },
   {
     id: "daily-life",
     name: "Daily Life",
     tag: "DAILY",
-    wordCount: 40,
+    wordCount: 85,
     description: "Alarms, toothbrush scrubs, AC remotes, and door keys.",
     words: [
       "Alarm", "Wallet", "Money", "UPI", "ATM",
@@ -315,7 +467,16 @@ export const PACKS: PackData[] = [
       "Calendar", "Notebook", "Pen", "Pencil", "Eraser",
       "Scissors", "Tape", "Umbrella", "Bag", "Shoes",
       "Socks", "Slippers", "Comb", "Perfume", "Deodorant",
-      "Glasses", "Watch", "Ring", "Keychain", "Charger Cable"
+      "Glasses", "Watch", "Ring", "Keychain", "Charger Cable",
+      "Blanket", "Bedsheet", "Mattress", "Wardrobe", "Hanger",
+      "Iron", "Ironing Board", "Washing Machine", "Detergent", "Bucket",
+      "Mug", "Geyser", "Shower", "Tap", "Sink",
+      "Dustbin", "Broom", "Mop", "Door Mat", "Curtain",
+      "Dining Table", "Plate", "Spoon", "Fork", "Knife",
+      "Bowl", "Frying Pan", "Tawa", "Cutting Board", "Refrigerator",
+      "Microwave", "Toaster", "Blender", "Kettle", "Water Filter",
+      "Hand Sanitizer", "Tissue Paper", "Handbag", "Coin", "Credit Card",
+      "Lock", "Padlock", "Flashlight", "Extension Cord", "Nail Cutter"
     ]
   }
 ];

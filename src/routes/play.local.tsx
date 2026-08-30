@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
+import {
+  playRoleRevealSound,
+  playPassTurnSound,
+  playDiscussionStartSound,
+  playTimerTickSound,
+  playTimerAlarmSound,
+  playVoteConfirmSound,
+  playVerdictSound,
+} from "@/lib/audio";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, User, ShieldAlert, Sparkles, Fingerprint } from "lucide-react";
 import { PACKS } from "@/lib/mcp/packs";
@@ -313,13 +322,18 @@ export function PassPhoneGame() {
     const interval = setInterval(() => {
       setSecondsLeft((prev) => {
         const next = prev - 1;
-        // Haptic feedback below 10s
-        if (next <= 10 && next >= 0) {
+        // Audio & Haptic feedback below 10s
+        if (next <= 5 && next > 0) {
           buzz(15);
+          playTimerTickSound(true);
+        } else if (next <= 10 && next > 5) {
+          buzz(15);
+          playTimerTickSound(false);
         }
         if (next === 0) {
           clearInterval(interval);
           setTimerActive(false);
+          playTimerAlarmSound();
           // Auto go to voting when time runs out
           setPhase("voting");
           setVotingCountdown(5);
@@ -337,6 +351,7 @@ export function PassPhoneGame() {
         const timer = setTimeout(() => {
           setVotingCountdown((c) => (c !== null ? c - 1 : null));
           buzz(15);
+          playTimerTickSound(true);
         }, 1000);
         return () => clearTimeout(timer);
       } else {
@@ -374,13 +389,14 @@ export function PassPhoneGame() {
   const scores = config.scores || {};
   const isFraud = Array.isArray(fraudsIndices) && fraudsIndices.includes(currentPlayer);
 
-  // Trigger role reveal haptics
+  // Trigger role reveal haptics & sound
   const handleCardFlip = () => {
     buzz(20);
     const nextFlipped = !cardFlipped;
     setCardFlipped(nextFlipped);
     if (nextFlipped) {
       setHasRevealed(true);
+      playRoleRevealSound();
     }
   };
 
@@ -388,6 +404,7 @@ export function PassPhoneGame() {
   const handleDoneReveal = () => {
     buzz(30);
     if (currentPlayer + 1 < players.length) {
+      playPassTurnSound();
       setCurrentPlayer(currentPlayer + 1);
       setPhase("pass");
       setCardFlipped(false);
@@ -397,6 +414,7 @@ export function PassPhoneGame() {
       const starterIdx = Math.floor(Math.random() * players.length);
       setDiscussionStarter(starterIdx);
       setPhase("discussion");
+      playDiscussionStartSound();
       if (config.timerSeconds > 0) {
         setSecondsLeft(config.timerSeconds);
         setTimerActive(true);
@@ -418,12 +436,14 @@ export function PassPhoneGame() {
     });
 
     buzz([40, 20, 60]);
+    playVoteConfirmSound();
     setVotedPlayerIndex(suspectedIdx);
 
     // Is the voted player a fraud?
     const isVotedFraud = fraudsIndices.includes(suspectedIdx);
     const win = isVotedFraud;
     setBroWon(win);
+    playVerdictSound(win);
 
     // Pick a funny roast
     const roasts = win ? ROASTS_WIN : ROASTS_LOSE;
@@ -478,6 +498,7 @@ export function PassPhoneGame() {
     setSecretVotes(updatedVotes);
 
     if (secretVoteCurrentPlayer + 1 < players.length) {
+      playPassTurnSound();
       setSecretVoteCurrentPlayer(secretVoteCurrentPlayer + 1);
       setSecretVotePhase("pass");
     } else {

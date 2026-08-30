@@ -1,6 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
+import {
+  playRoleRevealSound,
+  playDiscussionStartSound,
+  playTimerTickSound,
+  playTimerAlarmSound,
+  playVoteConfirmSound,
+  playVerdictSound,
+} from "@/lib/audio";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   User, Crown, Zap, Flame, Ghost, Skull, Gamepad2, Heart, Star, Trophy, Target, Shield, Eye, Bot, Sun, Smile,
@@ -443,8 +451,21 @@ export function OnlineRoom() {
     return () => clearInterval(interval);
   }, [isHost, gameState.timerActive, gameState.secondsLeft]);
 
-  // 5. Reset local UI states on phase changes
+  // 5. Sound trigger for phase transitions and reset local UI states
+  const prevPhaseRef = useRef(gameState.phase);
   useEffect(() => {
+    if (gameState.phase !== prevPhaseRef.current) {
+      if (gameState.phase === "DISCUSSION" || gameState.phase === "STAGE_ACTION") {
+        playDiscussionStartSound();
+      } else if (gameState.phase === "RESULTS") {
+        const myPlayer = gameState.players.find((p) => p.id === myPlayerId);
+        const myIsFraud = myPlayer?.role === "FRAUD";
+        const isWin = myIsFraud ? !gameState.broWon : gameState.broWon;
+        playVerdictSound(isWin ?? true);
+      }
+      prevPhaseRef.current = gameState.phase;
+    }
+
     if (gameState.phase === "ROLE_REVEAL" || gameState.phase === "PREPARATION") {
       setCardFlipped(false);
       setHasRevealed(false);
@@ -455,7 +476,18 @@ export function OnlineRoom() {
       setMyPanelClaim("");
       setSubmittedPanelClaim(false);
     }
-  }, [gameState.phase]);
+  }, [gameState.phase, gameState.broWon, gameState.players, myPlayerId]);
+
+  // Audio countdown ticks on synchronized timer
+  useEffect(() => {
+    if (!gameState.timerActive) return;
+    if (gameState.secondsLeft <= 5 && gameState.secondsLeft > 0) {
+      buzz(15);
+      playTimerTickSound(true);
+    } else if (gameState.secondsLeft === 0) {
+      playTimerAlarmSound();
+    }
+  }, [gameState.secondsLeft, gameState.timerActive]);
 
   // 6. Automatically transition host from ROLE_REVEAL to DISCUSSION once all players are ready (Word Deduction)
   useEffect(() => {
@@ -590,6 +622,7 @@ export function OnlineRoom() {
   const submitVote = () => {
     if (!selectedSuspectId) return;
     buzz([40, 20, 60]);
+    playVoteConfirmSound();
     setSubmittedVote(true);
 
     if (isHost) {
@@ -798,6 +831,7 @@ export function OnlineRoom() {
               setCardFlipped(nextFlipped);
               if (nextFlipped) {
                 setHasRevealed(true);
+                playRoleRevealSound();
               }
             }}
           >
@@ -1806,6 +1840,7 @@ export function OnlineRoom() {
               setCardFlipped(nextFlipped);
               if (nextFlipped) {
                 setHasRevealed(true);
+                playRoleRevealSound();
               }
             }}
             >

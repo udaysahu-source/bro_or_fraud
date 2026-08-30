@@ -4,12 +4,14 @@ export interface MatchSettings {
   rounds: number;
   timerSeconds: number;
   revealStyle: RevealStyle;
+  soundEnabled: boolean;
 }
 
 export const DEFAULT_SETTINGS: MatchSettings = {
   rounds: 5,
   timerSeconds: 30,
   revealStyle: "hold",
+  soundEnabled: true,
 };
 
 const KEY = "bof.settings.v1";
