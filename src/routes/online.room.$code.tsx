@@ -458,10 +458,22 @@ export function OnlineRoom() {
       if (gameState.phase === "DISCUSSION" || gameState.phase === "STAGE_ACTION") {
         playDiscussionStartSound();
       } else if (gameState.phase === "RESULTS") {
-        const myPlayer = gameState.players.find((p) => p.id === myPlayerId);
-        const myIsFraud = myPlayer?.role === "FRAUD";
-        const isWin = myIsFraud ? !gameState.broWon : gameState.broWon;
-        playVerdictSound(isWin ?? true);
+        const voteCounts: Record<string, number> = {};
+        Object.values(gameState.votes || {}).forEach((targetId) => {
+          voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
+        });
+        let highestVotedId = "";
+        let highestCount = -1;
+        Object.entries(voteCounts).forEach(([id, count]) => {
+          if (count > highestCount) {
+            highestCount = count;
+            highestVotedId = id;
+          }
+        });
+        const broWon = highestVotedId === gameState.fraudPlayerId;
+        const myIsFraud = myPlayerId === gameState.fraudPlayerId;
+        const isWin = myIsFraud ? !broWon : broWon;
+        playVerdictSound(isWin);
       }
       prevPhaseRef.current = gameState.phase;
     }
@@ -476,7 +488,7 @@ export function OnlineRoom() {
       setMyPanelClaim("");
       setSubmittedPanelClaim(false);
     }
-  }, [gameState.phase, gameState.broWon, gameState.players, myPlayerId]);
+  }, [gameState.phase, gameState.votes, gameState.fraudPlayerId, myPlayerId]);
 
   // Audio countdown ticks on synchronized timer
   useEffect(() => {
