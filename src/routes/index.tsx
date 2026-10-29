@@ -1,24 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { HelpCircle, Settings as SettingsIcon, Users, Flame, Sparkles, ChevronRight, X, Play } from "lucide-react";
 import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
 import { createRoomOptimistic, joinRoomOptimistic, type Room } from "@/lib/room";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
 import { PACKS as BUILTIN_PACKS } from "@/lib/mcp/packs";
-
-
 
 export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
       { title: "Bro or Fraud? — Catch the fraud before they catch you" },
-      { name: "description", content: "A chaotic party game for hostel groups. Create a room, pass the phone, and roast your friends." },
+      { name: "description", content: "A chaotic mobile-first party game for hostel groups. Pass the phone, bluff your way out, and roast your friends." },
       { property: "og:title", content: "Bro or Fraud?" },
       { property: "og:description", content: "Catch the fraud. Or be the fraud. Play with your bros right now." },
     ],
   }),
 });
+
+type SpiceLevel = "mild" | "spicy" | "chaos";
 
 type Pack = {
   id: string;
@@ -30,6 +31,29 @@ type Pack = {
   ink: string;
   pattern: "grid" | "stripes" | "dots" | "bars" | "glitch";
   accent: string;
+  emoji: string;
+  spice: SpiceLevel;
+};
+
+const PACK_METAS: Record<string, { emoji: string; spice: SpiceLevel }> = {
+  "college-life": { emoji: "🎓", spice: "spicy" },
+  relationships: { emoji: "💔", spice: "spicy" },
+  "gen-z": { emoji: "🧢", spice: "chaos" },
+  "indian-parents": { emoji: "🩴", spice: "spicy" },
+  food: { emoji: "🍕", spice: "mild" },
+  cricket: { emoji: "🏏", spice: "mild" },
+  gaming: { emoji: "🎮", spice: "mild" },
+  anime: { emoji: "⚔️", spice: "mild" },
+  movies: { emoji: "🍿", spice: "mild" },
+  bikes: { emoji: "🏍️", spice: "mild" },
+  travel: { emoji: "✈️", spice: "mild" },
+  "body-parts": { emoji: "👀", spice: "mild" },
+  animals: { emoji: "🦁", spice: "mild" },
+  vehicles: { emoji: "🚗", spice: "mild" },
+  tech: { emoji: "💻", spice: "mild" },
+  jobs: { emoji: "💼", spice: "mild" },
+  brands: { emoji: "🏷️", spice: "mild" },
+  "daily-life": { emoji: "☕", spice: "mild" },
 };
 
 const PACK_STYLES = [
@@ -43,6 +67,7 @@ const PACK_STYLES = [
 
 const PACKS: Pack[] = BUILTIN_PACKS.map((bp, i) => {
   const style = PACK_STYLES[i % PACK_STYLES.length];
+  const meta = PACK_METAS[bp.id] || { emoji: "🔥", spice: "mild" };
   const initials = bp.name
     .split(/[\s-]+/)
     .map((word) => word[0])
@@ -55,10 +80,11 @@ const PACKS: Pack[] = BUILTIN_PACKS.map((bp, i) => {
     tag: bp.tag,
     badge: initials || bp.name.slice(0, 2).toUpperCase(),
     words: bp.words.length,
+    emoji: meta.emoji,
+    spice: meta.spice,
     ...style,
   };
 });
-
 
 function PatternLayer({ pattern, accent }: { pattern: Pack["pattern"]; accent: string }) {
   switch (pattern) {
@@ -113,14 +139,15 @@ function PatternLayer({ pattern, accent }: { pattern: Pack["pattern"]; accent: s
 function PackSkeleton({ delay = 0 }: { delay?: number }) {
   return (
     <div
-      className="shrink-0 w-40 rounded-xl border-2 border-border bg-surface overflow-hidden"
+      className="shrink-0 w-44 rounded-2xl border-2 border-border bg-surface overflow-hidden min-h-[175px]"
       style={{ animationDelay: `${delay}ms` }}
       aria-hidden="true"
     >
-      <div className="skeleton-shimmer h-24 border-b-2 border-void" style={{ animationDelay: `${delay}ms` }} />
-      <div className="p-3 space-y-2">
-        <div className="skeleton-shimmer h-3 w-3/4 rounded" style={{ animationDelay: `${delay}ms` }} />
-        <div className="skeleton-shimmer h-2 w-1/2 rounded" style={{ animationDelay: `${delay + 120}ms` }} />
+      <div className="skeleton-shimmer h-20 border-b-2 border-border" style={{ animationDelay: `${delay}ms` }} />
+      <div className="p-3.5 space-y-2.5">
+        <div className="skeleton-shimmer h-3.5 w-3/4 rounded" style={{ animationDelay: `${delay}ms` }} />
+        <div className="skeleton-shimmer h-2.5 w-1/2 rounded" style={{ animationDelay: `${delay + 120}ms` }} />
+        <div className="skeleton-shimmer h-4 w-1/3 rounded-full mt-2" style={{ animationDelay: `${delay + 200}ms` }} />
       </div>
     </div>
   );
@@ -137,15 +164,23 @@ function PackCard({
   compact?: boolean;
   onSelect?: (p: Pack) => void;
 }) {
+  const spiceBadge =
+    p.spice === "chaos"
+      ? { label: "Chaos 🌶️", bg: "bg-magenta/20 border-magenta/40 text-magenta" }
+      : p.spice === "spicy"
+        ? { label: "Spicy 🔥", bg: "bg-orange-500/20 border-orange-500/40 text-orange-400" }
+        : { label: "Mild 🟢", bg: "bg-lime/20 border-lime/40 text-lime" };
+
   return (
     <button
+      type="button"
       onClick={() => {
         buzz(20);
         if (onSelect) onSelect(p);
       }}
       className={`pack-card ${
-        compact ? "w-full min-h-[120px]" : "shrink-0 w-40 snap-start h-auto"
-      } rounded-xl border-2 border-border bg-surface text-left overflow-hidden brutal-shadow-pink animate-[fade-in_0.35s_ease-out_both] flex flex-col justify-between`}
+        compact ? "w-full min-h-[135px]" : "shrink-0 w-44 snap-start h-auto"
+      } rounded-2xl border-2 border-border bg-surface text-left overflow-hidden brutal-shadow-pink animate-[fade-in_0.35s_ease-out_both] flex flex-col justify-between transition-transform active:scale-[0.98]`}
       style={{ animationDelay: `${i * 30}ms` }}
     >
       <div
@@ -155,27 +190,37 @@ function PackCard({
       >
         <PatternLayer pattern={p.pattern} accent={p.accent} />
         <div className="badge-shine absolute inset-0" />
-        <div className="relative flex h-full items-end justify-between px-3 pb-2 pt-2">
-          <span
-            className={`${
-              compact ? "text-2xl" : "text-3xl"
-            } font-black leading-none tracking-tighter`}
-            style={{ textShadow: `2px 2px 0 ${p.accent}` }}
-          >
-            {p.badge}
-          </span>
-          <span className="mb-1 rounded-sm border-2 border-current px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest">
+        <div className="relative flex h-full items-end justify-between px-3.5 pb-2 pt-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-2xl leading-none">{p.emoji}</span>
+            <span
+              className={`${
+                compact ? "text-xl" : "text-2xl"
+              } font-black leading-none tracking-tighter`}
+              style={{ textShadow: `2px 2px 0 ${p.accent}` }}
+            >
+              {p.badge}
+            </span>
+          </div>
+          <span className="mb-0.5 rounded border border-current px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest">
             {p.tag}
           </span>
         </div>
       </div>
-      <div className="p-3 flex-1 flex flex-col justify-between bg-surface">
-        <div className="text-xs font-black uppercase leading-tight text-foreground line-clamp-2">
-          {p.name}
+      <div className="p-3.5 flex-1 flex flex-col justify-between bg-surface">
+        <div>
+          <div className="text-xs font-black uppercase leading-tight text-foreground line-clamp-2">
+            {p.name}
+          </div>
+          <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+            {p.words} words · 3–20 players
+          </div>
         </div>
-        <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-          <span className="inline-block size-1.5 rounded-full bg-lime" />
-          {p.words} words
+        <div className="mt-2.5 flex items-center justify-between">
+          <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${spiceBadge.bg}`}>
+            {spiceBadge.label}
+          </span>
+          <span className="text-[10px] text-lime font-black">Play →</span>
         </div>
       </div>
     </button>
@@ -187,6 +232,10 @@ function Home() {
   const [mode, setMode] = useState<"online" | "local">("local");
   const [packsReady, setPacksReady] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [howToPlayStep, setHowToPlayStep] = useState(0);
+  const [savedRosterCount, setSavedRosterCount] = useState<number | null>(null);
+
   const [pending, setPending] = useState<
     | null
     | {
@@ -201,8 +250,27 @@ function Home() {
   const joinRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
-    const t = setTimeout(() => setPacksReady(true), 650);
+    const t = setTimeout(() => setPacksReady(true), 400);
     return () => clearTimeout(t);
+  }, []);
+
+  // Check saved roster and onboarding state from localStorage
+  useEffect(() => {
+    try {
+      const rosterRaw = localStorage.getItem("bof:roster");
+      if (rosterRaw) {
+        const parsed = JSON.parse(rosterRaw);
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          setSavedRosterCount(parsed.length);
+        }
+      }
+      const onboarded = localStorage.getItem("bof_onboarded_v1");
+      if (!onboarded) {
+        setShowHowToPlay(true);
+      }
+    } catch {
+      /* noop */
+    }
   }, []);
 
   // Custom Packs local state
@@ -224,16 +292,30 @@ function Home() {
       ink: "text-white",
       pattern: "glitch" as const,
       accent: "var(--color-lime)",
+      emoji: "⚡",
+      spice: "spicy" as SpiceLevel,
     })),
     ...PACKS,
   ];
 
   useEffect(() => {
-    if (!showAll) return;
+    if (!showAll && !showHowToPlay) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [showAll]);
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [showAll, showHowToPlay]);
+
+  function handleCloseHowToPlay() {
+    buzz(15);
+    setShowHowToPlay(false);
+    try {
+      localStorage.setItem("bof_onboarded_v1", "true");
+    } catch {
+      /* noop */
+    }
+  }
 
   function handlePrimary() {
     buzz([30, 20, 30]);
@@ -248,7 +330,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
-        sessionStorage.setItem("bof:hosting", r.code.toUpperCase()); // Tag this client as the host for this code
+        sessionStorage.setItem("bof:hosting", r.code.toUpperCase());
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
@@ -262,7 +344,7 @@ function Home() {
   }
 
   function handleJoinSubmit() {
-    const code = joinDigits.join("").toUpperCase(); // Convert code to uppercase for consistency
+    const code = joinDigits.join("").toUpperCase();
     if (code.length !== 4) return;
     buzz([20, 20]);
     const { room, confirmed } = joinRoomOptimistic(code);
@@ -271,7 +353,7 @@ function Home() {
       .then((r) => {
         setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
         hapticSuccess();
-        sessionStorage.removeItem("bof:hosting"); // Ensure this client joins as a guest
+        sessionStorage.removeItem("bof:hosting");
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
       })
       .catch((e: Error & { room?: Room }) => {
@@ -317,10 +399,26 @@ function Home() {
     navigate({ to: "/play/setup" });
   };
 
-  const cta = mode === "online"
-    ? { label: "Create Room", helper: "Play on separate devices via a 4-digit room code." }
-    : { label: "Start Pass-the-Phone", helper: "Pass one phone around the table. No signup, no wifi drama." };
-
+  const ONBOARDING_STEPS = [
+    {
+      title: "1. Secret Word Handoff",
+      emoji: "🤫",
+      description: "Pass one phone around the table. All Bros get the exact same secret word. One of you is the FRAUD who gets a fake decoy word (or nothing at all)!",
+      tip: "Keep a poker face — don't let anyone see your screen.",
+    },
+    {
+      title: "2. Blend In & Interrogate",
+      emoji: "🗣️",
+      description: "Take turns giving 1-word or short subtle clues about your secret word. Too obvious? The Fraud figures it out. Too vague? Your Bros vote YOU out!",
+      tip: "Watch who hesitates or gives suspiciously generic answers.",
+    },
+    {
+      title: "3. Vote & Roast",
+      emoji: "🗳️",
+      description: "Countdown 3-2-1 and point at who is bluffing. Catch the fraud to score points. If the fraud tricks you and escapes, they win the round and roast you!",
+      tip: "The roast is mandatory. Headphones off, volume up.",
+    },
+  ];
 
   return (
     <div className="min-h-dvh bg-void text-foreground">
@@ -331,22 +429,41 @@ function Home() {
             <img
               src="/app-logo.png"
               alt="Bro or Fraud Logo"
-              className="size-8.5 rounded-lg border-2 border-border object-cover shrink-0 shadow-sm"
+              className="size-9 rounded-xl border-2 border-border object-cover shrink-0 shadow-md"
             />
-            <span className="px-2 py-0.5 text-[8px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20">
-              v1 · chaos edition
-            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-wider text-foreground leading-none">
+                Bro or Fraud?
+              </span>
+              <span className="mt-0.5 px-1.5 py-0.2 text-[8px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20 inline-block w-fit">
+                v1 · hostel edition
+              </span>
+            </div>
           </div>
-          <Link
-            to="/settings"
-            onClick={() => buzz(20)}
-            className="rounded-md border-2 border-border bg-surface px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-foreground tactile tactile-press"
-          >
-            ⚙ Settings
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                buzz(20);
+                setShowHowToPlay(true);
+              }}
+              aria-label="How to play"
+              className="grid size-10 place-items-center rounded-xl border-2 border-border bg-surface text-foreground tactile tactile-press hover:border-white/20 transition-colors"
+            >
+              <HelpCircle className="size-5 text-lime" />
+            </button>
+            <Link
+              to="/settings"
+              onClick={() => buzz(20)}
+              aria-label="Match Settings"
+              className="grid size-10 place-items-center rounded-xl border-2 border-border bg-surface text-foreground tactile tactile-press hover:border-white/20 transition-colors"
+            >
+              <SettingsIcon className="size-5 text-foreground" />
+            </Link>
+          </div>
         </header>
 
-        {/* Logo / Hero — clamp-scaled */}
+        {/* Hero Section */}
         <section className="mt-[clamp(0.75rem,3vw,1.5rem)]">
           <h1 className="text-hero font-black uppercase">
             <span className="inline-block" style={{ textShadow: "4px 4px 0 var(--color-magenta)" }}>
@@ -360,173 +477,338 @@ function Home() {
               Fraud?
             </span>
           </h1>
-          <p className="text-tagline mt-[clamp(0.5rem,2vw,0.875rem)] font-semibold text-muted-foreground max-w-[22ch]">
+          <p className="text-tagline mt-[clamp(0.5rem,2vw,0.875rem)] font-semibold text-muted-foreground max-w-[24ch]">
             One of you is lying. The rest get to roast them.
           </p>
         </section>
 
-        {/* Segmented switch — capsule */}
+        {/* Segmented Mode Selector with clear active state */}
         <div
-          className="relative mt-5 grid grid-cols-2 rounded-full border-2 border-border p-1"
-          style={{ backgroundColor: "var(--color-track)" }}
+          className="relative mt-5 grid grid-cols-2 rounded-2xl border-2 border-border p-1 bg-track"
+          role="radiogroup"
+          aria-label="Game Mode"
         >
           <div
-            className={`pointer-events-none absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-lime transition-transform duration-200 ${
-              mode === "online" ? "translate-x-1" : "translate-x-[calc(100%+4px)]"
+            className={`pointer-events-none absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-lime transition-transform duration-200 ${
+              mode === "local" ? "translate-x-1" : "translate-x-[calc(100%+4px)]"
             }`}
           />
-          {(["online", "local"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => { setMode(m); buzz(15); }}
-              className={`relative z-10 py-2.5 text-xs font-black uppercase tracking-widest transition-colors ${
-                mode === m ? "text-void" : "text-muted-foreground"
-              }`}
-            >
-              {m === "online" ? "Online" : "Pass Phone"}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setMode("local");
+              buzz(15);
+            }}
+            className={`relative z-10 py-2.5 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[44px] ${
+              mode === "local" ? "text-void" : "text-muted-foreground"
+            }`}
+          >
+            <span>📱 Pass Phone</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode("online");
+              buzz(15);
+            }}
+            className={`relative z-10 py-2.5 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[44px] ${
+              mode === "online" ? "text-void" : "text-muted-foreground"
+            }`}
+          >
+            <span>🌐 Online</span>
+            <span className={`text-[8px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
+              mode === "online" ? "bg-void/20 text-void" : "bg-magenta/20 text-magenta border border-magenta/40"
+            }`}>
+              Beta
+            </span>
+          </button>
         </div>
+
+        {/* Mode helper text */}
         <p className="mt-2 text-center text-[11px] font-semibold text-muted-foreground">
-          {cta.helper}
+          {mode === "local"
+            ? "Pass one phone around the table. No signup, no wifi drama."
+            : "Experimental peer-to-peer online mode for separate devices."}
         </p>
 
-        {/* Primary CTA — above the fold */}
+        {/* Primary CTA Area */}
         <section className="mt-4 space-y-3">
-          <button
-            onClick={handlePrimary}
-            disabled={!!pending}
-            className="block w-full rounded-xl bg-lime px-6 py-5 text-center text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press disabled:opacity-90"
-          >
-            {pending?.kind === "create" ? "Spinning up room…" : `${cta.label} →`}
-          </button>
-          {mode === "online" ? (
-            <div className="rounded-xl border-2 border-border bg-surface px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                  Join with code
-                </span>
-                {joinOpen && (
+          {mode === "local" ? (
+            <>
+              <button
+                type="button"
+                onClick={handlePrimary}
+                className="block w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press active:scale-[0.98] transition-transform min-h-[58px]"
+              >
+                Start Pass-the-Phone →
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  buzz(25);
+                  navigate({ to: "/play/setup" });
+                }}
+                className="flex items-center justify-between w-full rounded-2xl border-2 border-border bg-surface px-5 py-3.5 text-xs font-black uppercase tracking-widest text-foreground tactile tactile-press hover:border-white/20 transition-all min-h-[50px]"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="size-4 text-lime" />
+                  <span>
+                    {savedRosterCount ? `Roster (${savedRosterCount} Players)` : "Add Players & Setup"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <span>Custom Packs & Frauds</span>
+                  <ChevronRight className="size-3.5" />
+                </div>
+              </button>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handlePrimary}
+                disabled={!!pending}
+                className="block w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press disabled:opacity-90 min-h-[54px]"
+              >
+                {pending?.kind === "create" ? "Spinning up room…" : "Create Room →"}
+              </button>
+              <div className="rounded-2xl border-2 border-border bg-surface px-4 py-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                    Join with 4-Digit Code
+                  </span>
+                  {joinOpen && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJoinOpen(false);
+                        setJoinDigits(["", "", "", ""]);
+                      }}
+                      className="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="mt-2.5 flex justify-center gap-2">
+                  {[0, 1, 2, 3].map((i) => (
+                    <input
+                      key={i}
+                      ref={(el) => {
+                        joinRefs.current[i] = el;
+                      }}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      value={joinDigits[i]}
+                      onFocus={() => {
+                        if (!joinOpen) setJoinOpen(true);
+                      }}
+                      onChange={(e) => setDigit(i, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace" && !joinDigits[i] && i > 0) {
+                          joinRefs.current[i - 1]?.focus();
+                        }
+                      }}
+                      aria-label={`Digit ${i + 1}`}
+                      className="grid size-11 place-items-center rounded-xl border-2 border-border bg-void text-center text-lg font-black text-foreground caret-lime focus:border-lime focus:outline-none"
+                    />
+                  ))}
+                </div>
+                {joinDigits.every((d) => d) && (
                   <button
-                    onClick={() => { setJoinOpen(false); setJoinDigits(["","","",""]); }}
-                    className="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
+                    type="button"
+                    onClick={handleJoinSubmit}
+                    disabled={!!pending}
+                    className="mt-3 w-full rounded-xl bg-magenta px-4 py-3 text-xs font-black uppercase tracking-widest text-white border-2 border-void tactile tactile-press disabled:opacity-70"
                   >
-                    Cancel
+                    {pending?.kind === "join" ? "Connecting…" : `Join Room ${joinDigits.join("")} →`}
                   </button>
                 )}
               </div>
-              <div className="mt-2 flex justify-center gap-1.5">
-                {[0, 1, 2, 3].map((i) => (
-                  <input
-                    key={i}
-                    ref={(el) => { joinRefs.current[i] = el; }}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={1}
-                    value={joinDigits[i]}
-                    onFocus={() => { if (!joinOpen) setJoinOpen(true); }}
-                    onChange={(e) => setDigit(i, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace" && !joinDigits[i] && i > 0) {
-                        joinRefs.current[i - 1]?.focus();
-                      }
-                    }}
-                    className="grid size-9 place-items-center rounded-md border-2 border-border bg-void text-center text-base font-black text-foreground caret-lime focus:border-lime focus:outline-none"
-                  />
-                ))}
-              </div>
-              {joinDigits.every((d) => d) && (
-                <button
-                  onClick={handleJoinSubmit}
-                  disabled={!!pending}
-                  className="mt-3 w-full rounded-md bg-magenta px-4 py-2 text-xs font-black uppercase tracking-widest text-white border-2 border-void tactile tactile-press disabled:opacity-70"
-                >
-                  {pending?.kind === "join" ? "Joining…" : `Join ${joinDigits.join("")} →`}
-                </button>
-              )}
             </div>
-          ) : (
-            <button
-              onClick={() => { buzz(25); navigate({ to: "/play/setup" }); }}
-              className="block w-full rounded-xl border-2 border-border bg-surface px-6 py-3.5 text-sm font-black uppercase tracking-widest text-foreground tactile tactile-press"
-            >
-              Add Players · Setup
-            </button>
           )}
         </section>
-
 
         {/* Trending Packs */}
         <section className="mt-7">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em]">
-              Trending Packs <span className="text-magenta">//</span>
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] flex items-center gap-1.5 text-foreground">
+              <span>Trending Packs</span>
+              <span className="text-magenta">//</span>
             </h2>
             <button
-              onClick={() => { buzz(20); setShowAll(true); }}
-              className="text-[11px] font-black uppercase tracking-widest text-lime tactile tactile-press"
+              type="button"
+              onClick={() => {
+                buzz(20);
+                setShowAll(true);
+              }}
+              className="text-[11px] font-black uppercase tracking-widest text-lime tactile tactile-press hover:underline"
             >
-              See all →
+              See all ({allPacks.length}) →
             </button>
           </div>
           <div className="relative -mx-5">
             <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {!packsReady
-                ? [0, 120, 240, 360, 480].map((d, i) => <PackSkeleton key={i} delay={d} />)
-                : allPacks.map((p, i) => (
-                    <PackCard key={p.name} p={p} i={i} onSelect={handleSelectPack} />
-                  ))}
+              {!packsReady ? (
+                [0, 120, 240, 360].map((d, i) => <PackSkeleton key={i} delay={d} />)
+              ) : allPacks.length === 0 ? (
+                <div className="w-full text-center py-8 px-4 rounded-2xl border-2 border-border bg-surface text-muted-foreground text-xs">
+                  No word packs found. Tap Setup to add or import packs!
+                </div>
+              ) : (
+                allPacks.slice(0, 8).map((p, i) => (
+                  <PackCard key={p.id} p={p} i={i} onSelect={handleSelectPack} />
+                ))
+              )}
               <div className="shrink-0 w-2" aria-hidden />
             </div>
-            {/* Right-edge fade to hint scrollability */}
+            {/* Right edge fade hint */}
             <div
-              className="pointer-events-none absolute inset-y-0 right-0 w-10"
+              className="pointer-events-none absolute inset-y-0 right-0 w-8"
               style={{ background: "linear-gradient(to left, var(--color-void), transparent)" }}
               aria-hidden
             />
           </div>
         </section>
 
-        <div className="flex-1" />
+        <div className="flex-1 min-h-6" />
 
-        <p className="pt-6 text-center text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
+        <footer className="pt-4 text-center text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
           best played loud · headphones off · roast on
-        </p>
+        </footer>
       </div>
 
-      {/* All Packs — bottom sheet */}
+      {/* How to Play 3-Step Onboarding Modal */}
+      <AnimatePresence>
+        {showHowToPlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.94, opacity: 0, y: 15 }}
+              className="relative w-full max-w-sm rounded-3xl border-2 border-border bg-surface p-6 text-foreground brutal-shadow-pink"
+            >
+              <button
+                type="button"
+                onClick={handleCloseHowToPlay}
+                aria-label="Close rules"
+                className="absolute right-4 top-4 grid size-8 place-items-center rounded-lg border border-border bg-void text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20">
+                  Quick Guide
+                </span>
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  Step {howToPlayStep + 1} of 3
+                </span>
+              </div>
+
+              <div className="mt-4 text-center">
+                <div className="text-4xl mb-2">{ONBOARDING_STEPS[howToPlayStep].emoji}</div>
+                <h3 className="text-xl font-black uppercase tracking-tight text-foreground font-display">
+                  {ONBOARDING_STEPS[howToPlayStep].title}
+                </h3>
+                <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
+                  {ONBOARDING_STEPS[howToPlayStep].description}
+                </p>
+                <div className="mt-3 rounded-xl bg-void/80 border border-border p-2.5 text-[11px] font-semibold text-lime">
+                  💡 {ONBOARDING_STEPS[howToPlayStep].tip}
+                </div>
+              </div>
+
+              {/* Step indicator dots */}
+              <div className="mt-5 flex justify-center gap-1.5">
+                {ONBOARDING_STEPS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      buzz(15);
+                      setHowToPlayStep(idx);
+                    }}
+                    aria-label={`Go to step ${idx + 1}`}
+                    className={`h-2 rounded-full transition-all ${
+                      howToPlayStep === idx ? "w-6 bg-lime" : "w-2 bg-border"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div className="mt-6 flex gap-2">
+                {howToPlayStep < 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      buzz(20);
+                      setHowToPlayStep((s) => s + 1);
+                    }}
+                    className="flex-1 rounded-xl bg-lime px-4 py-3 text-center text-xs font-black uppercase tracking-widest text-void border-2 border-void tactile tactile-press"
+                  >
+                    Next Step →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCloseHowToPlay}
+                    className="flex-1 rounded-xl bg-lime px-4 py-3 text-center text-xs font-black uppercase tracking-widest text-void border-2 border-void brutal-shadow-pink tactile tactile-press"
+                  >
+                    Got It, Let's Play! →
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* All Packs Bottom Sheet */}
       {showAll && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end animate-[fade-in_0.2s_ease-out_both]">
           <button
+            type="button"
             aria-label="Close"
             onClick={() => setShowAll(false)}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
-          <div className="relative mx-auto w-full max-w-md rounded-t-2xl border-t-2 border-x-2 border-border bg-void max-h-[85dvh] flex flex-col animate-[slide-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]">
+          <div className="relative mx-auto w-full max-w-md rounded-t-3xl border-t-2 border-x-2 border-border bg-void max-h-[85dvh] flex flex-col animate-[slide-up_0.28s_cubic-bezier(0.22,1,0.36,1)_both]">
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b-2 border-border">
               <div>
-                <h3 className="text-lg font-black uppercase tracking-wide">All Packs</h3>
+                <h3 className="text-lg font-black uppercase tracking-wide">All Word Packs</h3>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {allPacks.length} packs · tap to inspect
+                  {allPacks.length} packs · tap to select for match
                 </p>
               </div>
               <button
-                onClick={() => { buzz(15); setShowAll(false); }}
-                className="grid size-9 place-items-center rounded-md border-2 border-border bg-surface text-foreground font-black tactile tactile-press"
+                type="button"
+                onClick={() => {
+                  buzz(15);
+                  setShowAll(false);
+                }}
+                className="grid size-9 place-items-center rounded-xl border-2 border-border bg-surface text-foreground font-black tactile tactile-press"
               >
                 ✕
               </button>
             </div>
             <div className="grid grid-cols-2 gap-3 overflow-y-auto p-5 pb-8">
               {allPacks.map((p, i) => (
-                <PackCard key={p.name} p={p} i={i} compact onSelect={handleSelectPack} />
+                <PackCard key={p.id} p={p} i={i} compact onSelect={handleSelectPack} />
               ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Optimistic room overlay — animated with framer-motion */}
+      {/* Optimistic room overlay */}
       <AnimatePresence>
         {pending && (
           <motion.div
@@ -582,12 +864,6 @@ function Home() {
                       ? "3px 3px 0 var(--color-void)"
                       : "3px 3px 0 var(--color-magenta)",
                 }}
-                animate={
-                  pending.status === "confirmed"
-                    ? { scale: [1, 1.12, 1], rotate: [0, -2, 2, 0] }
-                    : {}
-                }
-                transition={{ duration: 0.45, ease: "easeOut" }}
               >
                 {pending.room.code}
               </motion.div>
@@ -602,15 +878,7 @@ function Home() {
                         : "bg-magenta animate-pulse"
                   }`}
                 />
-                <span
-                  className={
-                    pending.status === "confirmed"
-                      ? "text-lime"
-                      : pending.status === "failed"
-                        ? "text-magenta"
-                        : "text-magenta"
-                  }
-                >
+                <span className={pending.status === "confirmed" ? "text-lime" : "text-magenta"}>
                   {pending.status === "confirmed"
                     ? "Confirmed · entering…"
                     : pending.status === "failed"
@@ -624,14 +892,16 @@ function Home() {
               {pending.status === "failed" ? (
                 <div className="mt-5 flex gap-2">
                   <button
+                    type="button"
                     onClick={dismissPending}
-                    className="flex-1 rounded-md border-2 border-border bg-void px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-foreground tactile tactile-press"
+                    className="flex-1 rounded-xl border-2 border-border bg-void px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-foreground tactile tactile-press"
                   >
                     Cancel
                   </button>
                   <button
+                    type="button"
                     onClick={retryPending}
-                    className="flex-1 rounded-md bg-lime px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-void border-2 border-void tactile tactile-press"
+                    className="flex-1 rounded-xl bg-lime px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-void border-2 border-void tactile tactile-press"
                   >
                     Retry →
                   </button>
@@ -647,7 +917,6 @@ function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }
