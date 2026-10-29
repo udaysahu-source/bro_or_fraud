@@ -280,6 +280,36 @@ class SoundManager {
       osc.stop(now + 0.5);
     }
   }
+
+  /**
+   * Sound effect for suspense heartbeat during dramatic voting reveal
+   */
+  playSuspenseHeartbeat() {
+    if (!this.isEnabled()) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    [0, 0.12].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const st = now + delay;
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(i === 0 ? 90 : 70, st);
+      osc.frequency.exponentialRampToValueAtTime(40, st + 0.1);
+
+      gain.gain.setValueAtTime(0, st);
+      gain.gain.linearRampToValueAtTime(0.35, st + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, st + 0.12);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(st);
+      osc.stop(st + 0.12);
+    });
+  }
 }
 
 export const soundFx = new SoundManager();
@@ -291,3 +321,4 @@ export const playTimerTickSound = (isUrgent: boolean = false) => soundFx.playTim
 export const playTimerAlarmSound = () => soundFx.playTimerAlarm();
 export const playVoteConfirmSound = () => soundFx.playVoteConfirm();
 export const playVerdictSound = (isBroWin: boolean) => soundFx.playVerdict(isBroWin);
+export const playSuspenseHeartbeatSound = () => soundFx.playSuspenseHeartbeat();

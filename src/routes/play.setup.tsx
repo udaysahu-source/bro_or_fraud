@@ -12,6 +12,7 @@ import {
   type CustomPack,
 } from "@/lib/customPacks";
 import { PACKS } from "@/lib/mcp/packs";
+import { loadSettings, type MatchSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/play/setup")({
   component: PlaySetup,
@@ -46,9 +47,9 @@ export function PlaySetup() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [impostorsCount, setImpostorsCount] = useState(1);
-  const [selectedPacks, setSelectedPacks] = useState<string[]>(["hostel-life"]);
+  const [selectedPacks, setSelectedPacks] = useState<string[]>(["college-life"]);
   const [votingMode, setVotingMode] = useState<"pointing" | "secret">("pointing");
-  const timerSeconds = 0; // No Limit
+  const [matchSettings, setMatchSettings] = useState<MatchSettings>(loadSettings());
   const chaosMode = false;
   const [showHelp, setShowHelp] = useState(false);
 
@@ -63,6 +64,7 @@ export function PlaySetup() {
 
   // Load initial settings and custom packs
   useEffect(() => {
+    setMatchSettings(loadSettings());
     // Load players from localStorage or use defaults
     const savedPlayers = localStorage.getItem("bof:roster");
     if (savedPlayers) {
@@ -74,6 +76,7 @@ export function PlaySetup() {
     } else {
       setPlayers(DEFAULT_PLAYERS.map((name, i) => ({ name, emoji: FUN_EMOJIS[i % FUN_EMOJIS.length] })));
     }
+
 
     // Check pre-selected topic pack from home screen
     const preselected = sessionStorage.getItem("bof_preselect_pack");
@@ -386,10 +389,14 @@ export function PlaySetup() {
     const updatedRecent = [...newFraudNames, ...recentFrauds.filter(name => !newFraudNames.includes(name))].slice(0, maxRecentWindow);
     sessionStorage.setItem("bof_recent_frauds", JSON.stringify(updatedRecent));
 
+    const latestSettings = loadSettings();
     const matchConfig = {
       players,
       impostorsCount,
-      timerSeconds,
+      timerSeconds: latestSettings.timerSeconds,
+      rounds: latestSettings.rounds,
+      revealStyle: latestSettings.revealStyle,
+      soundEnabled: latestSettings.soundEnabled,
       chaosMode,
       selectedPacks,
       categoryName,
@@ -412,12 +419,16 @@ export function PlaySetup() {
         
         {/* Header */}
         <header className="flex items-center justify-between">
-          <Link to="/" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <Link to="/" className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-foreground">
             ← Home
           </Link>
-          <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-            Local Match Setup
-          </span>
+          <Link
+            to="/settings"
+            onClick={() => buzz(15)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-surface text-[10px] font-black uppercase tracking-wider text-lime hover:border-lime/40 transition-colors"
+          >
+            <span>⚙️ {matchSettings.rounds}R · {matchSettings.timerSeconds}s · {matchSettings.revealStyle}</span>
+          </Link>
         </header>
 
         {/* Title */}
