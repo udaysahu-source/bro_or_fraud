@@ -1,6 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
+import {
+  buzz,
+  success as hapticSuccess,
+  error as hapticError,
+  reveal as hapticReveal,
+} from "@/lib/haptics";
 import { createRoomOptimistic } from "@/lib/room";
 
 export const Route = createFileRoute("/online/lobby")({
@@ -30,7 +35,10 @@ export function OnlineLobby() {
   const joinRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const handleDigitChange = (index: number, val: string) => {
-    const clean = val.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(-1);
+    const clean = val
+      .replace(/[^A-Za-z0-9]/g, "")
+      .toUpperCase()
+      .slice(-1);
     setJoinDigits((prev) => {
       const next = [...prev];
       next[index] = clean;
@@ -46,7 +54,7 @@ export function OnlineLobby() {
     buzz([30, 20, 30]);
     setIsCreating(true);
     hapticReveal();
-    
+
     // Simulate optimistic room creation, then navigate to room
     const code = generateRoomCode().toUpperCase();
     sessionStorage.setItem("bof:hosting", code); // Tag this client as the host for this code
@@ -81,7 +89,11 @@ export function OnlineLobby() {
     <div className="min-h-dvh bg-void text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-8">
         <header className="flex items-center justify-between">
-          <Link to="/" onClick={() => buzz(15)} className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <Link
+            to="/"
+            onClick={() => buzz(15)}
+            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+          >
             ← Home
           </Link>
           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -128,7 +140,9 @@ export function OnlineLobby() {
               {[0, 1, 2, 3].map((i) => (
                 <input
                   key={i}
-                  ref={(el) => { joinRefs.current[i] = el; }}
+                  ref={(el) => {
+                    joinRefs.current[i] = el;
+                  }}
                   maxLength={1}
                   value={joinDigits[i]}
                   onChange={(e) => handleDigitChange(i, e.target.value)}

@@ -56,7 +56,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           This page didn't load
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {error?.message || "Something went wrong on our end. You can try refreshing or head back home."}
+          {error?.message ||
+            "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -93,9 +94,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Bro or Fraud?" },
       { title: "Bro or Fraud? — Social deduction party game." },
-      { name: "description", content: "Social deduction party game. Catch the fraud before the fraud catches you." },
+      {
+        name: "description",
+        content: "Social deduction party game. Catch the fraud before the fraud catches you.",
+      },
       { property: "og:title", content: "Bro or Fraud?" },
-      { property: "og:description", content: "Catch the fraud before the fraud catches you. Play online or pass-the-phone." },
+      {
+        property: "og:description",
+        content: "Catch the fraud before the fraud catches you. Play online or pass-the-phone.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -104,7 +111,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;700;900&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;700;900&display=swap",
+      },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],

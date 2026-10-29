@@ -57,17 +57,20 @@ export function createRoomOptimistic(mode: "online" | "local" = "online"): {
   writeRoom(room);
 
   const confirmed = new Promise<Room>((resolve, reject) => {
-    setTimeout(() => {
-      if (Math.random() < 0.08) {
-        const failed: Room = { ...room, status: "failed" };
-        writeRoom(failed);
-        reject(Object.assign(new Error("Server unreachable"), { room: failed }));
-        return;
-      }
-      const done: Room = { ...room, status: "confirmed" };
-      writeRoom(done);
-      resolve(done);
-    }, 600 + Math.random() * 400);
+    setTimeout(
+      () => {
+        if (Math.random() < 0.08) {
+          const failed: Room = { ...room, status: "failed" };
+          writeRoom(failed);
+          reject(Object.assign(new Error("Server unreachable"), { room: failed }));
+          return;
+        }
+        const done: Room = { ...room, status: "confirmed" };
+        writeRoom(done);
+        resolve(done);
+      },
+      600 + Math.random() * 400,
+    );
   });
 
   return { room, confirmed };
@@ -86,22 +89,25 @@ export function joinRoomOptimistic(code: string): {
   };
   writeRoom(room);
   const confirmed = new Promise<Room>((resolve, reject) => {
-    setTimeout(() => {
-      const bogus = code === "0000" || /^(\d)\1{3}$/.test(code);
-      if (bogus || Math.random() < 0.12) {
-        const failed: Room = { ...room, status: "failed" };
-        writeRoom(failed);
-        reject(
-          Object.assign(new Error(bogus ? "Room not found" : "Couldn't reach host"), {
-            room: failed,
-          }),
-        );
-        return;
-      }
-      const done: Room = { ...room, status: "confirmed" };
-      writeRoom(done);
-      resolve(done);
-    }, 500 + Math.random() * 400);
+    setTimeout(
+      () => {
+        const bogus = code === "0000" || /^(\d)\1{3}$/.test(code);
+        if (bogus || Math.random() < 0.12) {
+          const failed: Room = { ...room, status: "failed" };
+          writeRoom(failed);
+          reject(
+            Object.assign(new Error(bogus ? "Room not found" : "Couldn't reach host"), {
+              room: failed,
+            }),
+          );
+          return;
+        }
+        const done: Room = { ...room, status: "confirmed" };
+        writeRoom(done);
+        resolve(done);
+      },
+      500 + Math.random() * 400,
+    );
   });
   return { room, confirmed };
 }

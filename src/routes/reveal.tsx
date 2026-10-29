@@ -75,12 +75,14 @@ function Reveal() {
     }
   };
 
-
   return (
     <div className="min-h-dvh bg-void">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-8">
         <header className="flex items-center justify-between">
-          <Link to="/" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <Link
+            to="/"
+            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+          >
             ← Home
           </Link>
           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -96,7 +98,8 @@ function Reveal() {
           <h1 className="mt-2 text-5xl font-black uppercase leading-[0.85] animate-glitch">
             {broWon ? (
               <>
-                Bro caught<br />
+                Bro caught
+                <br />
                 the <span className="text-lime">FRAUD 🚨</span>
               </>
             ) : (
@@ -205,10 +208,7 @@ function Reveal() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6 backdrop-blur-md animate-in fade-in"
           onClick={() => setOpenPreview(false)}
         >
-          <div
-            className="w-full max-w-sm space-y-3"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="w-full max-w-sm space-y-3" onClick={(e) => e.stopPropagation()}>
             <div className="text-center text-[10px] font-black uppercase tracking-[0.3em] text-lime">
               // Your share card
             </div>
@@ -280,9 +280,7 @@ function FlipCard({
     return () => clearTimeout(t);
   }, [flipped, delay]);
   return (
-    <div
-      className="relative aspect-[3/4] w-full [perspective:1000px]"
-    >
+    <div className="relative aspect-[3/4] w-full [perspective:1000px]">
       <div
         className="absolute inset-0 transition-transform duration-700 [transform-style:preserve-3d]"
         style={{ transform: on ? "rotateY(180deg)" : "rotateY(0deg)" }}
@@ -292,9 +290,7 @@ function FlipCard({
         </div>
         <div
           className={`absolute inset-0 rounded-2xl border-2 p-4 [transform:rotateY(180deg)] [backface-visibility:hidden] ${
-            accent === "lime"
-              ? "border-lime/60 bg-lime/10"
-              : "border-magenta/60 bg-magenta/10"
+            accent === "lime" ? "border-lime/60 bg-lime/10" : "border-magenta/60 bg-magenta/10"
           }`}
         >
           <div className="flex h-full flex-col justify-between">

@@ -81,11 +81,36 @@ type Phase = "pass" | "reveal" | "discussion" | "voting" | "suspense" | "verdict
 
 const PLAYER_COLORS = [
   { text: "text-lime", border: "border-lime", bg: "bg-lime/10", accent: "rgba(255,214,0,0.5)" },
-  { text: "text-magenta", border: "border-magenta", bg: "bg-magenta/10", accent: "rgba(255,45,85,0.5)" },
-  { text: "text-cyan-400", border: "border-cyan-400", bg: "bg-cyan-400/10", accent: "rgba(34,211,238,0.5)" },
-  { text: "text-amber-400", border: "border-amber-400", bg: "bg-amber-400/10", accent: "rgba(251,191,36,0.5)" },
-  { text: "text-purple-400", border: "border-purple-400", bg: "bg-purple-400/10", accent: "rgba(192,132,252,0.5)" },
-  { text: "text-emerald-400", border: "border-emerald-400", bg: "bg-emerald-400/10", accent: "rgba(52,211,153,0.5)" },
+  {
+    text: "text-magenta",
+    border: "border-magenta",
+    bg: "bg-magenta/10",
+    accent: "rgba(255,45,85,0.5)",
+  },
+  {
+    text: "text-cyan-400",
+    border: "border-cyan-400",
+    bg: "bg-cyan-400/10",
+    accent: "rgba(34,211,238,0.5)",
+  },
+  {
+    text: "text-amber-400",
+    border: "border-amber-400",
+    bg: "bg-amber-400/10",
+    accent: "rgba(251,191,36,0.5)",
+  },
+  {
+    text: "text-purple-400",
+    border: "border-purple-400",
+    bg: "bg-purple-400/10",
+    accent: "rgba(192,132,252,0.5)",
+  },
+  {
+    text: "text-emerald-400",
+    border: "border-emerald-400",
+    bg: "bg-emerald-400/10",
+    accent: "rgba(52,211,153,0.5)",
+  },
 ];
 
 const ROASTS_WIN = [
@@ -144,7 +169,9 @@ export function PassPhoneGame() {
 
   // Next round candidate choices
   const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
-  const [wordCandidates, setWordCandidates] = useState<{ target: string; bluff: string; category: string }[]>([]);
+  const [wordCandidates, setWordCandidates] = useState<
+    { target: string; bluff: string; category: string }[]
+  >([]);
   const [selectedCandidateIdx, setSelectedCandidateIdx] = useState<number | "custom" | "replay">(0);
   const [customTargetWord, setCustomTargetWord] = useState("");
   const [customBluffWord, setCustomBluffWord] = useState("");
@@ -160,11 +187,16 @@ export function PassPhoneGame() {
 
   // 1. Screen Wake Lock API integration
   useEffect(() => {
-    let wakeLock: any = null;
+    let wakeLock: { release: () => Promise<void> } | null = null;
     const requestWakeLock = async () => {
       if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
         try {
-          wakeLock = await (navigator as any).wakeLock.request("screen");
+          const navWithWakeLock = navigator as unknown as {
+            wakeLock: {
+              request: (type: string) => Promise<{ release: () => Promise<void> }>;
+            };
+          };
+          wakeLock = await navWithWakeLock.wakeLock.request("screen");
         } catch {
           /* ignore lock rejection */
         }
@@ -234,7 +266,7 @@ export function PassPhoneGame() {
           currentRound: config.currentRound,
           phase,
           currentPlayer,
-        })
+        }),
       );
     } catch {
       /* noop */
@@ -401,7 +433,9 @@ export function PassPhoneGame() {
 
     for (let c = 0; c < 3; c++) {
       const pack = packsToUse[c % packsToUse.length];
-      const available = pack.words.filter((w) => !used.includes(w) && !candidates.some((cand) => cand.target === w));
+      const available = pack.words.filter(
+        (w) => !used.includes(w) && !candidates.some((cand) => cand.target === w),
+      );
       const target = (available.length > 0 ? available : pack.words)[
         Math.floor(Math.random() * (available.length || pack.words.length))
       ];
@@ -607,7 +641,9 @@ export function PassPhoneGame() {
     setSharing(true);
     buzz(30);
     try {
-      const highestScorePlayer = [...players].sort((a, b) => (scores[b.name] || 0) - (scores[a.name] || 0))[0];
+      const highestScorePlayer = [...players].sort(
+        (a, b) => (scores[b.name] || 0) - (scores[a.name] || 0),
+      )[0];
       const blob = await renderShareCard({
         title: broWon ? "Bros Exposed the Fraud!" : "Fraud Escaped Clean!",
         subtitle: `Match Result · Round ${currentRound} of ${totalRounds}`,
@@ -621,7 +657,11 @@ export function PassPhoneGame() {
           emoji: p.emoji,
         })),
       });
-      await shareCard(blob, `Bro or Fraud match result! ${highestScorePlayer.name} is on top 🔥`, "native");
+      await shareCard(
+        blob,
+        `Bro or Fraud match result! ${highestScorePlayer.name} is on top 🔥`,
+        "native",
+      );
       hapticSuccess();
     } catch {
       hapticError();
@@ -657,20 +697,23 @@ export function PassPhoneGame() {
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-border bg-surface text-[10px] font-black uppercase tracking-wider text-muted-foreground">
             <span className="text-lime font-black">Round {currentRound}</span> of {totalRounds}
           </div>
-          {phase !== "pass" && phase !== "reveal" && phase !== "suspense" && phase !== "game_over" && (
-            <button
-              type="button"
-              onClick={() => {
-                buzz(15);
-                setShowPeekModal(true);
-                setPeekPlayerIdx(null);
-                setPeekHeld(false);
-              }}
-              className="rounded-lg border border-border bg-surface px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-lime hover:border-lime transition-colors min-h-[36px]"
-            >
-              👀 Peek Word
-            </button>
-          )}
+          {phase !== "pass" &&
+            phase !== "reveal" &&
+            phase !== "suspense" &&
+            phase !== "game_over" && (
+              <button
+                type="button"
+                onClick={() => {
+                  buzz(15);
+                  setShowPeekModal(true);
+                  setPeekPlayerIdx(null);
+                  setPeekHeld(false);
+                }}
+                className="rounded-lg border border-border bg-surface px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-lime hover:border-lime transition-colors min-h-[36px]"
+              >
+                👀 Peek Word
+              </button>
+            )}
         </header>
 
         {/* PHASE 1: FULL-SCREEN HANDOFF */}
@@ -690,7 +733,9 @@ export function PassPhoneGame() {
                 <div className="size-20 rounded-2xl bg-void border-2 border-border grid place-items-center mb-3">
                   {renderAvatar(players[currentPlayer].emoji, `size-10 ${playerColor.text}`)}
                 </div>
-                <h1 className={`text-4xl font-black uppercase tracking-wide font-display ${playerColor.text}`}>
+                <h1
+                  className={`text-4xl font-black uppercase tracking-wide font-display ${playerColor.text}`}
+                >
                   {players[currentPlayer].name}
                 </h1>
                 <p className="mt-2 text-xs text-muted-foreground max-w-[24ch]">
@@ -733,7 +778,9 @@ export function PassPhoneGame() {
                   />
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     <Fingerprint className="size-5 text-lime" />
-                    <span>{held ? "Verifying..." : `I am ${players[currentPlayer].name} (Hold)`}</span>
+                    <span>
+                      {held ? "Verifying..." : `I am ${players[currentPlayer].name} (Hold)`}
+                    </span>
                   </span>
                 </button>
               )}
@@ -759,7 +806,9 @@ export function PassPhoneGame() {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className={`w-full rounded-3xl border-2 p-6 bg-surface ${
-                    isFraud ? "border-magenta shadow-[0_0_25px_rgba(255,45,85,0.25)]" : "border-lime shadow-[0_0_25px_rgba(255,214,0,0.25)]"
+                    isFraud
+                      ? "border-magenta shadow-[0_0_25px_rgba(255,45,85,0.25)]"
+                      : "border-lime shadow-[0_0_25px_rgba(255,214,0,0.25)]"
                   }`}
                 >
                   <span className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground block mb-1">
@@ -771,15 +820,21 @@ export function PassPhoneGame() {
 
                   <div
                     className={`py-6 px-4 rounded-2xl bg-void border border-border text-3xl font-black font-mono tracking-widest uppercase select-none ${
-                      isFraud ? "text-magenta drop-shadow-[0_0_12px_rgba(255,45,85,0.5)]" : "text-lime drop-shadow-[0_0_12px_rgba(255,214,0,0.5)]"
+                      isFraud
+                        ? "text-magenta drop-shadow-[0_0_12px_rgba(255,45,85,0.5)]"
+                        : "text-lime drop-shadow-[0_0_12px_rgba(255,214,0,0.5)]"
                     }`}
                   >
                     {isFraud ? bluffWord : targetWord}
                   </div>
 
-                  <div className={`mt-4 rounded-xl p-3 border flex items-center justify-between ${
-                    isFraud ? "border-magenta/30 bg-magenta/10 text-magenta" : "border-lime/30 bg-lime/10 text-lime"
-                  }`}>
+                  <div
+                    className={`mt-4 rounded-xl p-3 border flex items-center justify-between ${
+                      isFraud
+                        ? "border-magenta/30 bg-magenta/10 text-magenta"
+                        : "border-lime/30 bg-lime/10 text-lime"
+                    }`}
+                  >
                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                       ROLE:
                     </span>
@@ -839,7 +894,9 @@ export function PassPhoneGame() {
                 onClick={handleNextPlayerOrDiscussion}
                 className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press min-h-[54px]"
               >
-                {currentPlayer + 1 < players.length ? "Got It · Pass to Next Bro →" : "Start Discussion 💬 →"}
+                {currentPlayer + 1 < players.length
+                  ? "Got It · Pass to Next Bro →"
+                  : "Start Discussion 💬 →"}
               </button>
             </div>
           </div>
@@ -882,7 +939,9 @@ export function PassPhoneGame() {
                     </span>
                     <span
                       className={`font-display text-4xl font-black tabular-nums transition-colors ${
-                        secondsLeft <= 5 ? "text-magenta animate-pulse scale-105" : timerColor.split(" ")[0]
+                        secondsLeft <= 5
+                          ? "text-magenta animate-pulse scale-105"
+                          : timerColor.split(" ")[0]
                       }`}
                     >
                       0:{secondsLeft.toString().padStart(2, "0")}
@@ -906,7 +965,11 @@ export function PassPhoneGame() {
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-void text-xs font-black uppercase tracking-wider text-muted-foreground hover:text-foreground"
                     >
-                      {timerActive ? <Pause className="size-3.5 text-yellow-400" /> : <Play className="size-3.5 text-lime" />}
+                      {timerActive ? (
+                        <Pause className="size-3.5 text-yellow-400" />
+                      ) : (
+                        <Play className="size-3.5 text-lime" />
+                      )}
                       <span>{timerActive ? "Pause" : "Resume"}</span>
                     </button>
 
@@ -980,7 +1043,8 @@ export function PassPhoneGame() {
                     Who is the Fraud? 🕵️‍♂️
                   </h1>
                   <p className="text-xs text-muted-foreground">
-                    Voter: <strong className="text-lime">{players[secretVoteCurrentPlayer].name}</strong>
+                    Voter:{" "}
+                    <strong className="text-lime">{players[secretVoteCurrentPlayer].name}</strong>
                   </p>
                 </div>
 
@@ -1010,7 +1074,9 @@ export function PassPhoneGame() {
                               {renderAvatar(p.emoji, "size-6 text-magenta")}
                             </div>
                             <div>
-                              <div className="text-sm font-black uppercase text-foreground">{p.name}</div>
+                              <div className="text-sm font-black uppercase text-foreground">
+                                {p.name}
+                              </div>
                               <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
                                 Suspect
                               </span>
@@ -1032,7 +1098,10 @@ export function PassPhoneGame() {
                     disabled={pendingSuspectVote === null}
                     onClick={() => {
                       if (pendingSuspectVote === null) return;
-                      const nextVotes = { ...secretVotes, [secretVoteCurrentPlayer]: pendingSuspectVote };
+                      const nextVotes = {
+                        ...secretVotes,
+                        [secretVoteCurrentPlayer]: pendingSuspectVote,
+                      };
                       setSecretVotes(nextVotes);
                       setPendingSuspectVote(null);
 
@@ -1061,7 +1130,8 @@ export function PassPhoneGame() {
                     }}
                     className="w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile disabled:opacity-40 min-h-[54px]"
                   >
-                    Confirm Vote for {pendingSuspectVote !== null ? players[pendingSuspectVote].name : "Suspect"} →
+                    Confirm Vote for{" "}
+                    {pendingSuspectVote !== null ? players[pendingSuspectVote].name : "Suspect"} →
                   </button>
                 </div>
               </div>
@@ -1132,7 +1202,9 @@ export function PassPhoneGame() {
                             {renderAvatar(p.emoji, "size-5 text-lime")}
                           </div>
                           <div>
-                            <div className="text-sm font-black uppercase text-foreground">{p.name}</div>
+                            <div className="text-sm font-black uppercase text-foreground">
+                              {p.name}
+                            </div>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase">
                               {count} {count === 1 ? "vote" : "votes"}
                             </span>
@@ -1153,7 +1225,9 @@ export function PassPhoneGame() {
                           >
                             -
                           </button>
-                          <span className="w-6 text-center text-lg font-mono font-black text-lime">{count}</span>
+                          <span className="w-6 text-center text-lg font-mono font-black text-lime">
+                            {count}
+                          </span>
                           <button
                             type="button"
                             onClick={() => {
@@ -1212,7 +1286,10 @@ export function PassPhoneGame() {
             )}
 
             {suspenseStep === "accused" && votedPlayerIndex !== null && (
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1.05, opacity: 1 }}>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1.05, opacity: 1 }}
+              >
                 <span className="text-xs font-black uppercase tracking-[0.4em] text-magenta">
                   // the accused player is
                 </span>
@@ -1233,7 +1310,9 @@ export function PassPhoneGame() {
                     broWon ? "text-magenta" : "text-lime"
                   }`}
                 >
-                  {broWon ? `${players[votedPlayerIndex].name} WAS THE FRAUD!` : `${players[votedPlayerIndex].name} WAS A BRO!`}
+                  {broWon
+                    ? `${players[votedPlayerIndex].name} WAS THE FRAUD!`
+                    : `${players[votedPlayerIndex].name} WAS A BRO!`}
                 </h1>
               </motion.div>
             )}
@@ -1244,9 +1323,11 @@ export function PassPhoneGame() {
         {phase === "verdict" && (
           <div className="flex flex-1 flex-col justify-between pt-4 pb-2 animate-[fade-in_0.2s_ease-out_both]">
             <div className="text-center">
-              <span className={`text-xl font-black uppercase tracking-wider font-display ${
-                broWon ? "text-lime" : "text-magenta"
-              }`}>
+              <span
+                className={`text-xl font-black uppercase tracking-wider font-display ${
+                  broWon ? "text-lime" : "text-magenta"
+                }`}
+              >
                 {broWon ? "Bro Caught the Fraud!" : "Fraud Escaped!"}
               </span>
               <h1 className="text-4xl font-black font-display uppercase mt-1 text-foreground">
@@ -1300,8 +1381,12 @@ export function PassPhoneGame() {
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          {delta > 0 && <span className="text-lime text-[11px] font-black">+{delta}</span>}
-                          <span className="font-mono text-foreground">{scores[p.name] || 0} pts</span>
+                          {delta > 0 && (
+                            <span className="text-lime text-[11px] font-black">+{delta}</span>
+                          )}
+                          <span className="font-mono text-foreground">
+                            {scores[p.name] || 0} pts
+                          </span>
                         </div>
                       </div>
                     );
@@ -1364,7 +1449,10 @@ export function PassPhoneGame() {
                     Sharpest Detective
                   </div>
                   <div className="text-base font-black uppercase text-foreground">
-                    {[...players].sort((a, b) => (scores[b.name] || 0) - (scores[a.name] || 0))[0]?.name}
+                    {
+                      [...players].sort((a, b) => (scores[b.name] || 0) - (scores[a.name] || 0))[0]
+                        ?.name
+                    }
                   </div>
                   <p className="text-[10px] text-muted-foreground">
                     Highest score across all {totalRounds} rounds!
@@ -1492,7 +1580,9 @@ export function PassPhoneGame() {
                   {peekHeld ? (
                     <div className="w-full flex flex-col items-center animate-[fade-in_0.15s_ease-out_both]">
                       <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">
-                        {fraudsIndices.includes(peekPlayerIdx) ? "YOUR DECOY WORD" : "YOUR SECRET WORD"}
+                        {fraudsIndices.includes(peekPlayerIdx)
+                          ? "YOUR DECOY WORD"
+                          : "YOUR SECRET WORD"}
                       </span>
                       <div
                         className={`text-2xl font-black font-mono tracking-widest uppercase py-4 px-3 w-full rounded-xl bg-void border border-border mb-3 ${

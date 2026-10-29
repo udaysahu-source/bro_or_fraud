@@ -36,15 +36,17 @@ function Vote() {
     return () => clearTimeout(id);
   }, [seconds]);
 
-  const timerColor =
-    seconds > 20 ? "bg-lime" : seconds > 10 ? "bg-yellow-400" : "bg-magenta";
+  const timerColor = seconds > 20 ? "bg-lime" : seconds > 10 ? "bg-yellow-400" : "bg-magenta";
   const warn = seconds <= 10;
 
   return (
     <div className="min-h-dvh bg-void">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-32">
         <header className="flex items-center justify-between">
-          <Link to="/" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          <Link
+            to="/"
+            className="text-xs font-bold uppercase tracking-widest text-muted-foreground"
+          >
             ← Leave
           </Link>
           <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -75,7 +77,8 @@ function Vote() {
         </div>
 
         <h1 className="mt-8 text-4xl font-black uppercase leading-[0.9]">
-          Who's the<br />
+          Who's the
+          <br />
           <span className="text-magenta">Fraud?</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -93,7 +96,9 @@ function Vote() {
                   buzz(20);
                 }}
                 className={`relative rounded-2xl border-3 bg-gradient-to-br ${p.color} bg-surface p-5 text-left transition-all duration-200 tactile tactile-press ${
-                  active ? "border-magenta scale-105 shadow-[0_0_25px_rgba(255,45,85,0.45)] z-10" : "border-white/10 opacity-70"
+                  active
+                    ? "border-magenta scale-105 shadow-[0_0_25px_rgba(255,45,85,0.45)] z-10"
+                    : "border-white/10 opacity-70"
                 }`}
               >
                 <div className="flex items-center justify-between">

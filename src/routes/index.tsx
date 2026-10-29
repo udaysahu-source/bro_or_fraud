@@ -1,8 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { HelpCircle, Settings as SettingsIcon, Users, Flame, Sparkles, ChevronRight, X, Play } from "lucide-react";
-import { buzz, success as hapticSuccess, error as hapticError, reveal as hapticReveal } from "@/lib/haptics";
+import {
+  HelpCircle,
+  Settings as SettingsIcon,
+  Users,
+  Flame,
+  Sparkles,
+  ChevronRight,
+  X,
+  Play,
+} from "lucide-react";
+import {
+  buzz,
+  success as hapticSuccess,
+  error as hapticError,
+  reveal as hapticReveal,
+} from "@/lib/haptics";
 import { createRoomOptimistic, joinRoomOptimistic, type Room } from "@/lib/room";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
 import { PACKS as BUILTIN_PACKS } from "@/lib/mcp/packs";
@@ -12,9 +26,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Bro or Fraud? — Catch the fraud before they catch you" },
-      { name: "description", content: "A chaotic mobile-first party game for hostel groups. Pass the phone, bluff your way out, and roast your friends." },
+      {
+        name: "description",
+        content:
+          "A chaotic mobile-first party game for hostel groups. Pass the phone, bluff your way out, and roast your friends.",
+      },
       { property: "og:title", content: "Bro or Fraud?" },
-      { property: "og:description", content: "Catch the fraud. Or be the fraud. Play with your bros right now." },
+      {
+        property: "og:description",
+        content: "Catch the fraud. Or be the fraud. Play with your bros right now.",
+      },
     ],
   }),
 });
@@ -121,7 +142,11 @@ function PatternLayer({ pattern, accent }: { pattern: Pack["pattern"]; accent: s
       return (
         <div className="absolute inset-x-0 bottom-0 flex h-3 gap-1 px-2 opacity-90">
           {[6, 10, 4, 12, 7, 9, 5].map((h, i) => (
-            <span key={i} className="w-1.5" style={{ background: accent, height: `${h * 2}px`, alignSelf: "flex-end" }} />
+            <span
+              key={i}
+              className="w-1.5"
+              style={{ background: accent, height: `${h * 2}px`, alignSelf: "flex-end" }}
+            />
           ))}
         </div>
       );
@@ -129,8 +154,14 @@ function PatternLayer({ pattern, accent }: { pattern: Pack["pattern"]; accent: s
       return (
         <>
           <div className="absolute inset-x-0 top-2 h-1 opacity-70" style={{ background: accent }} />
-          <div className="absolute left-0 top-6 h-0.5 w-2/3 opacity-60" style={{ background: accent }} />
-          <div className="absolute right-0 bottom-3 h-0.5 w-1/2 opacity-60" style={{ background: accent }} />
+          <div
+            className="absolute left-0 top-6 h-0.5 w-2/3 opacity-60"
+            style={{ background: accent }}
+          />
+          <div
+            className="absolute right-0 bottom-3 h-0.5 w-1/2 opacity-60"
+            style={{ background: accent }}
+          />
         </>
       );
   }
@@ -143,11 +174,23 @@ function PackSkeleton({ delay = 0 }: { delay?: number }) {
       style={{ animationDelay: `${delay}ms` }}
       aria-hidden="true"
     >
-      <div className="skeleton-shimmer h-20 border-b-2 border-border" style={{ animationDelay: `${delay}ms` }} />
+      <div
+        className="skeleton-shimmer h-20 border-b-2 border-border"
+        style={{ animationDelay: `${delay}ms` }}
+      />
       <div className="p-3.5 space-y-2.5">
-        <div className="skeleton-shimmer h-3.5 w-3/4 rounded" style={{ animationDelay: `${delay}ms` }} />
-        <div className="skeleton-shimmer h-2.5 w-1/2 rounded" style={{ animationDelay: `${delay + 120}ms` }} />
-        <div className="skeleton-shimmer h-4 w-1/3 rounded-full mt-2" style={{ animationDelay: `${delay + 200}ms` }} />
+        <div
+          className="skeleton-shimmer h-3.5 w-3/4 rounded"
+          style={{ animationDelay: `${delay}ms` }}
+        />
+        <div
+          className="skeleton-shimmer h-2.5 w-1/2 rounded"
+          style={{ animationDelay: `${delay + 120}ms` }}
+        />
+        <div
+          className="skeleton-shimmer h-4 w-1/3 rounded-full mt-2"
+          style={{ animationDelay: `${delay + 200}ms` }}
+        />
       </div>
     </div>
   );
@@ -217,7 +260,9 @@ function PackCard({
           </div>
         </div>
         <div className="mt-2.5 flex items-center justify-between">
-          <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${spiceBadge.bg}`}>
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${spiceBadge.bg}`}
+          >
             {spiceBadge.label}
           </span>
           <span className="text-[10px] text-lime font-black">Play →</span>
@@ -236,15 +281,12 @@ function Home() {
   const [howToPlayStep, setHowToPlayStep] = useState(0);
   const [savedRosterCount, setSavedRosterCount] = useState<number | null>(null);
 
-  const [pending, setPending] = useState<
-    | null
-    | {
-        kind: "create" | "join";
-        room: Room;
-        status: "pending" | "confirmed" | "failed";
-        errorMessage?: string;
-      }
-  >(null);
+  const [pending, setPending] = useState<null | {
+    kind: "create" | "join";
+    room: Room;
+    status: "pending" | "confirmed" | "failed";
+    errorMessage?: string;
+  }>(null);
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinDigits, setJoinDigits] = useState<string[]>(["", "", "", ""]);
   const joinRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -328,7 +370,9 @@ function Home() {
     hapticReveal();
     confirmed
       .then((r) => {
-        setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
+        setPending((p) =>
+          p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p,
+        );
         hapticSuccess();
         sessionStorage.setItem("bof:hosting", r.code.toUpperCase());
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
@@ -351,7 +395,9 @@ function Home() {
     setPending({ kind: "join", room, status: "pending" });
     confirmed
       .then((r) => {
-        setPending((p) => (p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p));
+        setPending((p) =>
+          p && p.room.code === r.code ? { ...p, room: r, status: "confirmed" } : p,
+        );
         hapticSuccess();
         sessionStorage.removeItem("bof:hosting");
         setTimeout(() => navigate({ to: "/online/room/$code", params: { code: r.code } }), 550);
@@ -403,19 +449,22 @@ function Home() {
     {
       title: "1. Secret Word Handoff",
       emoji: "🤫",
-      description: "Pass one phone around the table. All Bros get the exact same secret word. One of you is the FRAUD who gets a fake decoy word (or nothing at all)!",
+      description:
+        "Pass one phone around the table. All Bros get the exact same secret word. One of you is the FRAUD who gets a fake decoy word (or nothing at all)!",
       tip: "Keep a poker face — don't let anyone see your screen.",
     },
     {
       title: "2. Blend In & Interrogate",
       emoji: "🗣️",
-      description: "Take turns giving 1-word or short subtle clues about your secret word. Too obvious? The Fraud figures it out. Too vague? Your Bros vote YOU out!",
+      description:
+        "Take turns giving 1-word or short subtle clues about your secret word. Too obvious? The Fraud figures it out. Too vague? Your Bros vote YOU out!",
       tip: "Watch who hesitates or gives suspiciously generic answers.",
     },
     {
       title: "3. Vote & Roast",
       emoji: "🗳️",
-      description: "Countdown 3-2-1 and point at who is bluffing. Catch the fraud to score points. If the fraud tricks you and escapes, they win the round and roast you!",
+      description:
+        "Countdown 3-2-1 and point at who is bluffing. Catch the fraud to score points. If the fraud tricks you and escapes, they win the round and roast you!",
       tip: "The roast is mandatory. Headphones off, volume up.",
     },
   ];
@@ -516,9 +565,13 @@ function Home() {
             }`}
           >
             <span>🌐 Online</span>
-            <span className={`text-[8px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
-              mode === "online" ? "bg-void/20 text-void" : "bg-magenta/20 text-magenta border border-magenta/40"
-            }`}>
+            <span
+              className={`text-[8px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
+                mode === "online"
+                  ? "bg-void/20 text-void"
+                  : "bg-magenta/20 text-magenta border border-magenta/40"
+              }`}
+            >
               Beta
             </span>
           </button>
@@ -553,7 +606,9 @@ function Home() {
                 <div className="flex items-center gap-2">
                   <Users className="size-4 text-lime" />
                   <span>
-                    {savedRosterCount ? `Roster (${savedRosterCount} Players)` : "Add Players & Setup"}
+                    {savedRosterCount
+                      ? `Roster (${savedRosterCount} Players)`
+                      : "Add Players & Setup"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -622,7 +677,9 @@ function Home() {
                     disabled={!!pending}
                     className="mt-3 w-full rounded-xl bg-magenta px-4 py-3 text-xs font-black uppercase tracking-widest text-white border-2 border-void tactile tactile-press disabled:opacity-70"
                   >
-                    {pending?.kind === "join" ? "Connecting…" : `Join Room ${joinDigits.join("")} →`}
+                    {pending?.kind === "join"
+                      ? "Connecting…"
+                      : `Join Room ${joinDigits.join("")} →`}
                   </button>
                 )}
               </div>
@@ -657,9 +714,9 @@ function Home() {
                   No word packs found. Tap Setup to add or import packs!
                 </div>
               ) : (
-                allPacks.slice(0, 8).map((p, i) => (
-                  <PackCard key={p.id} p={p} i={i} onSelect={handleSelectPack} />
-                ))
+                allPacks
+                  .slice(0, 8)
+                  .map((p, i) => <PackCard key={p.id} p={p} i={i} onSelect={handleSelectPack} />)
               )}
               <div className="shrink-0 w-2" aria-hidden />
             </div>
@@ -856,7 +913,9 @@ function Home() {
 
               <motion.div
                 className={`mt-3 text-6xl font-black tracking-[0.35em] ${
-                  pending.status === "failed" ? "text-magenta line-through decoration-4" : "text-lime"
+                  pending.status === "failed"
+                    ? "text-magenta line-through decoration-4"
+                    : "text-lime"
                 }`}
                 style={{
                   textShadow:
@@ -882,7 +941,7 @@ function Home() {
                   {pending.status === "confirmed"
                     ? "Confirmed · entering…"
                     : pending.status === "failed"
-                      ? pending.errorMessage ?? "Something broke"
+                      ? (pending.errorMessage ?? "Something broke")
                       : pending.kind === "create"
                         ? "Syncing with server…"
                         : "Knocking…"}
@@ -920,4 +979,3 @@ function Home() {
     </div>
   );
 }
-

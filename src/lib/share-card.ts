@@ -230,10 +230,7 @@ export async function shareCard(
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
   if (target === "whatsapp") {
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(text + " broorfraud.app")}`,
-      "_blank",
-    );
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + " broorfraud.app")}`, "_blank");
   }
   return "downloaded";
 }

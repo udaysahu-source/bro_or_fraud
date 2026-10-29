@@ -1,9 +1,12 @@
-const CACHE_NAME = "bof-pwa-v1";
+const CACHE_NAME = "bof-pwa-v2";
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
-  "/icon-192.svg",
-  "/icon-512.svg",
+  "/app-logo.png",
+  "/apple-touch-icon.png",
+  "/icon-192x192.png",
+  "/icon-512x512.png",
+  "/split-mask.png",
   "/favicon.ico",
 ];
 
@@ -13,7 +16,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log("[SW] Pre-caching offline assets");
       return cache.addAll(STATIC_ASSETS);
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -22,12 +25,8 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      );
-    })
+      return Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+    }),
   );
   self.clients.claim();
 });
@@ -54,7 +53,7 @@ self.addEventListener("fetch", (event) => {
           return caches.match(req).then((cached) => {
             return cached || caches.match("/");
           });
-        })
+        }),
     );
     return;
   }
@@ -70,7 +69,9 @@ self.addEventListener("fetch", (event) => {
               caches.open(CACHE_NAME).then((cache) => cache.put(req, networkResponse));
             }
           })
-          .catch(() => {/* offline silently */});
+          .catch(() => {
+            /* offline silently */
+          });
         return cachedResponse;
       }
 
@@ -85,6 +86,6 @@ self.addEventListener("fetch", (event) => {
         .catch((err) => {
           console.warn("[SW] Fetch failed for:", req.url, err);
         });
-    })
+    }),
   );
 });

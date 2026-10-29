@@ -35,10 +35,10 @@
   --color-lime: var(--lime);
   --color-magenta: var(--magenta);
   --color-void: var(--void);
-  --color-charcoal: #0D0D12;
-  --color-cyber-yellow: #FFD600;
-  --color-electric-pink: #FF2D55;
-  --color-off-white: #F5F5F7;
+  --color-charcoal: #0d0d12;
+  --color-cyber-yellow: #ffd600;
+  --color-electric-pink: #ff2d55;
+  --color-off-white: #f5f5f7;
   --font-display: "Anton", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-title: "Anton", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -48,31 +48,31 @@
 :root {
   --radius: 0.875rem;
   /* Charcoal #0D0D12 */
-  --void: #0D0D12;
+  --void: #0d0d12;
   /* Dark Surface #15151F */
-  --surface: #15151F;
+  --surface: #15151f;
   /* Track surface #12121A */
-  --track: #12121A;
-  --background: #0D0D12;
-  --foreground: #F5F5F7;
-  --card: #15151F;
-  --card-foreground: #F5F5F7;
-  --popover: #15151F;
-  --popover-foreground: #F5F5F7;
+  --track: #12121a;
+  --background: #0d0d12;
+  --foreground: #f5f5f7;
+  --card: #15151f;
+  --card-foreground: #f5f5f7;
+  --popover: #15151f;
+  --popover-foreground: #f5f5f7;
   /* Cyber Yellow #FFD600 */
-  --lime: #FFD600;
+  --lime: #ffd600;
   /* Electric Pink #FF2D55 */
-  --magenta: #FF2D55;
+  --magenta: #ff2d55;
   --primary: var(--lime);
   --primary-foreground: var(--void);
-  --secondary: #1C1C28;
-  --secondary-foreground: #F5F5F7;
-  --muted: #1C1C28;
-  --muted-foreground: #A0A0B0;
+  --secondary: #1c1c28;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1c1c28;
+  --muted-foreground: #a0a0b0;
   --accent: var(--magenta);
-  --accent-foreground: #F5F5F7;
+  --accent-foreground: #f5f5f7;
   --destructive: var(--magenta);
-  --destructive-foreground: #F5F5F7;
+  --destructive-foreground: #f5f5f7;
   /* Stroke #252533 */
   --border: #252533;
   --input: #252533;
@@ -83,7 +83,8 @@
   * {
     border-color: var(--color-border);
   }
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -94,7 +95,10 @@
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }
@@ -113,7 +117,7 @@
   box-shadow: 6px 6px 0 0 var(--color-magenta);
 }
 @utility brutal-shadow-white {
-  box-shadow: 6px 6px 0 0 rgba(255,255,255,0.9);
+  box-shadow: 6px 6px 0 0 rgba(255, 255, 255, 0.9);
 }
 @utility brutal-shadow-pink {
   box-shadow: 4px 4px 0 0 var(--color-magenta);
@@ -144,7 +148,9 @@
 }
 
 @utility tactile {
-  transition: transform 100ms ease, box-shadow 100ms ease;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
 }
 @utility tactile-press {
   &:active {
@@ -154,34 +160,67 @@
 }
 
 @keyframes glitch-pulse {
-  0%, 100% { text-shadow: 2px 0 var(--color-magenta), -2px 0 var(--color-lime); transform: translate(0,0); }
-  20% { text-shadow: -2px 0 var(--color-magenta), 2px 0 var(--color-lime); transform: translate(1px,-1px); }
-  40% { text-shadow: 2px 2px 0 var(--color-magenta), -2px -2px 0 var(--color-lime); transform: translate(-1px,1px); }
-  60% { text-shadow: 0 2px 0 var(--color-magenta), 0 -2px 0 var(--color-lime); }
+  0%,
+  100% {
+    text-shadow:
+      2px 0 var(--color-magenta),
+      -2px 0 var(--color-lime);
+    transform: translate(0, 0);
+  }
+  20% {
+    text-shadow:
+      -2px 0 var(--color-magenta),
+      2px 0 var(--color-lime);
+    transform: translate(1px, -1px);
+  }
+  40% {
+    text-shadow:
+      2px 2px 0 var(--color-magenta),
+      -2px -2px 0 var(--color-lime);
+    transform: translate(-1px, 1px);
+  }
+  60% {
+    text-shadow:
+      0 2px 0 var(--color-magenta),
+      0 -2px 0 var(--color-lime);
+  }
 }
 @utility animate-glitch {
   animation: glitch-pulse 4s infinite;
 }
 
 @keyframes scan {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(200%); }
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(200%);
+  }
 }
 @utility animate-scan {
   animation: scan 3s linear infinite;
 }
 
 @keyframes timer-warn {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 @utility animate-timer-warn {
   animation: timer-warn 0.6s infinite;
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 @utility skeleton-shimmer {
   background: linear-gradient(
@@ -205,11 +244,16 @@
 }
 
 @utility pack-card {
-  transition: transform 180ms cubic-bezier(.2,.9,.3,1.2), box-shadow 180ms ease, border-color 180ms ease;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    box-shadow 180ms ease,
+    border-color 180ms ease;
   will-change: transform;
   &:hover {
     transform: translate(-2px, -3px);
-    box-shadow: 6px 8px 0 0 var(--color-magenta), 0 0 24px -4px color-mix(in oklab, var(--color-lime) 60%, transparent);
+    box-shadow:
+      6px 8px 0 0 var(--color-magenta),
+      0 0 24px -4px color-mix(in oklab, var(--color-lime) 60%, transparent);
     border-color: var(--color-lime);
   }
   &:active {
@@ -219,8 +263,13 @@
 }
 
 @keyframes badge-shine {
-  0% { transform: translateX(-120%) skewX(-20deg); }
-  60%, 100% { transform: translateX(240%) skewX(-20deg); }
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  60%,
+  100% {
+    transform: translateX(240%) skewX(-20deg);
+  }
 }
 @utility badge-shine {
   position: relative;
@@ -229,7 +278,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
     transform: translateX(-120%) skewX(-20deg);
     animation: badge-shine 3.4s ease-in-out infinite;
     pointer-events: none;
@@ -237,6 +286,29 @@
 }
 
 @keyframes slide-up {
-  0% { transform: translateY(100%); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+}
+
+@utility pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

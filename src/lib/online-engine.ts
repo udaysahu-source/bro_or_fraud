@@ -40,7 +40,15 @@ export interface PhotoCounterfeitPayload {
 export interface OnlineGameState {
   roomCode: string;
   hostId: string;
-  phase: "LOBBY" | "ROLE_REVEAL" | "DISCUSSION" | "VOTING" | "RESULTS" | "PREPARATION" | "STAGE_ACTION" | "REVEAL";
+  phase:
+    | "LOBBY"
+    | "ROLE_REVEAL"
+    | "DISCUSSION"
+    | "VOTING"
+    | "RESULTS"
+    | "PREPARATION"
+    | "STAGE_ACTION"
+    | "REVEAL";
   players: OnlinePlayer[];
   selectedPackId: string;
   targetWord: string;
@@ -73,46 +81,46 @@ const TRIPLE_CLAIMS = [
   "I once accidentally texted a meme criticizing a professor directly to the professor's personal WhatsApp.",
   "I survived on only 5-minute Maggi for a whole week during exams.",
   "I did proxy attendance for a classmate who was actually sleeping next to me in the same lecture.",
-  "I bribed the security guard with a cup of hot tea to let me enter the campus after curfew."
+  "I bribed the security guard with a cup of hot tea to let me enter the campus after curfew.",
 ];
 
 const PHOTO_PROMPTS = [
   {
     real: "A dog wearing stylish sunglasses riding a tiny skateboard down a busy street.",
-    counterfeit: "A cat wearing a wizard hat riding a surfboard on a giant blue wave."
+    counterfeit: "A cat wearing a wizard hat riding a surfboard on a giant blue wave.",
   },
   {
     real: "A professor sleeping soundly on their desk while students quietly play video games.",
-    counterfeit: "A student sleeping soundly on the floor while a cat writes complex formulas on the whiteboard."
+    counterfeit:
+      "A student sleeping soundly on the floor while a cat writes complex formulas on the whiteboard.",
   },
   {
     real: "An astronaut holding a cup of steaming hot chai on the surface of the moon.",
-    counterfeit: "An alien eating a plate of spicy momos in a neon-lit futuristic market."
+    counterfeit: "An alien eating a plate of spicy momos in a neon-lit futuristic market.",
   },
   {
     real: "A hostel room completely filled with empty pizza boxes stacked up to the ceiling.",
-    counterfeit: "A hostel room completely filled with floating water balloons and neon green lights."
+    counterfeit:
+      "A hostel room completely filled with floating water balloons and neon green lights.",
   },
   {
     real: "A giant monkey playing a electric guitar on top of a red college building.",
-    counterfeit: "A giant robot playing a drum kit in the middle of a crowded football field."
-  }
+    counterfeit: "A giant robot playing a drum kit in the middle of a crowded football field.",
+  },
 ];
 
 // Handler to trigger role distribution and word selection cleanly
-export function assignOnlineRoles(
-  state: OnlineGameState
-): OnlineGameState {
+export function assignOnlineRoles(state: OnlineGameState): OnlineGameState {
   const playerIds = state.players.map((p) => p.id);
   if (playerIds.length === 0) return state;
 
   const randomFraudId = playerIds[Math.floor(Math.random() * playerIds.length)];
-  
+
   // 1. Get words from the selected pack
   const selectedPackId = state.selectedPackId;
   const builtIn = PACKS.find((p) => p.id === selectedPackId);
   let selectedWords: string[] = ["Chai", "Coffee"];
-  
+
   if (builtIn) {
     selectedWords = builtIn.words;
   } else {
@@ -134,7 +142,8 @@ export function assignOnlineRoles(
   // 2. Select Fraud word from a different recognizable pack (different from selectedPackId)
   const otherPacks = PACKS.filter((p) => p.id !== selectedPackId);
   const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
-  const decoyWord = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
+  const decoyWord =
+    randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
 
   // Reset players clues and votes for the new round
   const updatedPlayers = state.players.map((p) => ({
@@ -159,16 +168,14 @@ export function assignOnlineRoles(
   };
 }
 
-export function assignHotseatRoles(
-  state: OnlineGameState
-): OnlineGameState {
+export function assignHotseatRoles(state: OnlineGameState): OnlineGameState {
   const allPlayers = [...state.players];
   if (allPlayers.length === 0) return state;
 
   // Shuffle players to pick panel and audience
   const shuffledPlayers = [...allPlayers].sort(() => Math.random() - 0.5);
   const panelCount = Math.min(4, shuffledPlayers.length);
-  
+
   const panelIds = shuffledPlayers.slice(0, panelCount).map((p) => p.id);
   const audienceIds = shuffledPlayers.slice(panelCount).map((p) => p.id);
 
@@ -180,7 +187,7 @@ export function assignHotseatRoles(
     const selectedPackId = state.selectedPackId;
     const builtIn = PACKS.find((p) => p.id === selectedPackId);
     let selectedWords: string[] = ["Chai", "Coffee"];
-    
+
     if (builtIn) {
       selectedWords = builtIn.words;
     } else {
@@ -197,7 +204,8 @@ export function assignHotseatRoles(
     const realPrompt = availableWords[Math.floor(Math.random() * availableWords.length)] || "Chai";
     const otherPacks = PACKS.filter((p) => p.id !== selectedPackId);
     const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
-    const bluffPrompt = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
+    const bluffPrompt =
+      randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
 
     const fraudId = panelIds[Math.floor(Math.random() * panelIds.length)];
 

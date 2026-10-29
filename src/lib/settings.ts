@@ -82,4 +82,3 @@ export function saveSettings(s: MatchSettings) {
     /* noop */
   }
 }
-

@@ -97,7 +97,7 @@ class SoundManager {
 
     // 1. Energetic ascending fanfare brass/synth notes
     const fanfare = [
-      { freq: 392.0, time: 0.0, dur: 0.12 },  // G4
+      { freq: 392.0, time: 0.0, dur: 0.12 }, // G4
       { freq: 523.25, time: 0.1, dur: 0.12 }, // C5
       { freq: 659.25, time: 0.2, dur: 0.12 }, // E5
       { freq: 783.99, time: 0.3, dur: 0.35 }, // G5 (accented)

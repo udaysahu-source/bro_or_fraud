@@ -2,7 +2,20 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { buzz, success as hapticSuccess, error as hapticError } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Shield, Settings, Info, User, HelpCircle, Download, Upload, Eye, Volume2, MessageSquare } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Shield,
+  Settings,
+  Info,
+  User,
+  HelpCircle,
+  Download,
+  Upload,
+  Eye,
+  Volume2,
+  MessageSquare,
+} from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import Papa from "papaparse";
 import {
@@ -19,16 +32,41 @@ export const Route = createFileRoute("/play/setup")({
   head: () => ({
     meta: [
       { title: "Match Setup — Bro or Fraud?" },
-      { name: "description", content: "Set up players, select topic packs, and configure the impostor counts." },
+      {
+        name: "description",
+        content: "Set up players, select topic packs, and configure the impostor counts.",
+      },
     ],
   }),
 });
 
 const DEFAULT_PLAYERS = ["Player 1", "Player 2", "Player 3", "Player 4"];
-const FUN_EMOJIS = ["Zap", "Crown", "Flame", "Ghost", "Skull", "Gamepad2", "Heart", "Star", "Trophy", "Target", "Shield", "Eye", "Bot", "Sun", "Smile", "User"];
+const FUN_EMOJIS = [
+  "Zap",
+  "Crown",
+  "Flame",
+  "Ghost",
+  "Skull",
+  "Gamepad2",
+  "Heart",
+  "Star",
+  "Trophy",
+  "Target",
+  "Shield",
+  "Eye",
+  "Bot",
+  "Sun",
+  "Smile",
+  "User",
+];
 
 export function renderAvatar(emoji: string, className = "size-5 text-current") {
-  const IconComponent = (LucideIcons as any)[emoji];
+  const IconComponent = (
+    LucideIcons as unknown as Record<
+      string,
+      React.ComponentType<{ className?: string }>
+    >
+  )[emoji];
   if (IconComponent) {
     return <IconComponent className={className} />;
   }
@@ -71,12 +109,15 @@ export function PlaySetup() {
       try {
         setPlayers(JSON.parse(savedPlayers));
       } catch {
-        setPlayers(DEFAULT_PLAYERS.map((name, i) => ({ name, emoji: FUN_EMOJIS[i % FUN_EMOJIS.length] })));
+        setPlayers(
+          DEFAULT_PLAYERS.map((name, i) => ({ name, emoji: FUN_EMOJIS[i % FUN_EMOJIS.length] })),
+        );
       }
     } else {
-      setPlayers(DEFAULT_PLAYERS.map((name, i) => ({ name, emoji: FUN_EMOJIS[i % FUN_EMOJIS.length] })));
+      setPlayers(
+        DEFAULT_PLAYERS.map((name, i) => ({ name, emoji: FUN_EMOJIS[i % FUN_EMOJIS.length] })),
+      );
     }
-
 
     // Check pre-selected topic pack from home screen
     const preselected = sessionStorage.getItem("bof_preselect_pack");
@@ -137,12 +178,12 @@ export function PlaySetup() {
     players.length >= 17
       ? 5
       : players.length >= 13
-      ? 4
-      : players.length >= 9
-      ? 3
-      : players.length >= 6
-      ? 2
-      : 1;
+        ? 4
+        : players.length >= 9
+          ? 3
+          : players.length >= 6
+            ? 2
+            : 1;
 
   useEffect(() => {
     if (impostorsCount > maxImpostors) {
@@ -203,10 +244,14 @@ export function PlaySetup() {
 
   const handleExportPack = (pack: CustomPack) => {
     buzz(20);
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pack, null, 2));
+    const dataStr =
+      "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pack, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `${pack.title.replace(/\s+/g, "_").toLowerCase()}_pack.json`);
+    downloadAnchor.setAttribute(
+      "download",
+      `${pack.title.replace(/\s+/g, "_").toLowerCase()}_pack.json`,
+    );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -261,11 +306,14 @@ export function PlaySetup() {
               return;
             }
 
-            let title = "Imported CSV Pack";
-            let category = "Custom";
+            const title = "Imported CSV Pack";
+            const category = "Custom";
             let words: string[] = [];
 
-            const flatCells = data.flat().map((c) => c.trim()).filter(Boolean);
+            const flatCells = data
+              .flat()
+              .map((c) => c.trim())
+              .filter(Boolean);
             if (flatCells.length < 5) {
               alert("CSV pack must contain at least 5 words.");
               return;
@@ -331,10 +379,11 @@ export function PlaySetup() {
       categoryName = packsToUse[0].title;
       const words = packsToUse[0].words;
       targetWord = words[Math.floor(Math.random() * words.length)] || "Chai";
-      
+
       const otherPacks = PACKS.filter((p) => p.id !== packsToUse[0].id);
       const randomOtherPack = otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0];
-      bluffWord = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
+      bluffWord =
+        randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     } else if (packsToUse.length >= 2) {
       if (packsToUse.length === 2) {
         categoryName = `${packsToUse[0].title} + ${packsToUse[1].title}`;
@@ -343,13 +392,15 @@ export function PlaySetup() {
       }
       const chosenPack = packsToUse[Math.floor(Math.random() * packsToUse.length)];
       targetWord = chosenPack.words[Math.floor(Math.random() * chosenPack.words.length)] || "Chai";
-      
+
       const selectedIds = packsToUse.map((p) => p.id);
       const otherPacks = PACKS.filter((p) => !selectedIds.includes(p.id));
-      const randomOtherPack = otherPacks.length > 0 
-        ? (otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0])
-        : PACKS[0];
-      bluffWord = randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
+      const randomOtherPack =
+        otherPacks.length > 0
+          ? otherPacks[Math.floor(Math.random() * otherPacks.length)] || PACKS[0]
+          : PACKS[0];
+      bluffWord =
+        randomOtherPack.words[Math.floor(Math.random() * randomOtherPack.words.length)] || "Coffee";
     }
 
     // Assign frauds indices avoiding recent frauds (session-persistent history)
@@ -384,9 +435,12 @@ export function PlaySetup() {
     const fraudsIndices = combinedIndices.slice(0, impostorsCount);
 
     // Keep track of recent frauds to prevent repetition
-    const newFraudNames = fraudsIndices.map(idx => players[idx].name);
+    const newFraudNames = fraudsIndices.map((idx) => players[idx].name);
     const maxRecentWindow = Math.max(1, players.length - impostorsCount);
-    const updatedRecent = [...newFraudNames, ...recentFrauds.filter(name => !newFraudNames.includes(name))].slice(0, maxRecentWindow);
+    const updatedRecent = [
+      ...newFraudNames,
+      ...recentFrauds.filter((name) => !newFraudNames.includes(name)),
+    ].slice(0, maxRecentWindow);
     sessionStorage.setItem("bof_recent_frauds", JSON.stringify(updatedRecent));
 
     const latestSettings = loadSettings();
@@ -416,10 +470,12 @@ export function PlaySetup() {
   return (
     <div className="min-h-dvh bg-void text-foreground">
       <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-28">
-        
         {/* Header */}
         <header className="flex items-center justify-between">
-          <Link to="/" className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-foreground">
+          <Link
+            to="/"
+            className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-foreground"
+          >
             ← Home
           </Link>
           <Link
@@ -427,7 +483,10 @@ export function PlaySetup() {
             onClick={() => buzz(15)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-surface text-[10px] font-black uppercase tracking-wider text-lime hover:border-lime/40 transition-colors"
           >
-            <span>⚙️ {matchSettings.rounds}R · {matchSettings.timerSeconds}s · {matchSettings.revealStyle}</span>
+            <span>
+              ⚙️ {matchSettings.rounds}R · {matchSettings.timerSeconds}s ·{" "}
+              {matchSettings.revealStyle}
+            </span>
           </Link>
         </header>
 
@@ -438,12 +497,16 @@ export function PlaySetup() {
               // pass-the-phone
             </p>
             <h1 className="mt-1.5 text-4xl font-black uppercase leading-[0.9]">
-              Configure the<br />
+              Configure the
+              <br />
               <span className="text-lime">Session 🎮</span>
             </h1>
           </div>
           <button
-            onClick={() => { buzz(15); setShowHelp(true); }}
+            onClick={() => {
+              buzz(15);
+              setShowHelp(true);
+            }}
             className="grid size-12 place-items-center rounded-xl border-2 border-border bg-surface text-lime tactile tactile-press cursor-pointer shrink-0"
             title="How to Play"
           >
@@ -454,7 +517,9 @@ export function PlaySetup() {
         {/* 1. Player Roster Management */}
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em]">// Player Roster ({players.length}/20)</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em]">
+              // Player Roster ({players.length}/20)
+            </h2>
             <button
               onClick={quickAddPlayer}
               disabled={players.length >= 20}
@@ -541,15 +606,23 @@ export function PlaySetup() {
             </div>
             <div className="flex items-center gap-3 border-2 border-white/10 rounded-xl bg-void p-1.5">
               <button
-                onClick={() => { buzz(15); setImpostorsCount(Math.max(1, impostorsCount - 1)); }}
+                onClick={() => {
+                  buzz(15);
+                  setImpostorsCount(Math.max(1, impostorsCount - 1));
+                }}
                 disabled={impostorsCount <= 1}
                 className="size-8 rounded-lg bg-surface border border-white/10 text-lg font-black grid place-items-center disabled:opacity-30"
               >
                 -
               </button>
-              <span className="w-6 text-center font-display text-lg font-black text-lime">{impostorsCount}</span>
+              <span className="w-6 text-center font-display text-lg font-black text-lime">
+                {impostorsCount}
+              </span>
               <button
-                onClick={() => { buzz(15); setImpostorsCount(Math.min(maxImpostors, impostorsCount + 1)); }}
+                onClick={() => {
+                  buzz(15);
+                  setImpostorsCount(Math.min(maxImpostors, impostorsCount + 1));
+                }}
                 disabled={impostorsCount >= maxImpostors}
                 className="size-8 rounded-lg bg-surface border border-white/10 text-lg font-black grid place-items-center disabled:opacity-30"
               >
@@ -568,14 +641,17 @@ export function PlaySetup() {
                 Choose how players cast their votes
               </p>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/10 p-1 bg-void">
               <button
                 type="button"
-                onClick={() => { buzz(15); setVotingMode("pointing"); }}
+                onClick={() => {
+                  buzz(15);
+                  setVotingMode("pointing");
+                }}
                 className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  votingMode === "pointing" 
-                    ? "bg-lime text-void font-bold" 
+                  votingMode === "pointing"
+                    ? "bg-lime text-void font-bold"
                     : "text-muted-foreground hover:text-white"
                 }`}
               >
@@ -583,22 +659,24 @@ export function PlaySetup() {
               </button>
               <button
                 type="button"
-                onClick={() => { buzz(15); setVotingMode("secret"); }}
+                onClick={() => {
+                  buzz(15);
+                  setVotingMode("secret");
+                }}
                 className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  votingMode === "secret" 
-                    ? "bg-lime text-void font-bold" 
+                  votingMode === "secret"
+                    ? "bg-lime text-void font-bold"
                     : "text-muted-foreground hover:text-white"
                 }`}
               >
                 🤫 Secret Ballot
               </button>
             </div>
-            
+
             <p className="text-[9px] text-muted-foreground uppercase tracking-wider leading-relaxed">
-              {votingMode === "pointing" 
-                ? "Simultaneous pointing on zero. Fast and loud, ideal for large groups." 
-                : "Pass the phone secretly to cast individual votes. Maximum deception!"
-              }
+              {votingMode === "pointing"
+                ? "Simultaneous pointing on zero. Fast and loud, ideal for large groups."
+                : "Pass the phone secretly to cast individual votes. Maximum deception!"}
             </p>
           </div>
         </section>
@@ -608,10 +686,15 @@ export function PlaySetup() {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <h2 className="text-xs font-black uppercase tracking-[0.2em]">// Select Packs</h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Select 1 or more packs to blend word pools</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Select 1 or more packs to blend word pools
+              </p>
             </div>
             <button
-              onClick={() => { buzz(15); setShowCreatePack(true); }}
+              onClick={() => {
+                buzz(15);
+                setShowCreatePack(true);
+              }}
               className="text-[10px] font-black uppercase tracking-widest text-lime"
             >
               + Create custom
@@ -630,7 +713,9 @@ export function PlaySetup() {
                     active ? "border-magenta bg-magenta/10" : "border-white/10 bg-surface"
                   }`}
                 >
-                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">{pack.title}</div>
+                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">
+                    {pack.title}
+                  </div>
                   <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                     <span className="inline-block size-1.5 rounded-full bg-magenta" />
                     {pack.words.length} words · Custom
@@ -678,7 +763,9 @@ export function PlaySetup() {
                     active ? "border-lime bg-lime/10" : "border-white/10 bg-surface"
                   }`}
                 >
-                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">{pack.name}</div>
+                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">
+                    {pack.name}
+                  </div>
                   <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
                     <span className="inline-block size-1.5 rounded-full bg-lime" />
                     {pack.wordCount} words · Default
@@ -688,9 +775,6 @@ export function PlaySetup() {
             })}
           </div>
         </section>
-
-
-
       </div>
 
       {/* Sticky Bottom Actions */}
@@ -731,7 +815,10 @@ export function PlaySetup() {
                   </p>
                 </div>
                 <button
-                  onClick={() => { buzz(15); setShowCreatePack(false); }}
+                  onClick={() => {
+                    buzz(15);
+                    setShowCreatePack(false);
+                  }}
                   className="grid size-9 place-items-center rounded-md border-2 border-border bg-surface text-foreground font-black"
                 >
                   ✕
@@ -789,7 +876,9 @@ export function PlaySetup() {
                       className="hidden"
                     />
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">Min 5 words. (e.g. Chai, Maggi, Warden, Attendant, Bunk Bed)</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">
+                    Min 5 words. (e.g. Chai, Maggi, Warden, Attendant, Bunk Bed)
+                  </p>
                   <textarea
                     required
                     placeholder="Enter words here..."
@@ -799,8 +888,6 @@ export function PlaySetup() {
                     className="w-full mt-1.5 rounded-xl border-2 border-white/10 bg-surface px-4 py-3 text-sm font-semibold text-foreground focus:border-lime focus:outline-none"
                   />
                 </div>
-
-
 
                 <button
                   type="submit"
@@ -839,7 +926,10 @@ export function PlaySetup() {
                   </p>
                 </div>
                 <button
-                  onClick={() => { buzz(15); setShowHelp(false); }}
+                  onClick={() => {
+                    buzz(15);
+                    setShowHelp(false);
+                  }}
                   className="grid size-9 place-items-center rounded-md border-2 border-border bg-surface text-foreground font-black cursor-pointer"
                 >
                   ✕
@@ -859,7 +949,11 @@ export function PlaySetup() {
                     </h4>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    Everyone gets the <strong className="text-lime">same secret word</strong> (e.g. <code className="text-lime">MAGGI</code>), except the <strong className="text-magenta">Fraud</strong>, who gets a <strong className="text-magenta">different decoy word</strong> (e.g. <code className="text-magenta">MESS</code>) or no word.
+                    Everyone gets the <strong className="text-lime">same secret word</strong> (e.g.{" "}
+                    <code className="text-lime">MAGGI</code>), except the{" "}
+                    <strong className="text-magenta">Fraud</strong>, who gets a{" "}
+                    <strong className="text-magenta">different decoy word</strong> (e.g.{" "}
+                    <code className="text-magenta">MESS</code>) or no word.
                   </p>
                 </div>
 
@@ -874,7 +968,9 @@ export function PlaySetup() {
                     </h4>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    Go around in a circle. Everyone says <strong className="text-lime">ONE WORD ONLY</strong> related to their secret word.
+                    Go around in a circle. Everyone says{" "}
+                    <strong className="text-lime">ONE WORD ONLY</strong> related to their secret
+                    word.
                     <br />
                     <span className="italic mt-1 block text-muted-foreground/80">
                       Example: Bro says "Noodles". Fraud (who has MESS) says "Food".
@@ -893,7 +989,9 @@ export function PlaySetup() {
                     </h4>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    After one round of clues, debate for <strong className="text-magenta">60 seconds</strong> and vote on who gave the most sus clue. Find the impostor before they blend in!
+                    After one round of clues, debate for{" "}
+                    <strong className="text-magenta">60 seconds</strong> and vote on who gave the
+                    most sus clue. Find the impostor before they blend in!
                   </p>
                 </div>
               </div>

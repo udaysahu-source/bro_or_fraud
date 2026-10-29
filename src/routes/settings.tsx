@@ -29,7 +29,12 @@ const TIMERS = [15, 30, 45, 60];
 const REVEAL_STYLES: { id: RevealStyle; label: string; blurb: string; emoji: string }[] = [
   { id: "hold", label: "Hold to Reveal", blurb: "Press & hold 0.5s. Peeker-proof.", emoji: "🔒" },
   { id: "tap", label: "Tap to Reveal", blurb: "Single tap. Fastest handoff.", emoji: "👆" },
-  { id: "auto", label: "Auto Reveal (3s)", blurb: "Countdown, then flip. Hands-free.", emoji: "⏱️" },
+  {
+    id: "auto",
+    label: "Auto Reveal (3s)",
+    blurb: "Countdown, then flip. Hands-free.",
+    emoji: "⏱️",
+  },
 ];
 
 function Settings() {
@@ -46,7 +51,7 @@ function Settings() {
       (key) =>
         SETTINGS_PRESETS[key].settings.rounds === loaded.rounds &&
         SETTINGS_PRESETS[key].settings.timerSeconds === loaded.timerSeconds &&
-        SETTINGS_PRESETS[key].settings.revealStyle === loaded.revealStyle
+        SETTINGS_PRESETS[key].settings.revealStyle === loaded.revealStyle,
     );
     setPreset(found || "custom");
     setMounted(true);
@@ -76,11 +81,7 @@ function Settings() {
   const totalTime = Math.round((s.rounds * (s.timerSeconds + 50)) / 60);
 
   const vibe =
-    s.timerSeconds <= 20
-      ? "Blitz 🔥"
-      : s.timerSeconds >= 45
-        ? "Deep Chill 🧘"
-        : "Balanced 🎯";
+    s.timerSeconds <= 20 ? "Blitz 🔥" : s.timerSeconds >= 45 ? "Deep Chill 🧘" : "Balanced 🎯";
 
   return (
     <div className="min-h-dvh bg-void text-foreground">
@@ -103,7 +104,8 @@ function Settings() {
             // customization
           </p>
           <h1 className="mt-2 text-4xl font-black uppercase leading-[0.9]">
-            Tune the<br />
+            Tune the
+            <br />
             <span className="text-lime">Chaos</span>
           </h1>
           <p className="mt-2 text-xs font-medium text-muted-foreground">
@@ -164,11 +166,7 @@ function Settings() {
         <Section label="Discussion Timer" hint="Timer before voting">
           <div className="grid grid-cols-4 gap-2">
             {TIMERS.map((n) => (
-              <Chip
-                key={n}
-                active={s.timerSeconds === n}
-                onClick={() => update("timerSeconds", n)}
-              >
+              <Chip key={n} active={s.timerSeconds === n} onClick={() => update("timerSeconds", n)}>
                 {n}s
               </Chip>
             ))}
@@ -276,9 +274,7 @@ function Settings() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   Room Vibe
                 </span>
-                <div className="text-sm font-black uppercase text-lime">
-                  {vibe}
-                </div>
+                <div className="text-sm font-black uppercase text-lime">{vibe}</div>
               </div>
             </div>
 
@@ -357,4 +353,3 @@ function SliderBar({ value, min, max }: { value: number; min: number; max: numbe
     </div>
   );
 }
-
