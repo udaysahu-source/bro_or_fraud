@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "postbuild": "cp -r .vercel/output/static dist 2>/dev/null || true",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "content:check": "tsx scripts/check-content.ts"
+    "content:check": "bun scripts/check-content.ts"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
