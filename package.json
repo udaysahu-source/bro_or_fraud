@@ -15,9 +15,7 @@
   },
   "allowScripts": {
     "esbuild": true,
-    "protobufjs": true,
-    "esbuild@0.27.7": true,
-    "protobufjs@7.6.5": true
+    "protobufjs": true
   },
   "engines": {
     "node": ">=20.0.0"
