@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlaySetupRouteImport } from './routes/play.setup'
 import { Route as PlayLocalRouteImport } from './routes/play.local'
 import { Route as OnlineLobbyRouteImport } from './routes/online.lobby'
+import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as OnlineRoomCodeRouteImport } from './routes/online.room.$code'
@@ -62,6 +63,11 @@ const OnlineLobbyRoute = OnlineLobbyRouteImport.update({
   path: '/online/lobby',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GamesGameIdRoute = GamesGameIdRouteImport.update({
+  id: '/games/$gameId',
+  path: '/games/$gameId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
     id: '/.well-known/oauth-protected-resource',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/vote': typeof VoteRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/games/$gameId': typeof GamesGameIdRoute
   '/online/lobby': typeof OnlineLobbyRoute
   '/play/local': typeof PlayLocalRoute
   '/play/setup': typeof PlaySetupRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/vote': typeof VoteRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/games/$gameId': typeof GamesGameIdRoute
   '/online/lobby': typeof OnlineLobbyRoute
   '/play/local': typeof PlayLocalRoute
   '/play/setup': typeof PlaySetupRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/vote': typeof VoteRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/games/$gameId': typeof GamesGameIdRoute
   '/online/lobby': typeof OnlineLobbyRoute
   '/play/local': typeof PlayLocalRoute
   '/play/setup': typeof PlaySetupRoute
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/vote'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/games/$gameId'
     | '/online/lobby'
     | '/play/local'
     | '/play/setup'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/vote'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/games/$gameId'
     | '/online/lobby'
     | '/play/local'
     | '/play/setup'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/vote'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/games/$gameId'
     | '/online/lobby'
     | '/play/local'
     | '/play/setup'
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   VoteRoute: typeof VoteRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  GamesGameIdRoute: typeof GamesGameIdRoute
   OnlineLobbyRoute: typeof OnlineLobbyRoute
   PlayLocalRoute: typeof PlayLocalRoute
   PlaySetupRoute: typeof PlaySetupRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnlineLobbyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/games/$gameId': {
+      id: '/games/$gameId'
+      path: '/games/$gameId'
+      fullPath: '/games/$gameId'
+      preLoaderRoute: typeof GamesGameIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.well-known/oauth-protected-resource': {
       id: '/.well-known/oauth-protected-resource'
       path: '/.well-known/oauth-protected-resource'
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  GamesGameIdRoute: GamesGameIdRoute,
   OnlineLobbyRoute: OnlineLobbyRoute,
   PlayLocalRoute: PlayLocalRoute,
   PlaySetupRoute: PlaySetupRoute,

@@ -20,6 +20,7 @@ import {
 import { createRoomOptimistic, joinRoomOptimistic, type Room } from "@/lib/room";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
 import { PACKS as BUILTIN_PACKS } from "@/lib/mcp/packs";
+import { getHubGames } from "@/lib/games/registry";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -280,6 +281,7 @@ function Home() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [howToPlayStep, setHowToPlayStep] = useState(0);
   const [savedRosterCount, setSavedRosterCount] = useState<number | null>(null);
+  const hubGames = getHubGames();
 
   const [pending, setPending] = useState<null | {
     kind: "create" | "join";
@@ -685,6 +687,68 @@ function Home() {
               </div>
             </div>
           )}
+        </section>
+
+        {/* Hostel Party Games Hub */}
+        <section className="mt-8">
+          <div className="mb-3.5 flex items-center justify-between">
+            <h2 className="text-xs font-black uppercase tracking-[0.25em] flex items-center gap-1.5 text-foreground">
+              <span>Party Game Modes</span>
+              <span className="text-lime">//</span>
+            </h2>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/20">
+              8 Offline Modes
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {hubGames.map((game) => (
+              <button
+                key={game.id}
+                type="button"
+                onClick={() => {
+                  buzz(20);
+                  navigate({ to: game.route as any });
+                }}
+                className={`relative flex items-center justify-between p-3.5 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
+                  game.isFlagship
+                    ? "bg-gradient-to-r from-lime/15 via-surface to-surface border-lime/40 shadow-lg shadow-lime/5"
+                    : "bg-surface/80 hover:bg-surface border-border hover:border-white/20"
+                }`}
+              >
+                <div className="flex items-center gap-3 overflow-hidden pr-2">
+                  <div className="text-2xl w-10 h-10 rounded-xl bg-void/80 border border-white/5 flex items-center justify-center shrink-0">
+                    {game.emoji}
+                  </div>
+                  <div className="overflow-hidden">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-black text-foreground truncate">
+                        {game.name}
+                      </span>
+                      {game.isFlagship && (
+                        <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-lime text-void">
+                          Flagship
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground truncate">{game.tagline}</div>
+                    <div className="flex items-center gap-2 mt-1 text-[9px] text-slate-400 font-semibold">
+                      <span>
+                        👥 {game.players.min}-{game.players.max}
+                      </span>
+                      <span>•</span>
+                      <span>
+                        ⏱️ {game.estimatedMinutes.min}-{game.estimatedMinutes.max}m
+                      </span>
+                      <span>•</span>
+                      <span className="text-amber-400 font-bold">{game.moodTag}</span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="size-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
         </section>
 
         {/* Trending Packs */}

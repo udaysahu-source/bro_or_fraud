@@ -214,6 +214,42 @@ function Settings() {
           </div>
         </Section>
 
+        {/* Content Language */}
+        <Section
+          label="🗣️ Content Language"
+          hint={s.language === "hinglish" ? "Hinglish" : "English"}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <Chip active={s.language === "hinglish"} onClick={() => update("language", "hinglish")}>
+              Hinglish 🇮🇳
+            </Chip>
+            <Chip active={s.language === "en"} onClick={() => update("language", "en")}>
+              English 🇬🇧
+            </Chip>
+          </div>
+        </Section>
+
+        {/* Content Spice Level */}
+        <Section label="🌶️ Content Spice Level" hint={s.contentLevel?.toUpperCase() || "MILD"}>
+          <div className="grid grid-cols-3 gap-2">
+            <Chip active={s.contentLevel === "mild"} onClick={() => update("contentLevel", "mild")}>
+              Mild 🟢
+            </Chip>
+            <Chip
+              active={s.contentLevel === "spicy"}
+              onClick={() => update("contentLevel", "spicy")}
+            >
+              Spicy 🔥
+            </Chip>
+            <Chip
+              active={s.contentLevel === "unhinged"}
+              onClick={() => update("contentLevel", "unhinged")}
+            >
+              Unhinged 🌶️
+            </Chip>
+          </div>
+        </Section>
+
         {/* Sound Effects */}
         <Section label="Audio Synthesizer" hint="In-browser WebAudio FX">
           <button
@@ -251,6 +287,43 @@ function Settings() {
             <div
               className={`size-5 shrink-0 rounded-full border-2 ${
                 s.soundEnabled !== false ? "border-lime bg-lime" : "border-border"
+              }`}
+            />
+          </button>
+        </Section>
+
+        {/* Haptics */}
+        <Section
+          label="📳 Haptic Vibrations"
+          hint={s.hapticsEnabled !== false ? "Active" : "Disabled"}
+        >
+          <button
+            type="button"
+            onClick={() => update("hapticsEnabled", s.hapticsEnabled === false)}
+            className={`flex w-full items-center gap-3.5 rounded-2xl border-2 p-3.5 text-left transition-all tactile tactile-press ${
+              s.hapticsEnabled !== false
+                ? "border-lime bg-lime/10 shadow-[0_0_15px_rgba(255,214,0,0.15)]"
+                : "border-border bg-surface hover:border-white/20"
+            }`}
+          >
+            <div
+              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl ${
+                s.hapticsEnabled !== false ? "bg-lime/20" : "bg-void border border-border"
+              }`}
+            >
+              {s.hapticsEnabled !== false ? "📳" : "🔕"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-black uppercase tracking-wide text-foreground">
+                {s.hapticsEnabled !== false ? "Vibrations On" : "Vibrations Off"}
+              </div>
+              <div className="text-xs text-muted-foreground leading-snug">
+                Tactile buzz for buttons, reveals & countdowns
+              </div>
+            </div>
+            <div
+              className={`size-5 shrink-0 rounded-full border-2 ${
+                s.hapticsEnabled !== false ? "border-lime bg-lime" : "border-border"
               }`}
             />
           </button>

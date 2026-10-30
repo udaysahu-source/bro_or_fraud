@@ -1,0 +1,179 @@
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import React from "react";
+import {
+  SecretVoteEngine,
+  SecretVoteConfig,
+} from "@/components/games/secret-vote/SecretVoteEngine";
+import { PassTheBombEngine } from "@/components/games/pass-the-bomb/PassTheBombEngine";
+import { HotSeatEngine } from "@/components/games/hot-seat/HotSeatEngine";
+import { ConfessionRouletteEngine } from "@/components/games/confession-roulette/ConfessionRouletteEngine";
+import { HeadsUpEngine } from "@/components/games/heads-up/HeadsUpEngine";
+
+const NEVER_HAVE_I_EVER_CONFIG: SecretVoteConfig = {
+  gameId: "never-have-i-ever",
+  gameName: "Never Have I Ever",
+  gameTagline: "Hostel Edition • Spill the tea without getting caught",
+  instructions: {
+    steps: [
+      {
+        title: "Pass the Phone",
+        desc: "Each student secretly taps whether they have done it or not.",
+      },
+      {
+        title: "Aggregate Reveal",
+        desc: "See the total count of guilty friends without revealing identities!",
+      },
+      {
+        title: "Detective Mode",
+        desc: "Accuse and guess which friend is guilty for bonus points!",
+      },
+    ],
+  },
+  getPromptText: (item: any, lang) => ({
+    main: item.statement[lang] || item.statement.hinglish,
+    sub: "Never Have I Ever...",
+  }),
+  options: [
+    {
+      id: "have",
+      label: { hinglish: "Maine Kiya Hai", en: "I Have" },
+      emoji: "🙋‍♂️",
+      color: "from-amber-500 to-rose-600",
+    },
+    {
+      id: "never",
+      label: { hinglish: "Kabhi Nahi Kiya", en: "I Have Never" },
+      emoji: "😇",
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
+      id: "skip",
+      label: { hinglish: "Paani Peeyo / Pass", en: "Sip / Pass" },
+      emoji: "🥤",
+      color: "from-slate-600 to-slate-800",
+    },
+  ],
+  detectiveModeAvailable: true,
+};
+
+const WOULD_YOU_RATHER_CONFIG: SecretVoteConfig = {
+  gameId: "would-you-rather",
+  gameName: "Would You Rather",
+  gameTagline: "Hostel Dilemmas • No easy ways out",
+  instructions: {
+    steps: [
+      {
+        title: "Pick Option A or B",
+        desc: "Secretly vote which chaotic situation you would endure.",
+      },
+      { title: "Split Reveal", desc: "See which option the room chose." },
+      { title: "20s Defense", desc: "Defend your choice against the minority or majority!" },
+    ],
+  },
+  getPromptText: (item: any, lang) => ({
+    main: "Would You Rather...",
+    choiceA: item.optionA[lang] || item.optionA.hinglish,
+    choiceB: item.optionB[lang] || item.optionB.hinglish,
+  }),
+  options: [
+    {
+      id: "A",
+      label: { hinglish: "Option A", en: "Option A" },
+      emoji: "🅰️",
+      color: "from-blue-600 to-cyan-500",
+    },
+    {
+      id: "B",
+      label: { hinglish: "Option B", en: "Option B" },
+      emoji: "🅱️",
+      color: "from-purple-600 to-pink-500",
+    },
+  ],
+  allowDebate: true,
+  debateSeconds: 20,
+  majorityScoring: true,
+};
+
+const GARMA_GARAM_CONFIG: SecretVoteConfig = {
+  gameId: "garma-garam-takes",
+  gameName: "Garma-Garam Takes",
+  gameTagline: "Campus Hot Takes • Defend your stance",
+  instructions: {
+    steps: [
+      {
+        title: "Take a Stance",
+        desc: "Vote Agree or Disagree secretly on spicy campus statements.",
+      },
+      {
+        title: "Near-Tie Debate",
+        desc: "If the room is split close to 50/50, a 30s debate is triggered!",
+      },
+      {
+        title: "Re-Vote & Flip",
+        desc: "Students can flip sides during debate for persuasion bonuses!",
+      },
+    ],
+  },
+  getPromptText: (item: any, lang) => ({
+    main: item.statement[lang] || item.statement.hinglish,
+    sub: "Hot Take:",
+  }),
+  options: [
+    {
+      id: "agree",
+      label: { hinglish: "100% Sahi Hai (Agree)", en: "Agree" },
+      emoji: "🔥",
+      color: "from-red-600 to-amber-500",
+    },
+    {
+      id: "disagree",
+      label: { hinglish: "Bilkul Bakwas (Disagree)", en: "Disagree" },
+      emoji: "🧊",
+      color: "from-cyan-600 to-blue-600",
+    },
+  ],
+  allowDebate: true,
+  allowReVote: true,
+  debateSeconds: 30,
+};
+
+export const Route = createFileRoute("/games/$gameId")({
+  component: GameRouteComponent,
+});
+
+function GameRouteComponent() {
+  const { gameId } = useParams({ from: "/games/$gameId" });
+
+  switch (gameId) {
+    case "never-have-i-ever":
+      return <SecretVoteEngine config={NEVER_HAVE_I_EVER_CONFIG} />;
+    case "would-you-rather":
+      return <SecretVoteEngine config={WOULD_YOU_RATHER_CONFIG} />;
+    case "garma-garam-takes":
+      return <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
+    case "pass-the-bomb":
+      return <PassTheBombEngine />;
+    case "hot-seat":
+      return <HotSeatEngine />;
+    case "confession-roulette":
+      return <ConfessionRouletteEngine />;
+    case "heads-up-tilt":
+      return <HeadsUpEngine />;
+    default:
+      return (
+        <div className="min-h-screen bg-[#0D0D12] text-white flex flex-col items-center justify-center p-4 text-center space-y-4">
+          <div className="text-5xl">🎮</div>
+          <h1 className="text-xl font-black">Game Mode Not Found</h1>
+          <p className="text-xs text-slate-400">
+            The game mode "{gameId}" does not exist in the party hub.
+          </p>
+          <Link
+            to="/"
+            className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
+          >
+            ← Back to Party Hub
+          </Link>
+        </div>
+      );
+  }
+}

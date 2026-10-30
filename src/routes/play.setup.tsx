@@ -62,10 +62,7 @@ const FUN_EMOJIS = [
 
 export function renderAvatar(emoji: string, className = "size-5 text-current") {
   const IconComponent = (
-    LucideIcons as unknown as Record<
-      string,
-      React.ComponentType<{ className?: string }>
-    >
+    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
   )[emoji];
   if (IconComponent) {
     return <IconComponent className={className} />;
