@@ -27,7 +27,7 @@ import {
   playVoteConfirmSound,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
-import { getContent } from "@/lib/games/loader";
+import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { HotSeatItem } from "@/lib/games/types";
 
 interface Player {
@@ -103,7 +103,7 @@ export function HotSeatEngine() {
 
   // Start round
   const startRound = () => {
-    const item = getContent<HotSeatItem>("hot-seat", {
+    const item = getContentItem<HotSeatItem>("hot-seat", {
       packId: selectedPackId === "all" ? undefined : selectedPackId,
       spiceLevel: matchSettings.contentLevel,
     });
@@ -346,7 +346,7 @@ export function HotSeatEngine() {
                 Question for the room:
               </div>
               <div className="text-sm font-black text-white">
-                {currentItem.prompt[lang] || currentItem.prompt.hinglish}
+                {getLocalizedText(currentItem.prompt, lang)}
               </div>
             </div>
 
@@ -415,7 +415,7 @@ export function HotSeatEngine() {
                 Question about {seatedPlayer.name}:
               </div>
               <h3 className="text-lg font-black text-white">
-                {currentItem.prompt[lang] || currentItem.prompt.hinglish}
+                {getLocalizedText(currentItem.prompt, lang)}
               </h3>
             </div>
 
@@ -427,7 +427,7 @@ export function HotSeatEngine() {
                 </div>
                 <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
                   {currentItem.options.map((opt, idx) => {
-                    const text = opt[lang] || opt.hinglish;
+                    const text = getLocalizedText(opt, lang);
                     const isSelected = currentAnswer === text;
                     return (
                       <button

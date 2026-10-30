@@ -28,7 +28,7 @@ import {
   playVoteConfirmSound,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
-import { getContent } from "@/lib/games/loader";
+import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { ConfessionRouletteItem } from "@/lib/games/types";
 
 interface Player {
@@ -124,7 +124,7 @@ export function ConfessionRouletteEngine() {
 
   // Start round
   const startRound = () => {
-    const item = getContent<ConfessionRouletteItem>("confession-roulette", {
+    const item = getContentItem<ConfessionRouletteItem>("confession-roulette", {
       packId: selectedPackId === "all" ? undefined : selectedPackId,
       spiceLevel: matchSettings.contentLevel,
     });
@@ -180,7 +180,7 @@ export function ConfessionRouletteEngine() {
         shuffledDecoys.forEach((decoy, i) => {
           finalCards.push({
             id: `ghost-${Date.now()}-${i}`,
-            text: decoy[lang] || decoy.hinglish,
+            text: getLocalizedText(decoy, lang),
             isGhost: true,
             realAuthorId: "ghost",
             realAuthorName: "Ghost Decoy 👻",
@@ -441,7 +441,7 @@ export function ConfessionRouletteEngine() {
             <div className="p-6 rounded-3xl bg-gradient-to-b from-purple-600/20 to-pink-600/10 border border-purple-500/30 shadow-2xl space-y-3">
               <div className="text-5xl">🤫</div>
               <h2 className="text-xl font-black text-white leading-snug">
-                {currentItem.topic[lang] || currentItem.topic.hinglish}
+                {getLocalizedText(currentItem.prompt || (currentItem as any).topic, lang)}
               </h2>
               <p className="text-xs text-slate-300">
                 You can write your true story, make up an insane lie, or pick a ghost answer!
@@ -512,7 +512,7 @@ export function ConfessionRouletteEngine() {
                 Topic:
               </div>
               <h3 className="text-sm font-black text-white">
-                {currentItem.topic[lang] || currentItem.topic.hinglish}
+                {getLocalizedText(currentItem.prompt || (currentItem as any).topic, lang)}
               </h3>
             </div>
 
@@ -545,7 +545,7 @@ export function ConfessionRouletteEngine() {
                 </div>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                   {currentItem.ghostAnswers.map((ghost, i) => {
-                    const text = ghost[lang] || ghost.hinglish;
+                    const text = getLocalizedText(ghost, lang);
                     return (
                       <button
                         key={i}

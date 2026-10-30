@@ -28,7 +28,7 @@ import {
   playVoteConfirmSound,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
-import { getContent } from "@/lib/games/loader";
+import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { PassTheBombItem } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
 
@@ -207,7 +207,7 @@ export function PassTheBombEngine() {
 
   // Start new round
   const startRound = () => {
-    const item = getContent<PassTheBombItem>("pass-the-bomb", {
+    const item = getContentItem<PassTheBombItem>("pass-the-bomb", {
       packId: selectedPackId === "all" ? undefined : selectedPackId,
       spiceLevel: matchSettings.contentLevel,
     });
@@ -501,7 +501,7 @@ export function PassTheBombEngine() {
                 <Flame className="w-3.5 h-3.5" /> Name / Shout:
               </div>
               <h2 className="text-xl sm:text-2xl font-black leading-tight text-white">
-                {currentItem.category[lang] || currentItem.category.hinglish}
+                {getLocalizedText(currentItem.prompt || (currentItem as any).category, lang)}
               </h2>
               {currentItem.bannedWords && currentItem.bannedWords.length > 0 && (
                 <div className="pt-2 border-t border-white/5 text-[11px] text-rose-400">
@@ -590,12 +590,12 @@ export function PassTheBombEngine() {
                     💡 Example answers (shout one of these):
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {currentItem.examples.map((ex, i) => (
+                    {currentItem.examples.map((ex: any, i) => (
                       <span
                         key={i}
                         className="px-2 py-0.5 rounded-md bg-white/10 text-slate-200 text-[11px]"
                       >
-                        {ex}
+                        {getLocalizedText(ex, lang)}
                       </span>
                     ))}
                   </div>

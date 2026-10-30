@@ -26,7 +26,7 @@ import {
   playSuspenseHeartbeat,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
-import { getContent } from "@/lib/games/loader";
+import { getContent, getLocalizedText } from "@/lib/games/loader";
 import { LocalizedText } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
 
@@ -568,7 +568,7 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
                   <span className="text-2xl">{opt.emoji}</span>
                   <div>
                     <div className="text-base font-black uppercase text-foreground">
-                      {opt.label[lang]}
+                      {getLocalizedText(opt.label, lang)}
                     </div>
                   </div>
                 </div>
@@ -603,7 +603,7 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
             {chosenOpt?.emoji}
           </div>
           <h2 className="text-2xl font-black uppercase text-foreground">
-            {chosenOpt?.label[lang]}
+            {getLocalizedText(chosenOpt?.label, lang)}
           </h2>
           <p className="text-xs text-muted-foreground">
             Once submitted, your choice locks in. Ready to pass the phone?
@@ -675,7 +675,7 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-black uppercase flex items-center gap-2">
                       <span>{opt.emoji}</span>
-                      <span>{opt.label[lang]}</span>
+                      <span>{getLocalizedText(opt.label, lang)}</span>
                     </span>
                     <span className="text-sm font-black text-lime">
                       {count} {count === 1 ? "player" : "players"} ({pct}%)

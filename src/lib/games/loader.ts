@@ -11,10 +11,22 @@ export function getGameMode(id: string): GameMode | undefined {
   return CONTENT.gameModes.find((g) => g.id === id);
 }
 
+export function getLocalizedText(
+  val: any,
+  lang: "hinglish" | "en" = "hinglish",
+  fallback = ""
+): string {
+  if (!val) return fallback;
+  if (typeof val === "string") return val;
+  return val[lang] || val.hinglish || val.en || fallback;
+}
+
 export interface GetContentOptions {
   language?: "hinglish" | "en";
   levels?: ContentLevel[];
+  spiceLevel?: ContentLevel;
   packIds?: string[];
+  packId?: string;
   tags?: string[];
   resetSeen?: boolean;
 }
@@ -66,28 +78,47 @@ export function getContent<T = AnyGameItem>(gameId: string, options: GetContentO
     };
   }
 
+  const effectivePackIds = options.packIds ?? (options.packId ? [options.packId] : undefined);
+  const effectiveLevels = options.levels ?? (options.spiceLevel ? [options.spiceLevel] : undefined);
+
   // 1. Gather filtered items
-  const pool: T[] = [];
-  for (const pack of game.contentPacks) {
-    if (options.packIds && options.packIds.length > 0 && !options.packIds.includes(pack.id)) {
-      continue;
-    }
-    for (const item of pack.items as unknown as (AnyGameItem & {
-      level: ContentLevel;
-      tags?: string[];
-    })[]) {
-      if (options.levels && options.levels.length > 0 && !options.levels.includes(item.level)) {
+  let pool: T[] = [];
+  const collectItems = (filterByLevels = true) => {
+    const items: T[] = [];
+    for (const pack of game.contentPacks) {
+      if (effectivePackIds && effectivePackIds.length > 0 && !effectivePackIds.includes(pack.id)) {
         continue;
       }
-      if (
-        options.tags &&
-        options.tags.length > 0 &&
-        !options.tags.some((t) => item.tags?.includes(t))
-      ) {
-        continue;
+      for (const item of pack.items as unknown as (AnyGameItem & {
+        level: ContentLevel;
+        tags?: string[];
+      })[]) {
+        if (
+          filterByLevels &&
+          effectiveLevels &&
+          effectiveLevels.length > 0 &&
+          !effectiveLevels.includes(item.level)
+        ) {
+          continue;
+        }
+        if (
+          options.tags &&
+          options.tags.length > 0 &&
+          !options.tags.some((t) => item.tags?.includes(t))
+        ) {
+          continue;
+        }
+        items.push(item as unknown as T);
       }
-      pool.push(item as unknown as T);
     }
+    return items;
+  };
+
+  pool = collectItems(true);
+  // Graceful fallback: If filtered level yields 0 items (e.g. game mode only has "spicy" items),
+  // fallback to all available items in the packs so the mode never launches with an empty pool.
+  if (pool.length === 0 && effectiveLevels && effectiveLevels.length > 0) {
+    pool = collectItems(false);
   }
 
   if (options.resetSeen) {
@@ -147,3 +178,12 @@ export function getContent<T = AnyGameItem>(gameId: string, options: GetContentO
     exhausted,
   };
 }
+
+export function getContentItem<T = AnyGameItem>(
+  gameId: string,
+  options: GetContentOptions = {}
+): T | null {
+  const bag = getContent<T>(gameId, options);
+  return bag.draw();
+}
+

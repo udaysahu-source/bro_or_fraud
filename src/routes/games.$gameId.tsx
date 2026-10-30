@@ -8,6 +8,7 @@ import { PassTheBombEngine } from "@/components/games/pass-the-bomb/PassTheBombE
 import { HotSeatEngine } from "@/components/games/hot-seat/HotSeatEngine";
 import { ConfessionRouletteEngine } from "@/components/games/confession-roulette/ConfessionRouletteEngine";
 import { HeadsUpEngine } from "@/components/games/heads-up/HeadsUpEngine";
+import { getLocalizedText } from "@/lib/games/loader";
 
 const NEVER_HAVE_I_EVER_CONFIG: SecretVoteConfig = {
   gameId: "never-have-i-ever",
@@ -30,7 +31,7 @@ const NEVER_HAVE_I_EVER_CONFIG: SecretVoteConfig = {
     ],
   },
   getPromptText: (item: any, lang) => ({
-    main: item.statement[lang] || item.statement.hinglish,
+    main: getLocalizedText(item?.statement || item?.prompt, lang),
     sub: "Never Have I Ever...",
   }),
   options: [
@@ -72,8 +73,8 @@ const WOULD_YOU_RATHER_CONFIG: SecretVoteConfig = {
   },
   getPromptText: (item: any, lang) => ({
     main: "Would You Rather...",
-    choiceA: item.optionA[lang] || item.optionA.hinglish,
-    choiceB: item.optionB[lang] || item.optionB.hinglish,
+    choiceA: getLocalizedText(item?.optionA, lang),
+    choiceB: getLocalizedText(item?.optionB, lang),
   }),
   options: [
     {
@@ -115,7 +116,7 @@ const GARMA_GARAM_CONFIG: SecretVoteConfig = {
     ],
   },
   getPromptText: (item: any, lang) => ({
-    main: item.statement[lang] || item.statement.hinglish,
+    main: getLocalizedText(item?.statement || item?.prompt, lang),
     sub: "Hot Take:",
   }),
   options: [

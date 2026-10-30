@@ -26,7 +26,7 @@ import {
   playVoteConfirmSound,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
-import { getContent } from "@/lib/games/loader";
+import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { HeadsUpItem } from "@/lib/games/types";
 
 interface Player {
@@ -187,7 +187,7 @@ export function HeadsUpEngine() {
 
   // Start gameplay
   const startGameplay = () => {
-    const item = getContent<HeadsUpItem>("heads-up-tilt", {
+    const item = getContentItem<HeadsUpItem>("heads-up-tilt", {
       packId: selectedPackId === "all" ? undefined : selectedPackId,
       spiceLevel: matchSettings.contentLevel,
     });
@@ -234,7 +234,7 @@ export function HeadsUpEngine() {
     }, 350);
 
     // Fetch next card
-    const nextItem = getContent<HeadsUpItem>("heads-up-tilt", {
+    const nextItem = getContentItem<HeadsUpItem>("heads-up-tilt", {
       packId: selectedPackId === "all" ? undefined : selectedPackId,
       spiceLevel: matchSettings.contentLevel,
     });
@@ -450,10 +450,10 @@ export function HeadsUpEngine() {
             {/* Word Card (Extra large for friends across the room to read clearly) */}
             <div className="text-center space-y-4 my-auto select-none">
               <div className="text-[11px] uppercase font-black tracking-widest text-emerald-400">
-                {currentItem.word.en}
+                {getLocalizedText(currentItem.word, "en")}
               </div>
               <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow-md">
-                {currentItem.word[lang] || currentItem.word.hinglish}
+                {getLocalizedText(currentItem.word, lang)}
               </h2>
 
               {/* Forbidden Words (Taboo) */}
@@ -465,7 +465,9 @@ export function HeadsUpEngine() {
                       🚫 Do NOT say these words:
                     </div>
                     <div className="text-xs font-semibold text-rose-200">
-                      {currentItem.forbiddenWords.join(" • ")}
+                      {currentItem.forbiddenWords
+                        .map((w: any) => getLocalizedText(w, lang))
+                        .join(" • ")}
                     </div>
                   </div>
                 )}
@@ -521,7 +523,7 @@ export function HeadsUpEngine() {
                       : "bg-white/[0.03] border-white/5 text-slate-400 line-through"
                   }`}
                 >
-                  <span>{res.item.word[lang] || res.item.word.hinglish}</span>
+                  <span>{getLocalizedText(res.item.word, lang)}</span>
                   <span>{res.guessed ? "✓ Guessed" : "Skipped"}</span>
                 </div>
               ))}
