@@ -20,7 +20,7 @@ import {
 import { createRoomOptimistic, joinRoomOptimistic, type Room } from "@/lib/room";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
 import { PACKS as BUILTIN_PACKS } from "@/lib/mcp/packs";
-import { getHubGames } from "@/lib/games/registry";
+import { getHubGames, type GameCategoryChip } from "@/lib/games/registry";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -282,6 +282,10 @@ function Home() {
   const [howToPlayStep, setHowToPlayStep] = useState(0);
   const [savedRosterCount, setSavedRosterCount] = useState<number | null>(null);
   const hubGames = getHubGames();
+  const [activeGameCategory, setActiveGameCategory] = useState<GameCategoryChip>("all");
+  const filteredHubGames = activeGameCategory === "all"
+    ? hubGames
+    : hubGames.filter((g) => g.chipCategory === activeGameCategory || g.isFlagship);
 
   const [pending, setPending] = useState<null | {
     kind: "create" | "join";
@@ -696,44 +700,73 @@ function Home() {
               <span>Party Game Modes</span>
               <span className="text-lime">//</span>
             </h2>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/20">
+            <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/30 tracking-wider">
               8 Offline Modes
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {hubGames.map((game) => (
+          {/* Category Filter Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3 -mx-1 px-1">
+            {[
+              { id: "all" as GameCategoryChip, label: "🔥 All", count: 8 },
+              { id: "tea" as GameCategoryChip, label: "🤫 Tea & Roast", count: 3 },
+              { id: "reflexes" as GameCategoryChip, label: "⚡ Fast Reflexes", count: 2 },
+              { id: "debate" as GameCategoryChip, label: "🗣️ Hot Debates", count: 2 },
+              { id: "bluff" as GameCategoryChip, label: "🕵️ Spyfall", count: 1 },
+            ].map((cat) => (
               <button
-                key={game.id}
+                key={cat.id}
                 type="button"
                 onClick={() => {
-                  buzz(20);
-                  navigate({ to: game.route as any });
+                  buzz(15);
+                  setActiveGameCategory(cat.id);
                 }}
-                className={`relative flex items-center justify-between p-3.5 rounded-2xl border-2 text-left transition-all active:scale-[0.98] ${
-                  game.isFlagship
-                    ? "bg-gradient-to-r from-lime/15 via-surface to-surface border-lime/40 shadow-lg shadow-lime/5"
-                    : "bg-surface/80 hover:bg-surface border-border hover:border-white/20"
+                className={`text-[11px] font-black px-3 py-1.5 rounded-full whitespace-nowrap transition-all border shrink-0 ${
+                  activeGameCategory === cat.id
+                    ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10 scale-[1.02]"
+                    : "bg-surface/90 text-muted-foreground border-border hover:text-foreground hover:border-white/20"
                 }`}
               >
-                <div className="flex items-center gap-3 overflow-hidden pr-2">
-                  <div className="text-2xl w-10 h-10 rounded-xl bg-void/80 border border-white/5 flex items-center justify-center shrink-0">
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {filteredHubGames.map((game) => (
+              <motion.button
+                key={game.id}
+                type="button"
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={() => {
+                  buzz(25);
+                  navigate({ to: game.route as any });
+                }}
+                className={`group relative flex items-center justify-between p-4 rounded-2xl border-2 text-left transition-all duration-200 active:scale-[0.98] bg-gradient-to-r ${game.accentGradient} ${game.accentBorder} shadow-lg hover:shadow-xl`}
+              >
+                <div className="flex items-start gap-3.5 overflow-hidden pr-2">
+                  <div className="text-2xl w-11 h-11 rounded-xl bg-void/90 border border-white/10 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
                     {game.emoji}
                   </div>
                   <div className="overflow-hidden">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-black text-foreground truncate">
+                      <span className="text-sm font-black text-foreground truncate group-hover:text-white transition-colors">
                         {game.name}
                       </span>
                       {game.isFlagship && (
-                        <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded bg-lime text-void">
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-lime text-void shadow-sm tracking-wider">
                           Flagship
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate">{game.tagline}</div>
-                    <div className="flex items-center gap-2 mt-1 text-[9px] text-slate-400 font-semibold">
-                      <span>
+                    <div className="text-[11px] text-slate-300 font-medium truncate mt-0.5">
+                      {game.hostelVibe || game.tagline}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5 text-[10px] text-slate-400 font-semibold">
+                      <span className="flex items-center gap-1">
                         👥 {game.players.min}-{game.players.max}
                       </span>
                       <span>•</span>
@@ -741,12 +774,22 @@ function Home() {
                         ⏱️ {game.estimatedMinutes.min}-{game.estimatedMinutes.max}m
                       </span>
                       <span>•</span>
-                      <span className="text-amber-400 font-bold">{game.moodTag}</span>
+                      <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${game.badgeBg}`}>
+                        {game.moodTag}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="size-4 text-muted-foreground shrink-0" />
-              </button>
+
+                <div className="flex items-center gap-1 shrink-0 pl-1">
+                  <span className="hidden group-hover:inline-block text-[10px] font-black uppercase text-lime tracking-wider transition-opacity">
+                    Play
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/15 group-hover:border-white/20 transition-colors">
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </div>
+              </motion.button>
             ))}
           </div>
         </section>

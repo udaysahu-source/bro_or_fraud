@@ -9,33 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VoteRouteImport } from './routes/vote'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as RevealRouteImport } from './routes/reveal'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PlaySetupRouteImport } from './routes/play.setup'
-import { Route as PlayLocalRouteImport } from './routes/play.local'
-import { Route as OnlineLobbyRouteImport } from './routes/online.lobby'
-import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as RevealRouteImport } from './routes/reveal'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as VoteRouteImport } from './routes/vote'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as OnlineRoomCodeRouteImport } from './routes/online.room.$code'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as GamesGameIdRouteImport } from './routes/games.$gameId'
+import { Route as OnlineLobbyRouteImport } from './routes/online.lobby'
+import { Route as PlayLocalRouteImport } from './routes/play.local'
+import { Route as PlaySetupRouteImport } from './routes/play.setup'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as OnlineRoomCodeRouteImport } from './routes/online.room.$code'
 
-const VoteRoute = VoteRouteImport.update({
-  id: '/vote',
-  path: '/vote',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RevealRoute = RevealRouteImport.update({
-  id: '/reveal',
-  path: '/reveal',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -43,19 +33,36 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const RevealRoute = RevealRouteImport.update({
+  id: '/reveal',
+  path: '/reveal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlaySetupRoute = PlaySetupRouteImport.update({
-  id: '/play/setup',
-  path: '/play/setup',
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlayLocalRoute = PlayLocalRouteImport.update({
-  id: '/play/local',
-  path: '/play/local',
+const VoteRoute = VoteRouteImport.update({
+  id: '/vote',
+  path: '/vote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GamesGameIdRoute = GamesGameIdRouteImport.update({
+  id: '/games/$gameId',
+  path: '/games/$gameId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnlineLobbyRoute = OnlineLobbyRouteImport.update({
@@ -63,26 +70,14 @@ const OnlineLobbyRoute = OnlineLobbyRouteImport.update({
   path: '/online/lobby',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GamesGameIdRoute = GamesGameIdRouteImport.update({
-  id: '/games/$gameId',
-  path: '/games/$gameId',
+const PlayLocalRoute = PlayLocalRouteImport.update({
+  id: '/play/local',
+  path: '/play/local',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const OnlineRoomCodeRoute = OnlineRoomCodeRouteImport.update({
-  id: '/online/room/$code',
-  path: '/online/room/$code',
+const PlaySetupRoute = PlaySetupRouteImport.update({
+  id: '/play/setup',
+  path: '/play/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
@@ -91,6 +86,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const OnlineRoomCodeRoute = OnlineRoomCodeRouteImport.update({
+  id: '/online/room/$code',
+  path: '/online/room/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -204,25 +204,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/vote': {
-      id: '/vote'
-      path: '/vote'
-      fullPath: '/vote'
-      preLoaderRoute: typeof VoteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reveal': {
-      id: '/reveal'
-      path: '/reveal'
-      fullPath: '/reveal'
-      preLoaderRoute: typeof RevealRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -232,46 +218,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/reveal': {
+      id: '/reveal'
+      path: '/reveal'
+      fullPath: '/reveal'
+      preLoaderRoute: typeof RevealRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/play/setup': {
-      id: '/play/setup'
-      path: '/play/setup'
-      fullPath: '/play/setup'
-      preLoaderRoute: typeof PlaySetupRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/play/local': {
-      id: '/play/local'
-      path: '/play/local'
-      fullPath: '/play/local'
-      preLoaderRoute: typeof PlayLocalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/online/lobby': {
-      id: '/online/lobby'
-      path: '/online/lobby'
-      fullPath: '/online/lobby'
-      preLoaderRoute: typeof OnlineLobbyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/games/$gameId': {
-      id: '/games/$gameId'
-      path: '/games/$gameId'
-      fullPath: '/games/$gameId'
-      preLoaderRoute: typeof GamesGameIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/vote': {
+      id: '/vote'
+      path: '/vote'
+      fullPath: '/vote'
+      preLoaderRoute: typeof VoteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -281,11 +246,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/online/room/$code': {
-      id: '/online/room/$code'
-      path: '/online/room/$code'
-      fullPath: '/online/room/$code'
-      preLoaderRoute: typeof OnlineRoomCodeRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games/$gameId': {
+      id: '/games/$gameId'
+      path: '/games/$gameId'
+      fullPath: '/games/$gameId'
+      preLoaderRoute: typeof GamesGameIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/online/lobby': {
+      id: '/online/lobby'
+      path: '/online/lobby'
+      fullPath: '/online/lobby'
+      preLoaderRoute: typeof OnlineLobbyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play/local': {
+      id: '/play/local'
+      path: '/play/local'
+      fullPath: '/play/local'
+      preLoaderRoute: typeof PlayLocalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play/setup': {
+      id: '/play/setup'
+      path: '/play/setup'
+      fullPath: '/play/setup'
+      preLoaderRoute: typeof PlaySetupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/invoke-tool/$tool': {
@@ -293,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/.mcp/invoke-tool/$tool'
       fullPath: '/.mcp/invoke-tool/$tool'
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/online/room/$code': {
+      id: '/online/room/$code'
+      path: '/online/room/$code'
+      fullPath: '/online/room/$code'
+      preLoaderRoute: typeof OnlineRoomCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

@@ -141,26 +141,56 @@ export const Route = createFileRoute("/games/$gameId")({
   component: GameRouteComponent,
 });
 
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#0D0D12] text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-2 border-lime/20 border-t-lime animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center text-sm">🎮</div>
+        </div>
+        <div className="space-y-1">
+          <p className="text-xs font-black uppercase tracking-widest text-lime">Loading Game Mode</p>
+          <p className="text-[11px] text-slate-400">Heating up hostel gossip & secrets...</p>
+        </div>
+      </div>
+    );
+  }
+  return <>{children}</>;
+}
+
 function GameRouteComponent() {
   const { gameId } = useParams({ from: "/games/$gameId" });
 
+  let content: React.ReactNode;
   switch (gameId) {
     case "never-have-i-ever":
-      return <SecretVoteEngine config={NEVER_HAVE_I_EVER_CONFIG} />;
+      content = <SecretVoteEngine config={NEVER_HAVE_I_EVER_CONFIG} />;
+      break;
     case "would-you-rather":
-      return <SecretVoteEngine config={WOULD_YOU_RATHER_CONFIG} />;
+      content = <SecretVoteEngine config={WOULD_YOU_RATHER_CONFIG} />;
+      break;
     case "garma-garam-takes":
-      return <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
+      content = <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
+      break;
     case "pass-the-bomb":
-      return <PassTheBombEngine />;
+      content = <PassTheBombEngine />;
+      break;
     case "hot-seat":
-      return <HotSeatEngine />;
+      content = <HotSeatEngine />;
+      break;
     case "confession-roulette":
-      return <ConfessionRouletteEngine />;
+      content = <ConfessionRouletteEngine />;
+      break;
     case "heads-up-tilt":
-      return <HeadsUpEngine />;
+      content = <HeadsUpEngine />;
+      break;
     default:
-      return (
+      content = (
         <div className="min-h-screen bg-[#0D0D12] text-white flex flex-col items-center justify-center p-4 text-center space-y-4">
           <div className="text-5xl">🎮</div>
           <h1 className="text-xl font-black">Game Mode Not Found</h1>
@@ -176,4 +206,6 @@ function GameRouteComponent() {
         </div>
       );
   }
+
+  return <ClientOnly>{content}</ClientOnly>;
 }
