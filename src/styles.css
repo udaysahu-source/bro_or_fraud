@@ -89,11 +89,30 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+  }
+  /* Safe-area insets applied once (body only), not on html as well. */
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* Visible keyboard focus in the app's own style (hard yellow outline). */
+  :focus-visible {
+    outline: 3px solid var(--color-lime);
+    outline-offset: 3px;
+  }
+  /* Keep the app feeling native (no accidental text selection while tapping),
+     but never block selection/typing in form fields or opted-in text. */
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  .selectable {
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-touch-callout: default;
   }
   h1,
   h2,

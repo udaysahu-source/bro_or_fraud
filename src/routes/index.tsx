@@ -246,7 +246,7 @@ function PackCard({
               {p.badge}
             </span>
           </div>
-          <span className="mb-0.5 rounded border border-current px-1.5 py-0.5 text-[9px] font-black uppercase tracking-widest">
+          <span className="mb-0.5 rounded border border-current px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest">
             {p.tag}
           </span>
         </div>
@@ -256,17 +256,17 @@ function PackCard({
           <div className="text-xs font-black uppercase leading-tight text-foreground line-clamp-2">
             {p.name}
           </div>
-          <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             {p.words} words · 3–20 players
           </div>
         </div>
         <div className="mt-2.5 flex items-center justify-between">
           <span
-            className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${spiceBadge.bg}`}
+            className={`inline-block px-1.5 py-0.5 rounded text-[11px] font-black uppercase tracking-widest border ${spiceBadge.bg}`}
           >
             {spiceBadge.label}
           </span>
-          <span className="text-[10px] text-lime font-black">Play →</span>
+          <span className="text-[11px] text-lime font-black">Play →</span>
         </div>
       </div>
     </button>
@@ -487,10 +487,10 @@ function Home() {
               className="size-9 rounded-xl border-2 border-border object-cover shrink-0 shadow-md"
             />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-wider text-foreground leading-none">
+              <span className="text-[11px] font-black uppercase tracking-wider text-foreground leading-none">
                 Bro or Fraud?
               </span>
-              <span className="mt-0.5 px-1.5 py-0.2 text-[8px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20 inline-block w-fit">
+              <span className="mt-0.5 px-1.5 py-0.2 text-[10px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20 inline-block w-fit">
                 v1 · hostel edition
               </span>
             </div>
@@ -572,7 +572,7 @@ function Home() {
           >
             <span>🌐 Online</span>
             <span
-              className={`text-[8px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
+              className={`text-[10px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
                 mode === "online"
                   ? "bg-void/20 text-void"
                   : "bg-magenta/20 text-magenta border border-magenta/40"
@@ -584,7 +584,7 @@ function Home() {
         </div>
 
         {/* Mode helper text */}
-        <p className="mt-2 text-center text-[11px] font-semibold text-muted-foreground">
+        <p className="mt-2 text-center text-xs font-semibold text-muted-foreground">
           {mode === "local"
             ? "Pass one phone around the table. No signup, no wifi drama."
             : "Experimental peer-to-peer online mode for separate devices."}
@@ -617,7 +617,7 @@ function Home() {
                       : "Add Players & Setup"}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
                   <span>Custom Packs & Frauds</span>
                   <ChevronRight className="size-3.5" />
                 </div>
@@ -635,7 +635,7 @@ function Home() {
               </button>
               <div className="rounded-2xl border-2 border-border bg-surface px-4 py-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
                     Join with 4-Digit Code
                   </span>
                   {joinOpen && (
@@ -645,7 +645,7 @@ function Home() {
                         setJoinOpen(false);
                         setJoinDigits(["", "", "", ""]);
                       }}
-                      className="text-[10px] font-black uppercase tracking-widest text-muted-foreground"
+                      className="text-[11px] font-black uppercase tracking-widest text-muted-foreground"
                     >
                       Clear
                     </button>
@@ -659,6 +659,7 @@ function Home() {
                         joinRefs.current[i] = el;
                       }}
                       inputMode="numeric"
+                      autoComplete="off"
                       pattern="[0-9]*"
                       maxLength={1}
                       value={joinDigits[i]}
@@ -672,7 +673,7 @@ function Home() {
                         }
                       }}
                       aria-label={`Digit ${i + 1}`}
-                      className="grid size-11 place-items-center rounded-xl border-2 border-border bg-void text-center text-lg font-black text-foreground caret-lime focus:border-lime focus:outline-none"
+                      className="grid size-12 place-items-center rounded-xl border-2 border-border bg-void text-center text-xl font-black text-foreground caret-lime focus:border-lime focus:outline-none"
                     />
                   ))}
                 </div>
@@ -700,7 +701,7 @@ function Home() {
               <span>Party Game Modes</span>
               <span className="text-lime">//</span>
             </h2>
-            <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/30 tracking-wider">
+            <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/30 tracking-wider">
               8 Offline Modes
             </span>
           </div>
@@ -721,7 +722,7 @@ function Home() {
                   buzz(15);
                   setActiveGameCategory(cat.id);
                 }}
-                className={`text-[11px] font-black px-3 py-1.5 rounded-full whitespace-nowrap transition-all border shrink-0 ${
+                className={`text-xs font-black px-4 py-2.5 min-h-[40px] rounded-full whitespace-nowrap transition-all border shrink-0 ${
                   activeGameCategory === cat.id
                     ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10 scale-[1.02]"
                     : "bg-surface/90 text-muted-foreground border-border hover:text-foreground hover:border-white/20"
@@ -757,15 +758,15 @@ function Home() {
                         {game.name}
                       </span>
                       {game.isFlagship && (
-                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-full bg-lime text-void shadow-sm tracking-wider">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-lime text-void shadow-sm tracking-wider">
                           Flagship
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-slate-300 font-medium truncate mt-0.5">
+                    <div className="text-xs text-slate-300 font-medium truncate mt-0.5">
                       {game.hostelVibe || game.tagline}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-[10px] text-slate-400 font-semibold">
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400 font-semibold">
                       <span className="flex items-center gap-1">
                         👥 {game.players.min}-{game.players.max}
                       </span>
@@ -774,7 +775,7 @@ function Home() {
                         ⏱️ {game.estimatedMinutes.min}-{game.estimatedMinutes.max}m
                       </span>
                       <span>•</span>
-                      <span className={`px-1.5 py-0.2 rounded border text-[9px] font-bold ${game.badgeBg}`}>
+                      <span className={`px-1.5 py-0.2 rounded border text-[11px] font-bold ${game.badgeBg}`}>
                         {game.moodTag}
                       </span>
                     </div>
@@ -782,11 +783,11 @@ function Home() {
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0 pl-1">
-                  <span className="hidden group-hover:inline-block text-[10px] font-black uppercase text-lime tracking-wider transition-opacity">
+                  <span className="inline-block text-[11px] font-black uppercase text-lime tracking-wider transition-opacity">
                     Play
                   </span>
-                  <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-white/15 group-hover:border-white/20 transition-colors">
-                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                  <div className="size-9 rounded-full bg-lime/10 border border-lime/30 flex items-center justify-center group-hover:bg-lime/20 group-hover:border-white/20 transition-colors">
+                    <ChevronRight className="size-4 text-lime group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
               </motion.button>
@@ -807,7 +808,7 @@ function Home() {
                 buzz(20);
                 setShowAll(true);
               }}
-              className="text-[11px] font-black uppercase tracking-widest text-lime tactile tactile-press hover:underline"
+              className="text-xs font-black uppercase tracking-widest text-lime tactile tactile-press hover:underline"
             >
               See all ({allPacks.length}) →
             </button>
@@ -838,7 +839,7 @@ function Home() {
 
         <div className="flex-1 min-h-6" />
 
-        <footer className="pt-4 text-center text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">
+        <footer className="pt-4 text-center text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
           best played loud · headphones off · roast on
         </footer>
       </div>
@@ -868,10 +869,10 @@ function Home() {
               </button>
 
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20">
+                <span className="px-2 py-0.5 text-[11px] font-black uppercase tracking-widest text-lime bg-lime/10 rounded border border-lime/20">
                   Quick Guide
                 </span>
-                <span className="text-[10px] font-bold text-muted-foreground">
+                <span className="text-[11px] font-bold text-muted-foreground">
                   Step {howToPlayStep + 1} of 3
                 </span>
               </div>
@@ -884,7 +885,7 @@ function Home() {
                 <p className="mt-2.5 text-xs text-muted-foreground leading-relaxed">
                   {ONBOARDING_STEPS[howToPlayStep].description}
                 </p>
-                <div className="mt-3 rounded-xl bg-void/80 border border-border p-2.5 text-[11px] font-semibold text-lime">
+                <div className="mt-3 rounded-xl bg-void/80 border border-border p-2.5 text-xs font-semibold text-lime">
                   💡 {ONBOARDING_STEPS[howToPlayStep].tip}
                 </div>
               </div>
@@ -935,7 +936,7 @@ function Home() {
         )}
       </AnimatePresence>
 
-      {/* All Packs Bottom Sheet */}
+      {/* "All Packs" Bottom Sheet Drawer */}
       {showAll && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end animate-[fade-in_0.2s_ease-out_both]">
           <button
@@ -948,7 +949,7 @@ function Home() {
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b-2 border-border">
               <div>
                 <h3 className="text-lg font-black uppercase tracking-wide">All Word Packs</h3>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                   {allPacks.length} packs · tap to select for match
                 </p>
               </div>
@@ -1008,7 +1009,7 @@ function Home() {
                 x: { duration: 0.5, ease: "easeInOut" },
               }}
             >
-              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground">
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground">
                 {pending.status === "failed"
                   ? pending.kind === "create"
                     ? "Room failed"
@@ -1034,7 +1035,7 @@ function Home() {
                 {pending.room.code}
               </motion.div>
 
-              <div className="mt-4 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest">
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest">
                 <span
                   className={`inline-block size-2 rounded-full ${
                     pending.status === "confirmed"
@@ -1060,20 +1061,20 @@ function Home() {
                   <button
                     type="button"
                     onClick={dismissPending}
-                    className="flex-1 rounded-xl border-2 border-border bg-void px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-foreground tactile tactile-press"
+                    className="flex-1 rounded-xl border-2 border-border bg-void px-4 py-2.5 text-xs font-black uppercase tracking-widest text-foreground tactile tactile-press"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={retryPending}
-                    className="flex-1 rounded-xl bg-lime px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-void border-2 border-void tactile tactile-press"
+                    className="flex-1 rounded-xl bg-lime px-4 py-2.5 text-xs font-black uppercase tracking-widest text-void border-2 border-void tactile tactile-press"
                   >
                     Retry →
                   </button>
                 </div>
               ) : (
-                <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                   {pending.status === "confirmed"
                     ? "Locked in · good luck"
                     : "Share this code with your bros"}

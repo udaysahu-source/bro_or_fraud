@@ -759,12 +759,24 @@ export function OnlineRoom() {
     }
   };
 
-  // UI Helpers
-  const copyRoomCode = () => {
+  const copyRoomCode = async () => {
     buzz(15);
-    navigator.clipboard.writeText(roomCode.toUpperCase());
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+    try {
+      await navigator.clipboard.writeText(roomCode.toUpperCase());
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      // Clipboard can be blocked (permissions / insecure context). The code is
+      // selectable, so fall back to selecting it for manual copy.
+      const el = document.getElementById("room-code-display");
+      if (el) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    }
   };
 
   // Renders the secret word as a clean, highly-legible text block
@@ -1743,7 +1755,7 @@ export function OnlineRoom() {
           </Link>
           <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
             <span className="inline-block size-2 rounded-full bg-lime animate-pulse" />
-            Room {roomCode.toUpperCase()}
+            Room <span className="selectable">{roomCode.toUpperCase()}</span>
           </span>
         </header>
 
@@ -1756,6 +1768,7 @@ export function OnlineRoom() {
                 {statusMessage}
               </span>
               <h1
+                id="room-code-display"
                 className="mt-2 text-6xl font-black uppercase tracking-wider text-lime select-all cursor-pointer"
                 onClick={copyRoomCode}
               >
