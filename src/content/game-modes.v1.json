@@ -1,0 +1,863 @@
+{
+  "schemaVersion": "1.0.0",
+  "app": {
+    "name": "Bro or Fraud?",
+    "language": "en-IN",
+    "defaultContentLanguage": "hinglish",
+    "description": "A fast, chaotic party-game collection for Indian Gen Z groups.",
+    "contentGuidelines": {
+      "tone": ["current", "specific", "witty", "social", "slightly unhinged"],
+      "avoid": [
+        "generic icebreakers",
+        "dated meme phrasing",
+        "forced slang",
+        "personal humiliation",
+        "body-shaming",
+        "caste, religion, region, or accent-based jokes",
+        "pressuring players to disclose real secrets"
+      ],
+      "skipAllowed": true,
+      "fictionalAnswersAllowed": true
+    }
+  },
+  "gameModes": [
+    {
+      "id": "pass-the-bomb",
+      "name": "Pass the Bomb",
+      "tagline": "Think fast. Pass faster.",
+      "category": "speed-chaos",
+      "players": {
+        "min": 3,
+        "max": 12
+      },
+      "estimatedMinutes": {
+        "min": 5,
+        "max": 12
+      },
+      "coreLoop": [
+        "Show a category or challenge.",
+        "The current player gives one valid answer aloud.",
+        "They pass the bomb before the hidden fuse expires.",
+        "Repeated or invalid answers cost a life.",
+        "The player holding the bomb when it explodes loses a life or takes a silly penalty."
+      ],
+      "rules": {
+        "defaultFuseSeconds": {
+          "min": 15,
+          "max": 45
+        },
+        "livesPerPlayer": 3,
+        "suddenDeathPlayersRemaining": 2,
+        "suddenDeathFuseSeconds": {
+          "min": 8,
+          "max": 18
+        },
+        "repeatAnswerPenalty": "lose-life",
+        "skipAllowed": true,
+        "penaltiesMustBe": "optional, harmless, and non-humiliating"
+      },
+      "roundModifiers": [
+        {
+          "id": "reverse-direction",
+          "name": "Reverse Direction",
+          "description": "Passing direction reverses after the next valid answer."
+        },
+        {
+          "id": "double-trouble",
+          "name": "Double Trouble",
+          "description": "Two bombs circulate; each holder must answer before passing."
+        },
+        {
+          "id": "alphabet-lock",
+          "name": "Alphabet Lock",
+          "description": "Every answer must start with the displayed letter."
+        },
+        {
+          "id": "no-obvious-answers",
+          "name": "No Obvious Answers",
+          "description": "The group rejects the first predictable answer; use only with friendly consensus."
+        }
+      ],
+      "contentPacks": [
+        {
+          "id": "internet-brainrot",
+          "name": "Internet Brainrot",
+          "level": "unhinged",
+          "items": [
+            {
+              "id": "ptb-ib-001",
+              "prompt": "Things people do just to farm aura",
+              "examples": ["walk away without looking back", "wear sunglasses indoors"],
+              "tags": ["internet", "aura"]
+            },
+            {
+              "id": "ptb-ib-002",
+              "prompt": "Excuses for replying after 14 business days",
+              "examples": [
+                "I was protecting my peace",
+                "my notifications were in witness protection"
+              ],
+              "tags": ["dating", "internet"]
+            },
+            {
+              "id": "ptb-ib-003",
+              "prompt": "Things that look expensive but are actually free",
+              "examples": ["confidence", "a clean desktop wallpaper"],
+              "tags": ["humour"]
+            },
+            {
+              "id": "ptb-ib-004",
+              "prompt": "Signs someone is performing for the algorithm",
+              "examples": ["filming every coffee", "turning a normal day into a cinematic vlog"],
+              "tags": ["social-media"]
+            },
+            {
+              "id": "ptb-ib-005",
+              "prompt": "Things people put in a bio before earning them",
+              "examples": ["founder", "thought leader"],
+              "tags": ["internet", "work"]
+            },
+            {
+              "id": "ptb-ib-006",
+              "prompt": "Reasons someone says 'I'm locked in' but isn't",
+              "examples": ["reorganising Notion for three hours", "watching productivity videos"],
+              "tags": ["productivity"]
+            },
+            {
+              "id": "ptb-ib-007",
+              "prompt": "Things that instantly kill someone's aura",
+              "examples": ["being rude to staff", "explaining your own joke"],
+              "tags": ["social"]
+            },
+            {
+              "id": "ptb-ib-008",
+              "prompt": "Things that deserve a soft launch",
+              "examples": ["a new haircut", "a project that finally works"],
+              "tags": ["internet"]
+            },
+            {
+              "id": "ptb-ib-009",
+              "prompt": "Things people call a 'red flag' just because they dislike them",
+              "examples": ["using Android", "liking pineapple on pizza"],
+              "tags": ["dating", "debate"]
+            },
+            {
+              "id": "ptb-ib-010",
+              "prompt": "Things that are basically unpaid internships for your emotions",
+              "examples": ["situationships", "being the group therapist"],
+              "tags": ["dating", "social"]
+            }
+          ]
+        },
+        {
+          "id": "college-chaos",
+          "name": "College Chaos",
+          "level": "mild",
+          "items": [
+            {
+              "id": "ptb-cc-001",
+              "prompt": "Things people do to look busy before an evaluation",
+              "examples": ["opening a terminal", "scrolling through code they don't understand"],
+              "tags": ["college", "tech"]
+            },
+            {
+              "id": "ptb-cc-002",
+              "prompt": "Things that mysteriously appear the night before submission",
+              "examples": ["team conflict", "a new project idea"],
+              "tags": ["college"]
+            },
+            {
+              "id": "ptb-cc-003",
+              "prompt": "Things a hackathon team says at hour 23",
+              "examples": ["we can still fix the backend", "the demo is basically done"],
+              "tags": ["hackathon", "tech"]
+            },
+            {
+              "id": "ptb-cc-004",
+              "prompt": "Things that make a group project suspicious",
+              "examples": ["one person owns every file", "the presenter has never run the app"],
+              "tags": ["college"]
+            },
+            {
+              "id": "ptb-cc-005",
+              "prompt": "Things students call 'revision' that are not revision",
+              "examples": ["highlighting the syllabus", "watching a 4-hour study vlog"],
+              "tags": ["college"]
+            },
+            {
+              "id": "ptb-cc-006",
+              "prompt": "Things that look impressive on a resume but need proof",
+              "examples": ["ten tech stacks", "expert in everything"],
+              "tags": ["career", "tech"]
+            },
+            {
+              "id": "ptb-cc-007",
+              "prompt": "Things people say before asking you to do their part",
+              "examples": ["bro it's a small change", "you are better at this stuff"],
+              "tags": ["college"]
+            },
+            {
+              "id": "ptb-cc-008",
+              "prompt": "Things that should count as a college elective",
+              "examples": ["debugging at 2 AM", "explaining a failed demo confidently"],
+              "tags": ["college", "humour"]
+            },
+            {
+              "id": "ptb-cc-009",
+              "prompt": "Things that make a placement interview instantly awkward",
+              "examples": [
+                "claiming expertise then blanking",
+                "asking the interviewer to repeat the company name"
+              ],
+              "tags": ["career"]
+            },
+            {
+              "id": "ptb-cc-010",
+              "prompt": "Things people do after saying 'I'll start tomorrow'",
+              "examples": ["make a new timetable", "save another roadmap"],
+              "tags": ["productivity"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heads-up-tilt",
+      "name": "Heads Up / Tilt",
+      "tagline": "You have the word. They have the clues.",
+      "category": "team-performance",
+      "players": {
+        "min": 2,
+        "max": 12
+      },
+      "estimatedMinutes": {
+        "min": 3,
+        "max": 10
+      },
+      "coreLoop": [
+        "Choose a content pack and round duration.",
+        "The guesser holds the phone against their forehead.",
+        "Teammates describe the word without saying it or a forbidden word.",
+        "Tilt down to mark correct and tilt up to skip; buttons are always available as fallback.",
+        "Show the final correct, skipped, and pass totals."
+      ],
+      "rules": {
+        "roundDurationsSeconds": [30, 60, 90],
+        "correctAction": "tilt-down",
+        "skipAction": "tilt-up",
+        "fallbackControls": ["correct-button", "skip-button"],
+        "motionPermissionMustBeRequestedOnUserGesture": true,
+        "calibrationAvailable": true,
+        "forbiddenWordsEnabled": true,
+        "teamsOptional": true
+      },
+      "roundVariants": [
+        {
+          "id": "one-word-only",
+          "name": "One Word Only",
+          "description": "Clue-givers may say only one word per clue."
+        },
+        {
+          "id": "forbidden-words",
+          "name": "Forbidden Words",
+          "description": "Each card includes one or two words the team cannot say."
+        },
+        {
+          "id": "silent-acting",
+          "name": "Silent Acting",
+          "description": "Clue-givers must act without speaking."
+        },
+        {
+          "id": "speed-blitz",
+          "name": "Speed Blitz",
+          "description": "The final 15 seconds award a bonus for consecutive correct answers."
+        }
+      ],
+      "contentPacks": [
+        {
+          "id": "internet-culture",
+          "name": "Internet Culture",
+          "items": [
+            {
+              "id": "hu-ic-001",
+              "word": "Aura farming",
+              "forbiddenWords": ["aura", "cool"],
+              "tags": ["internet"]
+            },
+            {
+              "id": "hu-ic-002",
+              "word": "Close Friends story",
+              "forbiddenWords": ["Instagram", "green"],
+              "tags": ["social-media"]
+            },
+            {
+              "id": "hu-ic-003",
+              "word": "Soft launch",
+              "forbiddenWords": ["relationship", "reveal"],
+              "tags": ["dating", "internet"]
+            },
+            {
+              "id": "hu-ic-004",
+              "word": "Delulu",
+              "forbiddenWords": ["delusional", "dream"],
+              "tags": ["slang"]
+            },
+            {
+              "id": "hu-ic-005",
+              "word": "NPC energy",
+              "forbiddenWords": ["game", "character"],
+              "tags": ["internet"]
+            },
+            {
+              "id": "hu-ic-006",
+              "word": "Digital footprint",
+              "forbiddenWords": ["internet", "history"],
+              "tags": ["internet"]
+            },
+            {
+              "id": "hu-ic-007",
+              "word": "LinkedIn influencer",
+              "forbiddenWords": ["job", "professional"],
+              "tags": ["career", "social-media"]
+            },
+            {
+              "id": "hu-ic-008",
+              "word": "Situationship",
+              "forbiddenWords": ["dating", "relationship"],
+              "tags": ["dating"]
+            },
+            {
+              "id": "hu-ic-009",
+              "word": "Main character syndrome",
+              "forbiddenWords": ["hero", "attention"],
+              "tags": ["internet"]
+            },
+            {
+              "id": "hu-ic-010",
+              "word": "Productivity aesthetic",
+              "forbiddenWords": ["study", "desk"],
+              "tags": ["productivity"]
+            }
+          ]
+        },
+        {
+          "id": "college-and-tech",
+          "name": "College & Tech",
+          "items": [
+            {
+              "id": "hu-ct-001",
+              "word": "Merge conflict",
+              "forbiddenWords": ["Git", "code"],
+              "tags": ["tech"]
+            },
+            {
+              "id": "hu-ct-002",
+              "word": "Hackathon demo",
+              "forbiddenWords": ["project", "presentation"],
+              "tags": ["tech", "college"]
+            },
+            {
+              "id": "hu-ct-003",
+              "word": "Resume padding",
+              "forbiddenWords": ["CV", "experience"],
+              "tags": ["career"]
+            },
+            {
+              "id": "hu-ct-004",
+              "word": "Mass recruiter",
+              "forbiddenWords": ["placement", "company"],
+              "tags": ["career"]
+            },
+            {
+              "id": "hu-ct-005",
+              "word": "Group project freeloading",
+              "forbiddenWords": ["team", "work"],
+              "tags": ["college"]
+            },
+            {
+              "id": "hu-ct-006",
+              "word": "Last-minute deployment",
+              "forbiddenWords": ["website", "production"],
+              "tags": ["tech"]
+            },
+            {
+              "id": "hu-ct-007",
+              "word": "AI-generated assignment",
+              "forbiddenWords": ["ChatGPT", "copy"],
+              "tags": ["AI", "college"]
+            },
+            {
+              "id": "hu-ct-008",
+              "word": "Attendance shortage",
+              "forbiddenWords": ["75%", "class"],
+              "tags": ["college"]
+            },
+            {
+              "id": "hu-ct-009",
+              "word": "Tutorial hell",
+              "forbiddenWords": ["YouTube", "coding"],
+              "tags": ["tech", "learning"]
+            },
+            {
+              "id": "hu-ct-010",
+              "word": "LinkedIn humblebrag",
+              "forbiddenWords": ["post", "achievement"],
+              "tags": ["career", "internet"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "confession-roulette",
+      "name": "Confession Roulette",
+      "tagline": "Real answers. Fake answers. Who's bluffing?",
+      "category": "bluffing-deduction",
+      "players": {
+        "min": 3,
+        "max": 10
+      },
+      "estimatedMinutes": {
+        "min": 8,
+        "max": 15
+      },
+      "coreLoop": [
+        "Show a prompt to all players.",
+        "Each player privately submits a short answer or chooses a fictional answer.",
+        "Mix submissions with clearly marked system-generated decoys internally, but do not reveal which are decoys.",
+        "Reveal answers one at a time without authorship.",
+        "Players vote for the author or select Ghost/Decoy.",
+        "Reveal authorship and award points."
+      ],
+      "rules": {
+        "anonymousByDefault": true,
+        "fictionalAnswerAllowed": true,
+        "skipAllowed": true,
+        "interrogationSeconds": 30,
+        "voteReveal": "after-voting-locks",
+        "points": {
+          "correctAuthorGuess": 2,
+          "correctGhostGuess": 2,
+          "foolEachPlayer": 1,
+          "funniestAnswerOptionalBonus": 1
+        },
+        "privacy": {
+          "hideAuthorshipUntilReveal": true,
+          "doNotLogRawSubmissions": true,
+          "clearRoundSubmissionsAfterGame": true
+        }
+      },
+      "contentPacks": [
+        {
+          "id": "fake-flexes",
+          "name": "Fake Flexes",
+          "items": [
+            {
+              "id": "cr-ff-001",
+              "prompt": "What's the most impressive thing you could claim on LinkedIn with absolutely no evidence?",
+              "tags": ["career", "bluff"]
+            },
+            {
+              "id": "cr-ff-002",
+              "prompt": "Invent a startup idea that sounds fundable until someone asks one follow-up question.",
+              "tags": ["startup", "bluff"]
+            },
+            {
+              "id": "cr-ff-003",
+              "prompt": "What's a skill you could confidently claim after watching one tutorial?",
+              "tags": ["internet", "bluff"]
+            },
+            {
+              "id": "cr-ff-004",
+              "prompt": "Write a humblebrag about doing the bare minimum.",
+              "tags": ["social-media", "humour"]
+            },
+            {
+              "id": "cr-ff-005",
+              "prompt": "What's the most suspiciously specific excuse for missing a meeting?",
+              "tags": ["humour", "bluff"]
+            },
+            {
+              "id": "cr-ff-006",
+              "prompt": "Invent a productivity method that is just procrastination with better branding.",
+              "tags": ["productivity"]
+            },
+            {
+              "id": "cr-ff-007",
+              "prompt": "Write a fake achievement that would get 500 LinkedIn likes.",
+              "tags": ["career", "social-media"]
+            },
+            {
+              "id": "cr-ff-008",
+              "prompt": "What's the most believable reason someone has 47 unfinished side projects?",
+              "tags": ["creator", "humour"]
+            },
+            {
+              "id": "cr-ff-009",
+              "prompt": "Invent a course title that sounds premium but teaches one obvious thing.",
+              "tags": ["internet", "bluff"]
+            },
+            {
+              "id": "cr-ff-010",
+              "prompt": "What's the most ridiculous thing a person could call 'strategic networking'?",
+              "tags": ["career", "humour"]
+            }
+          ]
+        },
+        {
+          "id": "digital-confessions",
+          "name": "Digital Life Confessions",
+          "items": [
+            {
+              "id": "cr-dc-001",
+              "prompt": "What's a harmless online habit you would deny if someone opened your screen-time report?",
+              "tags": ["internet", "confession"]
+            },
+            {
+              "id": "cr-dc-002",
+              "prompt": "What's the most effort you've put into looking unbothered online?",
+              "tags": ["social-media"]
+            },
+            {
+              "id": "cr-dc-003",
+              "prompt": "What's a post you've drafted in your head but would never publish?",
+              "tags": ["social-media"]
+            },
+            {
+              "id": "cr-dc-004",
+              "prompt": "What's the most unserious reason you've judged someone's profile?",
+              "tags": ["internet"]
+            },
+            {
+              "id": "cr-dc-005",
+              "prompt": "What's a trend you pretended to understand before actually understanding it?",
+              "tags": ["trends"]
+            },
+            {
+              "id": "cr-dc-006",
+              "prompt": "What's a harmless thing you have over-analysed because of one notification?",
+              "tags": ["internet"]
+            },
+            {
+              "id": "cr-dc-007",
+              "prompt": "What's the funniest thing your search history could be misunderstood as?",
+              "tags": ["internet"]
+            },
+            {
+              "id": "cr-dc-008",
+              "prompt": "What's something you act too cool to enjoy but secretly like?",
+              "tags": ["confession"]
+            },
+            {
+              "id": "cr-dc-009",
+              "prompt": "What's the most elaborate excuse you've made to avoid a call?",
+              "tags": ["social"]
+            },
+            {
+              "id": "cr-dc-010",
+              "prompt": "What's a completely harmless thing you have treated like classified information?",
+              "tags": ["confession"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "never-have-i-ever",
+      "name": "Never Have I Ever",
+      "tagline": "Own it, deny it, or skip it.",
+      "category": "social-reveal",
+      "players": {
+        "min": 3,
+        "max": 12
+      },
+      "estimatedMinutes": {
+        "min": 5,
+        "max": 12
+      },
+      "coreLoop": [
+        "Show one statement.",
+        "Each player privately chooses I Have, I Haven't, or Skip.",
+        "Reveal only aggregate counts by default.",
+        "If exactly one player chooses I Have and Detective Mode is enabled, the group can guess who it was.",
+        "Allow the player to decline any follow-up."
+      ],
+      "rules": {
+        "responses": ["I have", "I haven't", "Skip"],
+        "aggregateRevealDefault": true,
+        "detectiveMode": {
+          "enabledByDefault": false,
+          "trigger": "exactly-one-I-have",
+          "guessSeconds": 20
+        },
+        "noForcedExplanations": true
+      },
+      "contentPacks": [
+        {
+          "id": "digital-delusions",
+          "name": "Digital Delusions",
+          "items": [
+            {
+              "id": "nhie-dd-001",
+              "statement": "Never have I ever posted a story mainly hoping one specific person would see it."
+            },
+            {
+              "id": "nhie-dd-002",
+              "statement": "Never have I ever checked someone's profile so deeply that I reached content from a different era."
+            },
+            {
+              "id": "nhie-dd-003",
+              "statement": "Never have I ever typed a reply, deleted it, rewritten it, and still sent 'lol'."
+            },
+            {
+              "id": "nhie-dd-004",
+              "statement": "Never have I ever pretended not to care while tracking every tiny online signal."
+            },
+            {
+              "id": "nhie-dd-005",
+              "statement": "Never have I ever opened an app automatically and forgotten why I opened it."
+            },
+            {
+              "id": "nhie-dd-006",
+              "statement": "Never have I ever used a song on a story to communicate something I wouldn't say directly."
+            },
+            {
+              "id": "nhie-dd-007",
+              "statement": "Never have I ever rehearsed how I'd act if I randomly met someone."
+            },
+            {
+              "id": "nhie-dd-008",
+              "statement": "Never have I ever checked who viewed my story and built a whole theory from it."
+            },
+            {
+              "id": "nhie-dd-009",
+              "statement": "Never have I ever kept a screenshot as evidence for a future argument that never happened."
+            },
+            {
+              "id": "nhie-dd-010",
+              "statement": "Never have I ever said I was offline while actively scrolling."
+            }
+          ]
+        },
+        {
+          "id": "college-and-career",
+          "name": "College & Career",
+          "items": [
+            {
+              "id": "nhie-cc-001",
+              "statement": "Never have I ever saved a roadmap instead of starting the actual work."
+            },
+            {
+              "id": "nhie-cc-002",
+              "statement": "Never have I ever added a tool to my resume because I understood one tutorial."
+            },
+            {
+              "id": "nhie-cc-003",
+              "statement": "Never have I ever called a project 'almost done' when the main feature was still imaginary."
+            },
+            {
+              "id": "nhie-cc-004",
+              "statement": "Never have I ever watched a productivity video to avoid doing the task."
+            },
+            {
+              "id": "nhie-cc-005",
+              "statement": "Never have I ever opened a coding problem, read the examples, and immediately checked the solution."
+            },
+            {
+              "id": "nhie-cc-006",
+              "statement": "Never have I ever joined a group project and discovered the group was just a WhatsApp notification."
+            },
+            {
+              "id": "nhie-cc-007",
+              "statement": "Never have I ever said 'I'll start after this week' more than once."
+            },
+            {
+              "id": "nhie-cc-008",
+              "statement": "Never have I ever used AI to explain an answer and then struggled to explain it myself."
+            },
+            {
+              "id": "nhie-cc-009",
+              "statement": "Never have I ever made a timetable so ambitious that it failed before lunch."
+            },
+            {
+              "id": "nhie-cc-010",
+              "statement": "Never have I ever presented a bug as a feature during a demo."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "would-you-rather",
+      "name": "Would You Rather",
+      "tagline": "Pick your problem.",
+      "category": "choices-debate",
+      "players": {
+        "min": 3,
+        "max": 12
+      },
+      "estimatedMinutes": {
+        "min": 5,
+        "max": 12
+      },
+      "coreLoop": [
+        "Show two mutually exclusive choices.",
+        "Players vote privately before seeing group results.",
+        "Reveal the vote split.",
+        "Optionally give one player from each side 20 seconds to defend the choice.",
+        "Award prediction points to players who correctly predict the majority."
+      ],
+      "rules": {
+        "privateVoting": true,
+        "debateSeconds": 20,
+        "majorityPredictionPoints": 1,
+        "tiesAllowed": true,
+        "skipAllowed": true
+      },
+      "contentPacks": [
+        {
+          "id": "internet-and-social-life",
+          "name": "Internet & Social Life",
+          "items": [
+            {
+              "id": "wyr-is-001",
+              "optionA": "Everyone can see your screen-time report",
+              "optionB": "Everyone can see your saved posts"
+            },
+            {
+              "id": "wyr-is-002",
+              "optionA": "Your Close Friends story becomes public for 24 hours",
+              "optionB": "Your last 20 searches become a group presentation"
+            },
+            {
+              "id": "wyr-is-003",
+              "optionA": "Never use Instagram again",
+              "optionB": "Never use YouTube again"
+            },
+            {
+              "id": "wyr-is-004",
+              "optionA": "Your crush reads your drafts",
+              "optionB": "Your friends read your unsent messages"
+            },
+            {
+              "id": "wyr-is-005",
+              "optionA": "Be famous online but misunderstood",
+              "optionB": "Be unknown online but respected in real life"
+            },
+            {
+              "id": "wyr-is-006",
+              "optionA": "Lose all your saved reels",
+              "optionB": "Lose every screenshot on your phone"
+            },
+            {
+              "id": "wyr-is-007",
+              "optionA": "Your algorithm becomes your public personality",
+              "optionB": "Your search history becomes your public personality"
+            },
+            {
+              "id": "wyr-is-008",
+              "optionA": "Only communicate through voice notes",
+              "optionB": "Only communicate through memes"
+            },
+            {
+              "id": "wyr-is-009",
+              "optionA": "Every post needs a public explanation",
+              "optionB": "Every deleted post is restored publicly"
+            },
+            {
+              "id": "wyr-is-010",
+              "optionA": "Get one honest answer to any question",
+              "optionB": "Know when anyone is lying to you"
+            }
+          ]
+        },
+        {
+          "id": "college-and-future",
+          "name": "College & Future",
+          "items": [
+            {
+              "id": "wyr-cf-001",
+              "optionA": "Get a high-paying job you find boring",
+              "optionB": "Get a modest-paying job you genuinely enjoy"
+            },
+            {
+              "id": "wyr-cf-002",
+              "optionA": "Have a perfect resume but no confidence",
+              "optionB": "Have average credentials but exceptional communication"
+            },
+            {
+              "id": "wyr-cf-003",
+              "optionA": "Build one product used by 10,000 people",
+              "optionB": "Earn a huge salary building someone else's product"
+            },
+            {
+              "id": "wyr-cf-004",
+              "optionA": "Know exactly what career you want at 20",
+              "optionB": "Have the freedom to change direction at 30"
+            },
+            {
+              "id": "wyr-cf-005",
+              "optionA": "Work remotely from anywhere",
+              "optionB": "Work four days a week with no overtime"
+            },
+            {
+              "id": "wyr-cf-006",
+              "optionA": "Be exceptionally skilled but terrible at networking",
+              "optionB": "Be average at your craft but excellent at selling your work"
+            },
+            {
+              "id": "wyr-cf-007",
+              "optionA": "Have a mentor who gives brutal feedback",
+              "optionB": "Have a friend who builds alongside you"
+            },
+            {
+              "id": "wyr-cf-008",
+              "optionA": "Get one year to explore the world",
+              "optionB": "Get one year to build a business with living costs covered"
+            },
+            {
+              "id": "wyr-cf-009",
+              "optionA": "Never procrastinate again",
+              "optionB": "Never doubt your decisions again"
+            },
+            {
+              "id": "wyr-cf-010",
+              "optionA": "Have unlimited learning resources",
+              "optionB": "Have a reliable team that executes with you"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sharedSystems": {
+    "playerSetup": {
+      "minPlayers": 3,
+      "maxPlayers": 12,
+      "validateEmptyNames": true,
+      "validateDuplicates": true
+    },
+    "ui": {
+      "theme": "dark",
+      "visualDirection": "bold meme-poster, high contrast, restrained neon accents, chunky readable type",
+      "mobileFirst": true,
+      "minimumTouchTargetPx": 48,
+      "reducedMotionSupport": true
+    },
+    "settings": {
+      "languageOptions": ["Hinglish", "English"],
+      "soundEffectsToggle": true,
+      "hapticsToggle": true,
+      "mildAndUnhingedContentLevels": true
+    },
+    "privacy": {
+      "anonymousVotesByDefault": true,
+      "skipPromptsEnabled": true,
+      "avoidPersistingSensitiveSubmissions": true
+    },
+    "offline": {
+      "contentBundledLocally": true,
+      "allCoreModesWorkOffline": true
+    }
+  }
+}

@@ -1,11 +1,17 @@
 export type RevealStyle = "hold" | "tap" | "auto";
 export type PresetKey = "quick" | "standard" | "chaos" | "custom";
 
+export type ContentLanguage = "hinglish" | "en";
+export type ContentLevel = "mild" | "spicy" | "unhinged";
+
 export interface MatchSettings {
   rounds: number;
   timerSeconds: number;
   revealStyle: RevealStyle;
   soundEnabled: boolean;
+  hapticsEnabled: boolean;
+  language: ContentLanguage;
+  contentLevel: ContentLevel;
   preset?: PresetKey;
 }
 
@@ -27,6 +33,9 @@ export const SETTINGS_PRESETS: Record<
       timerSeconds: 15,
       revealStyle: "tap",
       soundEnabled: true,
+      hapticsEnabled: true,
+      language: "hinglish",
+      contentLevel: "mild",
     },
   },
   standard: {
@@ -38,6 +47,9 @@ export const SETTINGS_PRESETS: Record<
       timerSeconds: 30,
       revealStyle: "hold",
       soundEnabled: true,
+      hapticsEnabled: true,
+      language: "hinglish",
+      contentLevel: "mild",
     },
   },
   chaos: {
@@ -49,6 +61,9 @@ export const SETTINGS_PRESETS: Record<
       timerSeconds: 45,
       revealStyle: "auto",
       soundEnabled: true,
+      hapticsEnabled: true,
+      language: "hinglish",
+      contentLevel: "spicy",
     },
   },
 };
@@ -58,6 +73,9 @@ export const DEFAULT_SETTINGS: MatchSettings = {
   timerSeconds: 30,
   revealStyle: "hold",
   soundEnabled: true,
+  hapticsEnabled: true,
+  language: "hinglish",
+  contentLevel: "mild",
   preset: "standard",
 };
 

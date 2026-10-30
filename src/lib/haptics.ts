@@ -1,4 +1,16 @@
 export function buzz(pattern: number | number[] = 30) {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = window.localStorage.getItem("bof.settings.v1");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.hapticsEnabled === false) return;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     try {
       navigator.vibrate(pattern);

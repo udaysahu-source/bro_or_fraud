@@ -321,4 +321,6 @@ export const playTimerTickSound = (isUrgent: boolean = false) => soundFx.playTim
 export const playTimerAlarmSound = () => soundFx.playTimerAlarm();
 export const playVoteConfirmSound = () => soundFx.playVoteConfirm();
 export const playVerdictSound = (isBroWin: boolean) => soundFx.playVerdict(isBroWin);
+export const playVictorySound = () => soundFx.playVerdict(true);
+export const playSuspenseHeartbeat = () => soundFx.playSuspenseHeartbeat();
 export const playSuspenseHeartbeatSound = () => soundFx.playSuspenseHeartbeat();
