@@ -223,14 +223,14 @@ function PackCard({
         if (onSelect) onSelect(p);
       }}
       className={`pack-card ${
-        compact ? "w-full min-h-[135px]" : "shrink-0 w-44 snap-start h-auto"
-      } rounded-2xl border-2 border-border bg-surface text-left overflow-hidden brutal-shadow-pink animate-[fade-in_0.35s_ease-out_both] flex flex-col justify-between transition-transform active:scale-[0.98]`}
+        compact ? "w-full min-h-[135px]" : "shrink-0 w-48 snap-start h-auto"
+      } rounded-2xl border-2.5 border-black bg-surface text-left overflow-hidden shadow-[4px_4px_0_0_#000] hover:shadow-[6px_6px_0_0_var(--color-magenta)] animate-[fade-in_0.35s_ease-out_both] flex flex-col justify-between transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000]`}
       style={{ animationDelay: `${i * 30}ms` }}
     >
       <div
         className={`relative ${p.bg} ${p.ink} ${
-          compact ? "h-16" : "h-20"
-        } border-b-2 border-void overflow-hidden shrink-0`}
+          compact ? "h-16" : "h-22"
+        } border-b-2.5 border-black overflow-hidden shrink-0`}
       >
         <PatternLayer pattern={p.pattern} accent={p.accent} />
         <div className="badge-shine absolute inset-0" />
@@ -283,9 +283,10 @@ function Home() {
   const [savedRosterCount, setSavedRosterCount] = useState<number | null>(null);
   const hubGames = getHubGames();
   const [activeGameCategory, setActiveGameCategory] = useState<GameCategoryChip>("all");
-  const filteredHubGames = activeGameCategory === "all"
-    ? hubGames
-    : hubGames.filter((g) => g.chipCategory === activeGameCategory || g.isFlagship);
+  const filteredHubGames =
+    activeGameCategory === "all"
+      ? hubGames
+      : hubGames.filter((g) => g.chipCategory === activeGameCategory || g.isFlagship);
 
   const [pending, setPending] = useState<null | {
     kind: "create" | "join";
@@ -519,32 +520,55 @@ function Home() {
         </header>
 
         {/* Hero Section */}
-        <section className="mt-[clamp(0.75rem,3vw,1.5rem)]">
-          <h1 className="text-hero font-black uppercase">
-            <span className="inline-block" style={{ textShadow: "4px 4px 0 var(--color-magenta)" }}>
+        <section className="mt-[clamp(0.75rem,3vw,1.5rem)] relative">
+          <div className="flex flex-wrap items-center gap-2 mb-2.5">
+            <span className="sticker-badge bg-lime text-void rotate-[-1.5deg]">
+              ⚡ 100% OFFLINE
+            </span>
+            <span className="sticker-badge bg-magenta text-white rotate-[1deg]">
+              🚫 ZERO SIGNUP
+            </span>
+            <span className="sticker-badge bg-white text-void rotate-[-1deg]">
+              🎮 8 PARTY MODES
+            </span>
+          </div>
+
+          <h1 className="text-hero font-black uppercase tracking-tight select-none">
+            <span
+              className="inline-block text-white"
+              style={{
+                textShadow: "4px 4px 0 #000, 6px 6px 0 var(--color-magenta)",
+              }}
+            >
               Bro or
             </span>
             <br />
             <span
               className="inline-block text-lime mt-1"
-              style={{ textShadow: "4px 4px 0 var(--color-magenta)" }}
+              style={{
+                textShadow: "4px 4px 0 #000, 6px 6px 0 var(--color-magenta)",
+              }}
             >
               Fraud?
             </span>
           </h1>
-          <p className="text-tagline mt-[clamp(0.5rem,2vw,0.875rem)] font-semibold text-muted-foreground max-w-[24ch]">
-            One of you is lying. The rest get to roast them.
-          </p>
+
+          <div className="mt-3 flex items-center gap-2">
+            <span className="inline-block size-2 rounded-full bg-lime animate-ping" />
+            <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">
+              One of you is bluffing. The rest roast them.
+            </p>
+          </div>
         </section>
 
         {/* Segmented Mode Selector with clear active state */}
         <div
-          className="relative mt-5 grid grid-cols-2 rounded-2xl border-2 border-border p-1 bg-track"
+          className="relative mt-5 grid grid-cols-2 rounded-2xl border-2 border-black p-1 bg-void shadow-[4px_4px_0_0_#000]"
           role="radiogroup"
           aria-label="Game Mode"
         >
           <div
-            className={`pointer-events-none absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-lime transition-transform duration-200 ${
+            className={`pointer-events-none absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-lime border-2 border-black shadow-[2px_2px_0_0_#000] transition-transform duration-200 ${
               mode === "local" ? "translate-x-1" : "translate-x-[calc(100%+4px)]"
             }`}
           />
@@ -554,8 +578,8 @@ function Home() {
               setMode("local");
               buzz(15);
             }}
-            className={`relative z-10 py-2.5 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[44px] ${
-              mode === "local" ? "text-void" : "text-muted-foreground"
+            className={`relative z-10 py-3 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[46px] ${
+              mode === "local" ? "text-void" : "text-muted-foreground hover:text-white"
             }`}
           >
             <span>📱 Pass Phone</span>
@@ -566,25 +590,25 @@ function Home() {
               setMode("online");
               buzz(15);
             }}
-            className={`relative z-10 py-2.5 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[44px] ${
-              mode === "online" ? "text-void" : "text-muted-foreground"
+            className={`relative z-10 py-3 text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 min-h-[46px] ${
+              mode === "online" ? "text-void" : "text-muted-foreground hover:text-white"
             }`}
           >
-            <span>🌐 Online</span>
+            <span>🌐 Online Room</span>
             <span
-              className={`text-[10px] px-1 py-0.2 rounded font-black uppercase tracking-wider ${
+              className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider border ${
                 mode === "online"
-                  ? "bg-void/20 text-void"
-                  : "bg-magenta/20 text-magenta border border-magenta/40"
+                  ? "bg-void text-lime border-black"
+                  : "bg-magenta/20 text-magenta border-magenta/40"
               }`}
             >
-              Beta
+              P2P
             </span>
           </button>
         </div>
 
         {/* Mode helper text */}
-        <p className="mt-2 text-center text-xs font-semibold text-muted-foreground">
+        <p className="mt-2 text-center text-xs font-bold text-muted-foreground/80 uppercase tracking-wider">
           {mode === "local"
             ? "Pass one phone around the table. No signup, no wifi drama."
             : "Experimental peer-to-peer online mode for separate devices."}
@@ -597,9 +621,12 @@ function Home() {
               <button
                 type="button"
                 onClick={handlePrimary}
-                className="block w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press active:scale-[0.98] transition-transform min-h-[58px]"
+                className="group relative block w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-3 border-black shadow-[5px_5px_0_0_var(--color-magenta)] hover:shadow-[7px_7px_0_0_var(--color-magenta)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-[1px_1px_0_0_var(--color-magenta)] transition-all min-h-[58px]"
               >
-                Start Pass-the-Phone →
+                <div className="flex items-center justify-center gap-2">
+                  <span>Start Pass-the-Phone</span>
+                  <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
+                </div>
               </button>
               <button
                 type="button"
@@ -607,19 +634,21 @@ function Home() {
                   buzz(25);
                   navigate({ to: "/play/setup" });
                 }}
-                className="flex items-center justify-between w-full rounded-2xl border-2 border-border bg-surface px-5 py-3.5 text-xs font-black uppercase tracking-widest text-foreground tactile tactile-press hover:border-white/20 transition-all min-h-[50px]"
+                className="flex items-center justify-between w-full rounded-2xl border-2 border-white/20 bg-surface px-5 py-3.5 text-xs font-black uppercase tracking-widest text-foreground shadow-[4px_4px_0_0_#000] hover:border-lime hover:shadow-[4px_4px_0_0_var(--color-lime)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all min-h-[52px]"
               >
-                <div className="flex items-center gap-2">
-                  <Users className="size-4 text-lime" />
-                  <span>
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-lime/10 border border-lime/30 grid place-items-center text-lime">
+                    <Users className="size-4" />
+                  </div>
+                  <span className="font-bold">
                     {savedRosterCount
                       ? `Roster (${savedRosterCount} Players)`
                       : "Add Players & Setup"}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-lime">
                   <span>Custom Packs & Frauds</span>
-                  <ChevronRight className="size-3.5" />
+                  <ChevronRight className="size-4" />
                 </div>
               </button>
             </>
@@ -733,8 +762,8 @@ function Home() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filteredHubGames.map((game) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {filteredHubGames.map((game, idx) => (
               <motion.button
                 key={game.id}
                 type="button"
@@ -746,36 +775,36 @@ function Home() {
                   buzz(25);
                   navigate({ to: game.route as any });
                 }}
-                className={`group relative flex items-center justify-between p-4 rounded-2xl border-2 text-left transition-all duration-200 active:scale-[0.98] bg-gradient-to-r ${game.accentGradient} ${game.accentBorder} shadow-lg hover:shadow-xl`}
+                className={`group relative flex items-center justify-between p-4 rounded-2xl border-2.5 border-black text-left transition-all duration-150 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_0_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_0_#000] bg-gradient-to-br ${game.accentGradient} shadow-[4px_4px_0_0_#000]`}
               >
                 <div className="flex items-start gap-3.5 overflow-hidden pr-2">
-                  <div className="text-2xl w-11 h-11 rounded-xl bg-void/90 border border-white/10 flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+                  <div className="text-2xl size-12 rounded-xl bg-void border-2 border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0_0_#000] group-hover:scale-105 transition-transform">
                     {game.emoji}
                   </div>
                   <div className="overflow-hidden">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-black text-foreground truncate group-hover:text-white transition-colors">
+                      <span className="text-sm font-black text-white uppercase tracking-tight truncate group-hover:text-lime transition-colors">
                         {game.name}
                       </span>
                       {game.isFlagship && (
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-lime text-void shadow-sm tracking-wider">
+                        <span className="sticker-badge bg-lime text-void text-[9px] py-0 px-1.5 rotate-[1deg]">
                           Flagship
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-300 font-medium truncate mt-0.5">
+                    <div className="text-xs text-white/80 font-bold truncate mt-0.5">
                       {game.hostelVibe || game.tagline}
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-400 font-semibold">
-                      <span className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 mt-2 text-[10px] text-white/70 font-black uppercase tracking-wider">
+                      <span className="bg-black/40 px-2 py-0.5 rounded border border-white/10 flex items-center gap-1">
                         👥 {game.players.min}-{game.players.max}
                       </span>
-                      <span>•</span>
-                      <span>
+                      <span className="bg-black/40 px-2 py-0.5 rounded border border-white/10">
                         ⏱️ {game.estimatedMinutes.min}-{game.estimatedMinutes.max}m
                       </span>
-                      <span>•</span>
-                      <span className={`px-1.5 py-0.2 rounded border text-[11px] font-bold ${game.badgeBg}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded border border-black font-black uppercase ${game.badgeBg}`}
+                      >
                         {game.moodTag}
                       </span>
                     </div>
@@ -783,11 +812,8 @@ function Home() {
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0 pl-1">
-                  <span className="inline-block text-[11px] font-black uppercase text-lime tracking-wider transition-opacity">
-                    Play
-                  </span>
-                  <div className="size-9 rounded-full bg-lime/10 border border-lime/30 flex items-center justify-center group-hover:bg-lime/20 group-hover:border-white/20 transition-colors">
-                    <ChevronRight className="size-4 text-lime group-hover:translate-x-0.5 transition-all" />
+                  <div className="size-9 rounded-xl bg-black border-2 border-white/20 flex items-center justify-center group-hover:bg-lime group-hover:border-black group-hover:text-void text-lime shadow-[2px_2px_0_0_#000] transition-colors">
+                    <ChevronRight className="size-5 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </motion.button>

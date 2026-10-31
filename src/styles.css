@@ -252,6 +252,70 @@
   animation: shimmer 1.4s ease-in-out infinite;
 }
 
+@utility bg-cyber-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+
+@utility bg-cyber-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+@utility brutal-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 1.25rem;
+  box-shadow: 4px 4px 0 0 #000000;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+@utility brutal-card-interactive {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 1.25rem;
+  box-shadow: 4px 4px 0 0 var(--color-magenta);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease;
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 var(--color-magenta);
+    border-color: var(--color-lime);
+  }
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 var(--color-magenta);
+  }
+}
+
+@utility brutal-shadow-heavy {
+  box-shadow:
+    6px 6px 0 0 #000000,
+    6px 6px 0 2px var(--color-magenta);
+}
+
+@utility sticker-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0 0 #000000;
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
 @utility text-hero {
   font-size: clamp(2.75rem, 13vw, 4.5rem);
   line-height: 0.82;

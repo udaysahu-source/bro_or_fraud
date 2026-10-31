@@ -85,30 +85,35 @@ function Settings() {
 
   return (
     <div className="min-h-dvh bg-void text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-40">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-44">
         <header className="flex items-center justify-between">
           <Link
             to="/"
             onClick={() => buzz(15)}
-            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors min-h-[44px] px-1"
+            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-white transition-colors min-h-[44px] px-1"
           >
             ← Home
           </Link>
-          <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground bg-surface px-2.5 py-1 rounded border border-border">
-            Pacing & Rules
+          <span className="sticker-badge bg-black text-lime border-2 border-black text-[10px] shadow-[2px_2px_0_0_#000]">
+            PACING & RULES
           </span>
         </header>
 
         <section className="mt-5">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-magenta">
-            // customization
-          </p>
-          <h1 className="mt-2 text-4xl font-black uppercase leading-[0.9]">
+          <span className="sticker-badge bg-magenta text-white text-[9px] mb-2">
+            // CUSTOMIZATION
+          </span>
+          <h1
+            className="mt-2 text-4xl sm:text-5xl font-black uppercase leading-[0.9] font-display text-foreground"
+            style={{ textShadow: "3px 3px 0 #000" }}
+          >
             Tune the
             <br />
-            <span className="text-lime">Chaos</span>
+            <span className="text-lime" style={{ textShadow: "3px 3px 0 var(--color-magenta)" }}>
+              Chaos
+            </span>
           </h1>
-          <p className="mt-2 text-xs font-medium text-muted-foreground">
+          <p className="mt-2 text-xs font-bold text-muted-foreground uppercase tracking-wide">
             Pick a quick preset or fine-tune round count, timer, and reveal security.
           </p>
         </section>
@@ -119,7 +124,7 @@ function Settings() {
             <h2 className="text-xs font-black uppercase tracking-widest text-foreground">
               ⚡ Presets
             </h2>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="text-[10px] font-black uppercase tracking-widest text-lime">
               {preset === "custom" ? "Custom Config" : `${preset} active`}
             </span>
           </div>
@@ -132,17 +137,17 @@ function Settings() {
                   key={key}
                   type="button"
                   onClick={() => selectPreset(key)}
-                  className={`flex flex-col items-center justify-center rounded-2xl border-2 p-3 text-center transition-all tactile tactile-press min-h-[78px] ${
+                  className={`flex flex-col items-center justify-center rounded-2xl border-2.5 border-black p-3 text-center transition-all min-h-[82px] cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
                     active
-                      ? "border-lime bg-lime/15 shadow-[0_0_15px_rgba(255,214,0,0.2)]"
-                      : "border-border bg-surface text-muted-foreground hover:border-white/20"
+                      ? "border-lime bg-lime/20 shadow-[4px_4px_0_0_#CCFF00]"
+                      : "bg-surface text-muted-foreground hover:border-white/40"
                   }`}
                 >
-                  <span className="text-xl leading-none">{p.emoji}</span>
+                  <span className="text-2xl leading-none">{p.emoji}</span>
                   <span className="mt-1.5 text-xs font-black uppercase tracking-wide text-foreground">
                     {p.name.split(" ")[0]}
                   </span>
-                  <span className="text-[9px] font-bold text-muted-foreground">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase">
                     {p.settings.rounds}R · {p.settings.timerSeconds}s
                   </span>
                 </button>
@@ -184,15 +189,15 @@ function Settings() {
                   key={r.id}
                   type="button"
                   onClick={() => update("revealStyle", r.id)}
-                  className={`flex w-full items-center gap-3.5 rounded-2xl border-2 p-3.5 text-left transition-all tactile tactile-press ${
+                  className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
                     active
-                      ? "border-lime bg-lime/10 shadow-[0_0_15px_rgba(255,214,0,0.15)]"
-                      : "border-border bg-surface hover:border-white/20"
+                      ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
+                      : "bg-surface hover:bg-surface/80"
                   }`}
                 >
                   <div
-                    className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl ${
-                      active ? "bg-lime/20" : "bg-void border border-border"
+                    className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
+                      active ? "bg-lime/25" : "bg-void"
                     }`}
                   >
                     {r.emoji}
@@ -201,13 +206,17 @@ function Settings() {
                     <div className="text-sm font-black uppercase tracking-wide text-foreground">
                       {r.label}
                     </div>
-                    <div className="text-xs text-muted-foreground leading-snug">{r.blurb}</div>
+                    <div className="text-xs text-muted-foreground font-medium leading-snug">
+                      {r.blurb}
+                    </div>
                   </div>
                   <div
-                    className={`size-5 shrink-0 rounded-full border-2 ${
-                      active ? "border-lime bg-lime" : "border-border"
+                    className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
+                      active ? "bg-lime text-void font-black" : "bg-void"
                     }`}
-                  />
+                  >
+                    {active && <span className="text-[10px]">✓</span>}
+                  </div>
                 </button>
               );
             })}
@@ -261,15 +270,15 @@ function Settings() {
                 playDiscussionStartSound();
               }
             }}
-            className={`flex w-full items-center gap-3.5 rounded-2xl border-2 p-3.5 text-left transition-all tactile tactile-press ${
+            className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
               s.soundEnabled !== false
-                ? "border-lime bg-lime/10 shadow-[0_0_15px_rgba(255,214,0,0.15)]"
-                : "border-border bg-surface hover:border-white/20"
+                ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
+                : "bg-surface hover:bg-surface/80"
             }`}
           >
             <div
-              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl ${
-                s.soundEnabled !== false ? "bg-lime/20" : "bg-void border border-border"
+              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
+                s.soundEnabled !== false ? "bg-lime/25" : "bg-void"
               }`}
             >
               {s.soundEnabled !== false ? "🔊" : "🔇"}
@@ -278,17 +287,19 @@ function Settings() {
               <div className="text-sm font-black uppercase tracking-wide text-foreground">
                 {s.soundEnabled !== false ? "Sound FX Enabled" : "Sound Muted"}
               </div>
-              <div className="text-xs text-muted-foreground leading-snug">
+              <div className="text-xs text-muted-foreground font-medium leading-snug">
                 {s.soundEnabled !== false
                   ? "Cues for secret reveals, timer alert & roasts"
                   : "Silent gameplay without audio synth"}
               </div>
             </div>
             <div
-              className={`size-5 shrink-0 rounded-full border-2 ${
-                s.soundEnabled !== false ? "border-lime bg-lime" : "border-border"
+              className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
+                s.soundEnabled !== false ? "bg-lime text-void font-black" : "bg-void"
               }`}
-            />
+            >
+              {s.soundEnabled !== false && <span className="text-[10px]">✓</span>}
+            </div>
           </button>
         </Section>
 
@@ -300,15 +311,15 @@ function Settings() {
           <button
             type="button"
             onClick={() => update("hapticsEnabled", s.hapticsEnabled === false)}
-            className={`flex w-full items-center gap-3.5 rounded-2xl border-2 p-3.5 text-left transition-all tactile tactile-press ${
+            className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
               s.hapticsEnabled !== false
-                ? "border-lime bg-lime/10 shadow-[0_0_15px_rgba(255,214,0,0.15)]"
-                : "border-border bg-surface hover:border-white/20"
+                ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
+                : "bg-surface hover:bg-surface/80"
             }`}
           >
             <div
-              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl ${
-                s.hapticsEnabled !== false ? "bg-lime/20" : "bg-void border border-border"
+              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
+                s.hapticsEnabled !== false ? "bg-lime/25" : "bg-void"
               }`}
             >
               {s.hapticsEnabled !== false ? "📳" : "🔕"}
@@ -317,15 +328,17 @@ function Settings() {
               <div className="text-sm font-black uppercase tracking-wide text-foreground">
                 {s.hapticsEnabled !== false ? "Vibrations On" : "Vibrations Off"}
               </div>
-              <div className="text-xs text-muted-foreground leading-snug">
+              <div className="text-xs text-muted-foreground font-medium leading-snug">
                 Tactile buzz for buttons, reveals & countdowns
               </div>
             </div>
             <div
-              className={`size-5 shrink-0 rounded-full border-2 ${
-                s.hapticsEnabled !== false ? "border-lime bg-lime" : "border-border"
+              className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
+                s.hapticsEnabled !== false ? "bg-lime text-void font-black" : "bg-void"
               }`}
-            />
+            >
+              {s.hapticsEnabled !== false && <span className="text-[10px]">✓</span>}
+            </div>
           </button>
         </Section>
       </div>
@@ -333,13 +346,13 @@ function Settings() {
       {/* Sticky bottom bar with Est. Time + Vibe + Start Game CTA */}
       <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-void via-void/95 to-transparent pb-safe pt-2">
         <div className="mx-auto w-full max-w-md px-5 pb-5 pt-2">
-          <div className="rounded-2xl border-2 border-border bg-surface/90 p-3.5 shadow-2xl backdrop-blur-xl space-y-3">
+          <div className="rounded-2xl border-3 border-black bg-surface/95 p-4 shadow-[5px_5px_0_0_#000] backdrop-blur-xl space-y-3">
             <div className="flex items-center justify-between px-1">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   Est. Match Time
                 </span>
-                <div className="text-lg font-black font-display text-foreground">
+                <div className="text-xl font-black font-display text-foreground">
                   ~{totalTime} min
                 </div>
               </div>
@@ -358,9 +371,9 @@ function Settings() {
                 buzz([30, 20, 40]);
                 navigate({ to: "/play/setup" });
               }}
-              className="block w-full rounded-xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press"
+              className="block w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
             >
-              Start Game →
+              Save & Setup Match 🚀 →
             </button>
           </div>
         </div>
@@ -382,7 +395,7 @@ function Section({
     <section className="mt-6">
       <div className="mb-2.5 flex items-baseline justify-between">
         <h2 className="text-xs font-black uppercase tracking-widest text-foreground">{label}</h2>
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
           {hint}
         </span>
       </div>
@@ -404,10 +417,10 @@ function Chip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-xl border-2 py-3 text-center font-display text-base font-black transition-all tactile tactile-press min-h-[48px] ${
+      className={`rounded-xl border-2.5 border-black py-3 text-center font-display text-base font-black transition-all min-h-[48px] cursor-pointer shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
         active
-          ? "border-lime bg-lime text-void shadow-sm"
-          : "border-border bg-surface text-foreground hover:border-white/20"
+          ? "border-lime bg-lime text-void shadow-[3px_3px_0_0_#000]"
+          : "bg-surface text-foreground hover:border-white/40"
       }`}
     >
       {children}
@@ -418,7 +431,7 @@ function Chip({
 function SliderBar({ value, min, max }: { value: number; min: number; max: number }) {
   const pct = Math.max(5, Math.min(100, ((value - min) / (max - min)) * 100));
   return (
-    <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-border">
+    <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-void border-2 border-black shadow-inner">
       <div
         className="h-full bg-lime transition-all duration-300 rounded-full"
         style={{ width: `${pct}%` }}

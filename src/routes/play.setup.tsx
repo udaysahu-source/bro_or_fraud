@@ -471,14 +471,14 @@ export function PlaySetup() {
         <header className="flex items-center justify-between">
           <Link
             to="/"
-            className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-foreground"
+            className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-lime transition-colors"
           >
             ← Home
           </Link>
           <Link
             to="/settings"
             onClick={() => buzz(15)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-border bg-surface text-[10px] font-black uppercase tracking-wider text-lime hover:border-lime/40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-surface text-[10px] font-black uppercase tracking-wider text-lime shadow-[2px_2px_0_0_#000] hover:border-lime transition-all"
           >
             <span>
               ⚙️ {matchSettings.rounds}R · {matchSettings.timerSeconds}s ·{" "}
@@ -490,13 +490,15 @@ export function PlaySetup() {
         {/* Title */}
         <section className="mt-5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-magenta">
-              // pass-the-phone
-            </p>
-            <h1 className="mt-1.5 text-4xl font-black uppercase leading-[0.9]">
-              Configure the
+            <span className="sticker-badge bg-magenta text-white text-[9px] mb-1.5 rotate-[-1deg]">
+              PASS-THE-PHONE CONFIG
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-black uppercase leading-[0.95] select-none">
+              Setup The
               <br />
-              <span className="text-lime">Session 🎮</span>
+              <span className="text-lime" style={{ textShadow: "3px 3px 0 #000" }}>
+                Session 🎮
+              </span>
             </h1>
           </div>
           <button
@@ -504,34 +506,35 @@ export function PlaySetup() {
               buzz(15);
               setShowHelp(true);
             }}
-            className="grid size-12 place-items-center rounded-xl border-2 border-border bg-surface text-lime tactile tactile-press cursor-pointer shrink-0"
+            className="grid size-12 place-items-center rounded-2xl border-2.5 border-black bg-surface text-lime shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_var(--color-lime)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none cursor-pointer shrink-0 transition-all"
             title="How to Play"
           >
-            <HelpCircle size={22} />
+            <HelpCircle size={24} />
           </button>
         </section>
 
         {/* 1. Player Roster Management */}
         <section className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em]">
-              // Player Roster ({players.length}/20)
+          <div className="mb-2.5 flex items-center justify-between">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-1">
+              <span>// Player Roster</span>
+              <span className="text-lime">({players.length}/20)</span>
             </h2>
             <button
               onClick={quickAddPlayer}
               disabled={players.length >= 20}
-              className="text-[10px] font-black uppercase tracking-widest text-lime disabled:opacity-50"
+              className="text-[10px] font-black uppercase tracking-widest text-lime hover:underline disabled:opacity-40"
             >
               + Quick Add
             </button>
           </div>
 
           {/* Player roster list with inline editing */}
-          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
             {players.map((p, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-surface px-3 py-2"
+                className="flex items-center justify-between rounded-xl border-2 border-black bg-surface px-3 py-2 shadow-[2px_2px_0_0_#000]"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
                   <button
@@ -544,7 +547,7 @@ export function PlaySetup() {
                       setPlayers(updated);
                       localStorage.setItem("bof:roster", JSON.stringify(updated));
                     }}
-                    className="grid size-9 place-items-center rounded-lg border border-white/10 bg-void text-lime shrink-0 hover:scale-110 transition-transform"
+                    className="grid size-9 place-items-center rounded-lg border-2 border-black bg-void text-lime shrink-0 shadow-[1px_1px_0_0_#000] hover:scale-105 active:scale-95 transition-transform"
                     title="Tap to change avatar"
                   >
                     {renderAvatar(p.emoji, "size-5")}
@@ -555,13 +558,14 @@ export function PlaySetup() {
                     onChange={(e) => updatePlayerName(idx, e.target.value)}
                     maxLength={15}
                     placeholder={`Player ${idx + 1}`}
-                    className="w-full bg-transparent font-bold uppercase text-sm text-foreground focus:outline-none focus:border-b-2 focus:border-lime"
+                    className="w-full bg-transparent font-black uppercase text-sm text-foreground focus:outline-none focus:text-lime"
                   />
                 </div>
                 <button
                   onClick={() => removePlayer(idx)}
                   disabled={players.length <= 3}
-                  className="text-muted-foreground hover:text-magenta disabled:opacity-30 p-1 shrink-0"
+                  className="text-muted-foreground hover:text-magenta disabled:opacity-20 p-1.5 shrink-0 transition-colors"
+                  aria-label={`Remove ${p.name}`}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -580,39 +584,44 @@ export function PlaySetup() {
                 if (e.key === "Enter") addPlayer(newPlayerName);
               }}
               maxLength={15}
-              className="flex-1 rounded-xl border-2 border-white/10 bg-void px-4 py-3 text-sm font-bold text-foreground focus:border-magenta focus:outline-none"
+              className="flex-1 rounded-xl border-2.5 border-black bg-void px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:border-lime focus:outline-none shadow-[2px_2px_0_0_#000]"
             />
             <button
               onClick={() => addPlayer(newPlayerName)}
               disabled={players.length >= 20 || !newPlayerName.trim()}
-              className="grid size-12 place-items-center rounded-xl bg-magenta text-white border-2 border-void brutal-shadow-white tactile tactile-press disabled:opacity-50"
+              className="grid size-12 place-items-center rounded-xl bg-magenta text-white border-2.5 border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-40 transition-all"
             >
-              <Plus size={20} />
+              <Plus size={22} />
             </button>
           </div>
         </section>
 
         {/* 2. Fraud count selector */}
-        <section className="mt-6 rounded-2xl border-2 border-white/10 bg-surface p-4">
+        <section className="mt-6 rounded-2xl border-2.5 border-black bg-surface p-4 shadow-[3px_3px_0_0_#000]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black uppercase tracking-wide">Impostors / Frauds</h2>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
-                Dynamic limits based on players
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🕵️‍♂️</span>
+                <h2 className="text-sm font-black uppercase tracking-wide">Frauds / Impostors</h2>
+              </div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">
+                {impostorsCount === 1
+                  ? "1 fraud among the bros"
+                  : `${impostorsCount} frauds infiltrating`}
               </p>
             </div>
-            <div className="flex items-center gap-3 border-2 border-white/10 rounded-xl bg-void p-1.5">
+            <div className="flex items-center gap-3 border-2 border-black rounded-xl bg-void p-1 shadow-[2px_2px_0_0_#000]">
               <button
                 onClick={() => {
                   buzz(15);
                   setImpostorsCount(Math.max(1, impostorsCount - 1));
                 }}
                 disabled={impostorsCount <= 1}
-                className="size-8 rounded-lg bg-surface border border-white/10 text-lg font-black grid place-items-center disabled:opacity-30"
+                className="size-9 rounded-lg bg-surface border-2 border-black text-lg font-black grid place-items-center disabled:opacity-30 active:scale-95 transition-transform"
               >
                 -
               </button>
-              <span className="w-6 text-center font-display text-lg font-black text-lime">
+              <span className="w-6 text-center font-display text-xl font-black text-lime">
                 {impostorsCount}
               </span>
               <button
@@ -621,7 +630,7 @@ export function PlaySetup() {
                   setImpostorsCount(Math.min(maxImpostors, impostorsCount + 1));
                 }}
                 disabled={impostorsCount >= maxImpostors}
-                className="size-8 rounded-lg bg-surface border border-white/10 text-lg font-black grid place-items-center disabled:opacity-30"
+                className="size-9 rounded-lg bg-surface border-2 border-black text-lg font-black grid place-items-center disabled:opacity-30 active:scale-95 transition-transform"
               >
                 +
               </button>
@@ -775,14 +784,22 @@ export function PlaySetup() {
       </div>
 
       {/* Sticky Bottom Actions */}
-      <div className="fixed inset-x-0 bottom-0 z-40">
-        <div className="mx-auto w-full max-w-md px-5 pb-6 pt-3">
-          <div className="rounded-2xl border-2 border-white/10 bg-black/60 p-3 backdrop-blur-md">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-void via-void/90 to-transparent pt-6 pb-safe pointer-events-none">
+        <div className="mx-auto w-full max-w-md px-5 pb-4 pointer-events-auto">
+          <div className="rounded-2xl border-2.5 border-black bg-surface/95 p-3.5 backdrop-blur-md shadow-[4px_4px_0_0_#000]">
+            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-muted-foreground px-1 pb-2">
+              <span className="flex items-center gap-1.5 text-foreground">
+                <span className="size-2 rounded-full bg-lime animate-ping" />
+                {players.length} Players ({impostorsCount}{" "}
+                {impostorsCount === 1 ? "Fraud" : "Frauds"})
+              </span>
+              <span className="text-lime">{selectedPacks.length} Packs Selected</span>
+            </div>
             <button
               onClick={handleStartMatch}
-              className="block w-full rounded-xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink tactile tactile-press"
+              className="block w-full rounded-xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] hover:shadow-[6px_6px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_0_var(--color-magenta)] transition-all cursor-pointer"
             >
-              Start Local Match →
+              Start Local Match 🚀 →
             </button>
           </div>
         </div>
