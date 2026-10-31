@@ -18,6 +18,9 @@ import {
   Award,
   ChevronRight,
   Send,
+  Lock,
+  ArrowRight,
+  Trophy,
 } from "lucide-react";
 import { buzz } from "@/lib/haptics";
 import {
@@ -29,6 +32,7 @@ import {
 import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { HotSeatItem } from "@/lib/games/types";
+import { renderAvatar } from "@/routes/play.setup";
 
 interface Player {
   id: string;
@@ -43,22 +47,34 @@ interface Submission {
   answer: string;
 }
 
+const AVATAR_POOL = [
+  "Smile",
+  "Crown",
+  "Sparkles",
+  "Ghost",
+  "Flame",
+  "Bot",
+  "Shield",
+  "Zap",
+  "Star",
+  "User",
+];
+
 export function HotSeatEngine() {
   const navigate = useNavigate();
-  const [matchSettings, setMatchSettings] = useState<MatchSettings>(loadSettings());
+  const [matchSettings] = useState<MatchSettings>(loadSettings());
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Setup state
   const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "Player 1", avatar: "😎", score: 0 },
-    { id: "2", name: "Player 2", avatar: "🤠", score: 0 },
-    { id: "3", name: "Player 3", avatar: "🤓", score: 0 },
+    { id: "1", name: "Player 1", avatar: "Smile", score: 0 },
+    { id: "2", name: "Player 2", avatar: "Crown", score: 0 },
+    { id: "3", name: "Player 3", avatar: "Sparkles", score: 0 },
   ]);
   const [newPlayerName, setNewPlayerName] = useState("");
-  const [selectedPackId, setSelectedPackId] = useState<string>("all");
   const [seatedPlayerIndex, setSeatedPlayerIndex] = useState(0);
 
-  // Gameplay phases: setup -> round-intro -> handoff -> submit -> seated-reveal -> seated-guessing -> round-recap -> podium
+  // Gameplay phases
   const [phase, setPhase] = useState<
     "setup" | "round-intro" | "handoff" | "submit" | "seated-reveal" | "round-recap" | "podium"
   >("setup");
@@ -68,20 +84,32 @@ export function HotSeatEngine() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [currentVoterIndex, setCurrentVoterIndex] = useState(0);
   const [currentAnswer, setCurrentAnswer] = useState("");
-  const [guessedAuthors, setGuessedAuthors] = useState<Record<number, string>>({}); // submissionIdx -> guessedPlayerId
+  const [guessedAuthors, setGuessedAuthors] = useState<Record<number, string>>({});
   const [roundNumber, setRoundNumber] = useState(1);
 
   const lang = matchSettings.language || "hinglish";
   const seatedPlayer = players[seatedPlayerIndex];
-  // Submitting players are all players EXCEPT the seated player
   const submittingPlayers = players.filter((_, idx) => idx !== seatedPlayerIndex);
   const currentSubmittingPlayer = submittingPlayers[currentVoterIndex];
 
-  // Add / remove player
+  // Auto-hide when blurred
+  useEffect(() => {
+    const handleHide = () => {
+      if (phase === "submit") {
+        setPhase("handoff");
+      }
+    };
+    window.addEventListener("blur", handleHide);
+    document.addEventListener("visibilitychange", handleHide);
+    return () => {
+      window.removeEventListener("blur", handleHide);
+      document.removeEventListener("visibilitychange", handleHide);
+    };
+  }, [phase]);
+
   const addPlayer = () => {
     if (!newPlayerName.trim()) return;
-    const avatars = ["😎", "🤠", "🤓", "👻", "🔥", "🤖", "🦊", "🍕", "⚡", "🚀"];
-    const avatar = avatars[players.length % avatars.length];
+    const avatar = AVATAR_POOL[players.length % AVATAR_POOL.length];
     setPlayers((prev) => [
       ...prev,
       {
@@ -101,187 +129,184 @@ export function HotSeatEngine() {
     buzz(15);
   };
 
-  // Start round
   const startRound = () => {
-    const item = getContentItem<HotSeatItem>("hot-seat", {
-      packId: selectedPackId === "all" ? undefined : selectedPackId,
-      spiceLevel: matchSettings.contentLevel,
-    });
+    buzz(25);
+    const item = getContentItem("hot-seat") as HotSeatItem;
     setCurrentItem(item);
-    setSubmissions([]);
     setCurrentVoterIndex(0);
     setCurrentAnswer("");
+    setSubmissions([]);
     setGuessedAuthors({});
     setPhase("round-intro");
-    buzz(25);
-    if (soundEnabled) playRoleRevealSound();
   };
 
-  // Begin submission handoffs
-  const startSubmissions = () => {
-    setCurrentVoterIndex(0);
-    setCurrentAnswer("");
-    setPhase("handoff");
+  const startSubmissionsHandoff = () => {
     buzz(20);
+    setCurrentVoterIndex(0);
+    setPhase("handoff");
   };
 
-  // Submit answer
-  const handleSubmitAnswer = () => {
-    if (!currentAnswer.trim() || !currentSubmittingPlayer) return;
+  const handleSubmitAnswer = (isPreset = false, presetText = "") => {
     buzz(20);
     if (soundEnabled) playVoteConfirmSound();
 
-    const newSubmissions = [
-      ...submissions,
-      {
-        playerId: currentSubmittingPlayer.id,
-        playerName: currentSubmittingPlayer.name,
-        answer: currentAnswer.trim(),
-      },
-    ];
-    setSubmissions(newSubmissions);
+    const textToSave = isPreset
+      ? presetText
+      : currentAnswer.trim() || "Always borrowing chargers without returning them.";
+
+    const newSub: Submission = {
+      playerId: currentSubmittingPlayer.id,
+      playerName: currentSubmittingPlayer.name,
+      answer: textToSave,
+    };
+
+    const nextSubs = [...submissions, newSub];
+    setSubmissions(nextSubs);
     setCurrentAnswer("");
 
-    // Next voter or finish
     if (currentVoterIndex + 1 < submittingPlayers.length) {
       setCurrentVoterIndex((i) => i + 1);
       setPhase("handoff");
     } else {
-      // Shuffle submissions so seated player doesn't know turn order!
-      const shuffled = [...newSubmissions].sort(() => Math.random() - 0.5);
+      // Shuffle submissions so seated player cannot infer order
+      const shuffled = [...nextSubs].sort(() => Math.random() - 0.5);
       setSubmissions(shuffled);
       setPhase("seated-reveal");
     }
   };
 
-  // Guess author of a submission
-  const handleGuessAuthor = (subIdx: number, playerId: string) => {
-    buzz(20);
+  const handleGuessAuthor = (subIdx: number, authorId: string) => {
+    buzz(15);
     setGuessedAuthors((prev) => ({
       ...prev,
-      [subIdx]: playerId,
+      [subIdx]: authorId,
     }));
   };
 
-  // Finalize round scoring
-  const handleFinishGuessing = () => {
+  const finalizeSeatedGuesses = () => {
     buzz(30);
-    if (soundEnabled) playRoleRevealSound();
-
-    let seatedPointsGained = 0;
+    let correctCount = 0;
     submissions.forEach((sub, idx) => {
-      const guessed = guessedAuthors[idx];
-      if (guessed === sub.playerId) {
-        seatedPointsGained += 1;
+      if (guessedAuthors[idx] === sub.playerId) {
+        correctCount++;
       }
     });
 
     setPlayers((prev) =>
-      prev.map((p, idx) => {
-        if (idx === seatedPlayerIndex) {
-          return { ...p, score: p.score + seatedPointsGained };
-        }
-        return p;
-      }),
+      prev.map((p, idx) =>
+        idx === seatedPlayerIndex ? { ...p, score: p.score + correctCount } : p,
+      ),
     );
 
+    if (soundEnabled) playRoleRevealSound();
     setPhase("round-recap");
   };
 
-  // Advance to next seated player
   const handleNextRound = () => {
-    const nextSeatedIdx = (seatedPlayerIndex + 1) % players.length;
-    setSeatedPlayerIndex(nextSeatedIdx);
-    setRoundNumber((r) => r + 1);
-
-    // End after all players had a turn in the hot seat
     if (roundNumber >= players.length) {
       setPhase("podium");
       if (soundEnabled) playVictorySound();
     } else {
+      setSeatedPlayerIndex((i) => (i + 1) % players.length);
+      setRoundNumber((r) => r + 1);
       startRound();
     }
   };
 
+  const allGuessesMade = submissions.length > 0 && submissions.every((_, i) => !!guessedAuthors[i]);
+
   return (
-    <div className="min-h-screen bg-[#0D0D12] text-slate-100 flex flex-col justify-between selection:bg-rose-500/30">
-      {/* Top Bar */}
-      <header className="px-4 py-3 border-b border-white/5 flex items-center justify-between backdrop-blur-md sticky top-0 z-30 bg-[#0D0D12]/80">
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
         <Link
           to="/"
-          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
         >
-          ← Hub
+          End game
         </Link>
+
         <div className="flex items-center gap-2">
-          <span className="text-sm font-black tracking-wide bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
-            🔥 THE HOT SEAT
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">The Hot Seat</span>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)] tabular-nums">
+            R{roundNumber}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1">
           <button
+            type="button"
+            aria-label="Toggle sound"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
+            className="size-9 rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center cursor-pointer"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEnabled ? (
+              <Volume2 className="size-4 text-[var(--gold-text)]" strokeWidth={1.5} />
+            ) : (
+              <VolumeX className="size-4" strokeWidth={1.5} />
+            )}
           </button>
-          <Link
-            to="/settings"
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </Link>
         </div>
       </header>
 
-      {/* Main Area */}
+      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-center">
         {/* SETUP SCREEN */}
         {phase === "setup" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-red-500 to-amber-600 flex items-center justify-center text-3xl shadow-lg shadow-red-500/20">
-                🔥
-              </div>
-              <h1 className="text-2xl font-black">The Hot Seat</h1>
-              <p className="text-xs text-slate-400">
-                One player sits in the hot seat. The room secretly submits roasts and archetypes
-                about them!
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="text-center space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                <Flame className="size-3 text-[var(--gold-text)]" strokeWidth={1.5} />
+                Hostel Roasts & Archetypes
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                The Hot Seat
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                One player sits in the hot seat. The room secretly submits roasts about them!
               </p>
             </div>
 
             {/* Rules */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 text-xs text-slate-300">
-              <div className="font-bold text-amber-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> How it Works:
+            <div
+              className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-2 text-xs"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(251, 146, 60, 0.2)",
+              }}
+            >
+              <div className="font-bold text-[var(--gold-text)] flex items-center gap-1.5">
+                <Sparkles className="size-3.5" strokeWidth={1.5} />
+                <span>How It Works</span>
               </div>
-              <ul className="list-disc list-inside space-y-1 text-slate-400">
-                <li>One student takes the Hot Seat.</li>
-                <li>Pass the phone privately to each friend to submit an answer.</li>
-                <li>The Hot Seat player reads all answers and guesses who wrote what!</li>
-                <li>+1 Point for each correct guess. Everyone gets a turn in the hot seat!</li>
+              <ul className="space-y-1 text-[var(--text-secondary)] text-[11px]">
+                <li>• One student takes the Hot Seat.</li>
+                <li>• Pass the phone to each friend to submit a secret answer.</li>
+                <li>• The Hot Seat player reads all answers and guesses who wrote what!</li>
+                <li>• +1 Point for each correct guess. Everyone gets a turn!</li>
               </ul>
             </div>
 
             {/* Players */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" /> Room Squad ({players.length})
-              </label>
+            <div className="rounded-[var(--radius-group)] bg-[var(--card)] p-3 border border-[var(--separator)] space-y-2">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block">
+                Room Squad ({players.length})
+              </span>
               <div className="grid grid-cols-2 gap-2">
                 {players.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/5"
+                    className="flex items-center justify-between p-2 rounded-[0.5rem] bg-[var(--chip)] text-xs font-semibold"
                   >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="text-lg">{p.avatar}</span>
-                      <span className="text-xs font-semibold truncate">{p.name}</span>
+                    <div className="flex items-center gap-2">
+                      {renderAvatar(p.avatar, "size-4 text-[var(--gold-text)]")}
+                      <span className="text-[var(--text)] truncate">{p.name}</span>
                     </div>
                     {players.length > 3 && (
                       <button
+                        type="button"
+                        aria-label={`Remove ${p.name}`}
                         onClick={() => removePlayer(p.id)}
-                        className="text-slate-500 hover:text-rose-400 text-xs px-1"
+                        className="text-[var(--text-secondary)] hover:text-[var(--pink-text)] text-xs px-1"
                       >
                         ✕
                       </button>
@@ -290,388 +315,360 @@ export function HotSeatEngine() {
                 ))}
               </div>
 
-              {/* Add player */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   placeholder="Friend's name..."
                   value={newPlayerName}
                   onChange={(e) => setNewPlayerName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addPlayer()}
-                  className="flex-1 text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
+                  className="flex-1 bg-[var(--bg)] border border-[var(--separator)] rounded-[var(--radius-btn)] px-3 py-1.5 text-xs text-[var(--text)] outline-none focus:border-[var(--brand-gold)]"
                 />
                 <button
+                  type="button"
                   onClick={addPlayer}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-colors"
+                  className="px-3 py-1.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-bold text-[var(--text)] hover:bg-[var(--chip)]/80"
                 >
                   + Add
                 </button>
               </div>
             </div>
 
-            <button
-              onClick={startRound}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-600 font-black text-sm tracking-wide shadow-lg shadow-red-600/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Flame className="w-4 h-4 fill-current" /> START HOT SEAT
-            </button>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={startRound}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Flame className="size-4" strokeWidth={1.5} />
+                <span>Start The Hot Seat</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ROUND INTRO SCREEN: Announce Seated Player */}
+        {/* ROUND INTRO */}
         {phase === "round-intro" && currentItem && (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center space-y-6 py-6"
-          >
-            <div className="space-y-2">
-              <span className="text-xs uppercase font-extrabold tracking-widest text-amber-400">
-                Round {roundNumber} of {players.length}
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                Round {roundNumber}
               </span>
-              <h1 className="text-3xl font-black text-white">In the Hot Seat:</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                In The Hot Seat
+              </h1>
             </div>
 
-            <div className="p-8 rounded-3xl bg-gradient-to-b from-red-500/20 to-amber-500/10 border border-red-500/30 shadow-2xl space-y-3 max-w-xs mx-auto">
-              <div className="text-6xl animate-bounce">{seatedPlayer.avatar}</div>
-              <div className="text-2xl font-black text-amber-300">{seatedPlayer.name}</div>
-              <div className="text-xs text-slate-300 font-medium">
-                Sit tight! Your friends are about to answer a prompt about you.
-              </div>
-            </div>
-
-            {/* Prompt preview */}
-            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/5 text-center space-y-1">
-              <div className="text-[11px] font-bold text-slate-400 uppercase">
-                Question for the room:
-              </div>
-              <div className="text-sm font-black text-white">
-                {getLocalizedText(currentItem.prompt, lang)}
-              </div>
-            </div>
-
-            <button
-              onClick={startSubmissions}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 font-black text-sm text-white shadow-lg shadow-red-600/30"
-            >
-              Hand Phone to Friends →
-            </button>
-          </motion.div>
-        )}
-
-        {/* PRIVACY HANDOFF */}
-        {phase === "handoff" && currentSubmittingPlayer && (
-          <motion.div
-            initial={{ scale: 0.92, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center space-y-6 py-8"
-          >
-            <div className="w-16 h-16 mx-auto rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-              <EyeOff className="w-8 h-8" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="text-xs uppercase font-bold text-slate-500 tracking-wider">
-                Confidential Handoff
-              </div>
-              <h2 className="text-2xl font-black text-white">Pass phone to</h2>
-              <div className="text-3xl font-black text-amber-400 flex items-center justify-center gap-2">
-                <span>{currentSubmittingPlayer.avatar}</span>
-                <span>{currentSubmittingPlayer.name}</span>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-400 max-w-xs mx-auto">
-              Keep the screen hidden from <strong>{seatedPlayer.name}</strong>!
-            </p>
-
-            <button
-              onClick={() => {
-                buzz(20);
-                setPhase("submit");
+            <div
+              className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-3"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(251, 146, 60, 0.2)",
               }}
-              className="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all"
             >
-              I Am {currentSubmittingPlayer.name} (Reveal)
-            </button>
-          </motion.div>
+              <div className="size-16 rounded-[var(--radius-group)] bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)] mb-2">
+                {renderAvatar(seatedPlayer.avatar, "size-8 text-current")}
+              </div>
+              <h2 className="text-3xl font-bold text-[var(--text)]">{seatedPlayer.name}</h2>
+              <div className="p-3 rounded-[var(--radius-group)] bg-[var(--bg)] border border-[var(--separator)] text-xs font-semibold text-[var(--gold-text)]">
+                "{getLocalizedText(currentItem.prompt || (currentItem as any).question, lang)}"
+              </div>
+              <p className="text-xs text-[var(--text-secondary)]">
+                {seatedPlayer.name} will step away while the rest of the room submits answers!
+              </p>
+            </div>
+
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={startSubmissionsHandoff}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Pass to Friends</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* SUBMISSION SCREEN */}
-        {phase === "submit" && currentItem && currentSubmittingPlayer && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            <div className="flex items-center justify-between text-xs text-slate-400 border-b border-white/5 pb-2">
-              <span className="font-semibold">{currentSubmittingPlayer.name}'s turn</span>
-              <span>Hot Seat: {seatedPlayer.name}</span>
+        {/* HANDOFF */}
+        {phase === "handoff" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)]">
+                <Lock className="size-3 text-[var(--brand-pink)]" strokeWidth={1.5} />
+                Private Submission
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Pass the phone
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Voter {currentVoterIndex + 1} of {submittingPlayers.length}
+              </p>
             </div>
 
-            {/* Prompt */}
-            <div className="p-5 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2 text-center">
-              <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
-                Question about {seatedPlayer.name}:
+            <div className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center">
+              <div className="size-20 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center mb-3 text-[var(--gold-text)]">
+                {renderAvatar(currentSubmittingPlayer.avatar, "size-10 text-current")}
               </div>
-              <h3 className="text-lg font-black text-white">
-                {getLocalizedText(currentItem.prompt, lang)}
-              </h3>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--text)]">
+                {currentSubmittingPlayer.name}
+              </h2>
+              <p className="mt-2 text-xs text-[var(--text-secondary)] max-w-[28ch]">
+                Submit your answer about {seatedPlayer.name}.
+              </p>
             </div>
 
-            {/* Choice or Input */}
-            {currentItem.options && currentItem.options.length > 0 ? (
-              <div className="space-y-2">
-                <div className="text-xs font-semibold text-slate-400">
-                  Select an archetype / option:
-                </div>
-                <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-1">
-                  {currentItem.options.map((opt, idx) => {
-                    const text = getLocalizedText(opt, lang);
-                    const isSelected = currentAnswer === text;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setCurrentAnswer(text);
-                          buzz(10);
-                        }}
-                        className={`p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
-                          isSelected
-                            ? "bg-amber-500/20 border-amber-500 text-amber-200 shadow-md"
-                            : "bg-white/[0.03] border-white/5 text-slate-300 hover:bg-white/[0.07]"
-                        }`}
-                      >
-                        {text}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : currentItem.type === "rating" ? (
-              <div className="space-y-3">
-                <div className="text-xs font-semibold text-slate-400 text-center">
-                  Rate from 1 to 10:
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: 10 }).map((_, i) => {
-                    const num = String(i + 1);
-                    const isSelected = currentAnswer === num;
-                    return (
-                      <button
-                        key={num}
-                        onClick={() => {
-                          setCurrentAnswer(num);
-                          buzz(10);
-                        }}
-                        className={`py-3 rounded-xl border font-black text-sm transition-all ${
-                          isSelected
-                            ? "bg-amber-500 border-amber-400 text-slate-950 scale-105"
-                            : "bg-white/5 border-white/10 text-white hover:bg-white/10"
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-400">
-                  Type your answer secretly:
-                </label>
-                <textarea
-                  rows={3}
-                  value={currentAnswer}
-                  onChange={(e) => setCurrentAnswer(e.target.value)}
-                  placeholder="Be creative, funny, or savage..."
-                  className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500 resize-none"
-                />
-              </div>
-            )}
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  buzz(20);
+                  setPhase("submit");
+                }}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>I Am {currentSubmittingPlayer.name} · Answer</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        )}
 
-            <button
-              onClick={handleSubmitAnswer}
-              disabled={!currentAnswer.trim()}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 disabled:opacity-40 text-white font-black text-sm shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
-            >
-              <Send className="w-4 h-4" /> Submit Confidential Answer
-            </button>
-          </motion.div>
+        {/* SUBMIT */}
+        {phase === "submit" && currentItem && (
+          <div className="flex flex-1 flex-col justify-between py-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+                <span>{currentSubmittingPlayer.name}'s Turn</span>
+                <span className="text-[var(--gold-text)]">Target: {seatedPlayer.name}</span>
+              </div>
+              <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-xs text-[var(--text)] font-semibold">
+                {getLocalizedText(currentItem.prompt || (currentItem as any).question, lang)}
+              </div>
+            </div>
+
+            <div className="my-auto space-y-3">
+              <textarea
+                rows={3}
+                placeholder={`Type your roast/answer about ${seatedPlayer.name}...`}
+                value={currentAnswer}
+                onChange={(e) => setCurrentAnswer(e.target.value)}
+                className="w-full p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-xs text-[var(--text)] outline-none focus:border-[var(--brand-gold)] resize-none"
+              />
+
+              {currentItem.presetAnswers && currentItem.presetAnswers.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase block">
+                    Or pick a fast archetype:
+                  </span>
+                  <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
+                    {currentItem.presetAnswers.map((preset: any, idx) => {
+                      const text = getLocalizedText(preset, lang);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSubmitAnswer(true, text)}
+                          className="w-full p-2.5 rounded-[0.5rem] bg-[var(--chip)] text-left text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 transition-colors"
+                        >
+                          "{text}"
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={() => handleSubmitAnswer(false)}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Submit & Pass Phone</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
         )}
 
         {/* SEATED REVEAL & GUESSING */}
         {phase === "seated-reveal" && (
-          <div className="space-y-6">
+          <div className="flex flex-1 flex-col justify-between py-4">
             <div className="text-center space-y-1">
-              <span className="text-xs uppercase font-extrabold tracking-widest text-amber-400">
-                Hot Seat Guessing Time!
+              <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                {seatedPlayer.name}'s Guessing Time
               </span>
-              <h2 className="text-xl font-black text-white">
-                {seatedPlayer.name}, who wrote what?
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                Who said what about you?
               </h2>
-              <p className="text-xs text-slate-400">
-                Tap each card and guess which friend submitted it. You score +1 per correct guess!
+              <p className="text-xs text-[var(--text-secondary)]">
+                Assign each answer to the student who wrote it.
               </p>
             </div>
 
-            {/* Submissions list */}
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-              {submissions.map((sub, idx) => {
-                const guessedId = guessedAuthors[idx];
-                const guessedPlayer = players.find((p) => p.id === guessedId);
-
-                return (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 space-y-3"
-                  >
-                    <div className="text-sm font-black text-white bg-white/5 p-3 rounded-xl border border-white/5">
-                      "{sub.answer}"
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="text-[11px] font-semibold text-slate-400">
-                        Guessed author:
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {submittingPlayers.map((p) => {
-                          const isSelected = guessedId === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              onClick={() => handleGuessAuthor(idx, p.id)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                                isSelected
-                                  ? "bg-amber-500 border-amber-400 text-slate-950 font-bold"
-                                  : "bg-white/5 border-white/5 text-slate-300 hover:bg-white/10"
-                              }`}
-                            >
-                              {p.avatar} {p.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+            <div className="my-auto space-y-3 max-h-[50dvh] overflow-y-auto pr-1">
+              {submissions.map((sub, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] space-y-2 text-xs"
+                >
+                  <div className="font-semibold text-[var(--text)]">"{sub.answer}"</div>
+                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-[var(--separator)]">
+                    {submittingPlayers.map((p) => {
+                      const isSelected = guessedAuthors[idx] === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => handleGuessAuthor(idx, p.id)}
+                          className={`px-2.5 py-1 rounded-[0.5rem] text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                            isSelected
+                              ? "bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold"
+                              : "bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                          }`}
+                        >
+                          {renderAvatar(p.avatar, "size-3 text-current")}
+                          <span>{p.name}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
 
-            <button
-              onClick={handleFinishGuessing}
-              disabled={Object.keys(guessedAuthors).length < submissions.length}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 disabled:opacity-40 text-white font-black text-sm shadow-lg shadow-red-600/30"
-            >
-              Lock In Guesses & Reveal Truth!
-            </button>
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                disabled={!allGuessesMade}
+                onClick={finalizeSeatedGuesses}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Reveal Answers & Score</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
         )}
 
         {/* ROUND RECAP */}
         {phase === "round-recap" && (
-          <div className="space-y-6 py-2">
-            <div className="text-center space-y-1">
-              <h2 className="text-2xl font-black text-amber-400">Round Results!</h2>
-              <p className="text-xs text-slate-400">Here's who actually wrote each answer:</p>
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                Results
+              </span>
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                The Truth Unveiled!
+              </h2>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+            <div className="my-auto space-y-2 w-full max-h-[50dvh] overflow-y-auto pr-1 text-left">
               {submissions.map((sub, idx) => {
-                const guessedId = guessedAuthors[idx];
-                const isCorrect = guessedId === sub.playerId;
-                const actualPlayer = players.find((p) => p.id === sub.playerId);
-
+                const isCorrect = guessedAuthors[idx] === sub.playerId;
                 return (
                   <div
                     key={idx}
-                    className={`p-4 rounded-2xl border space-y-2 ${
-                      isCorrect
-                        ? "bg-emerald-500/10 border-emerald-500/30"
-                        : "bg-rose-500/10 border-rose-500/30"
-                    }`}
+                    className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-xs space-y-1"
                   >
-                    <div className="text-xs font-semibold text-slate-300">"{sub.answer}"</div>
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-400">Actual Author:</span>
-                        <strong className="text-white">
-                          {actualPlayer?.avatar} {actualPlayer?.name}
-                        </strong>
-                      </div>
-                      <div className="font-bold">
-                        {isCorrect ? (
-                          <span className="text-emerald-400 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Correct! (+1)
-                          </span>
-                        ) : (
-                          <span className="text-rose-400">Wrong guess</span>
-                        )}
-                      </div>
+                    <div className="font-semibold text-[var(--text)]">"{sub.answer}"</div>
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[var(--text-secondary)]">
+                        Written by: <strong>{sub.playerName}</strong>
+                      </span>
+                      <span
+                        className={
+                          isCorrect
+                            ? "text-[var(--gold-text)] font-bold"
+                            : "text-[var(--pink-text)] font-semibold"
+                        }
+                      >
+                        {isCorrect ? "Correct! (+1)" : "Missed"}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            <button
-              onClick={handleNextRound}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 text-white font-black text-sm shadow-lg shadow-red-600/30"
-            >
-              {roundNumber >= players.length ? "View Final Podium 🏆" : "Next Hot Seat Player →"}
-            </button>
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={handleNextRound}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>
+                  {roundNumber >= players.length ? "View Final Podium" : "Next Hot Seat Player"}
+                </span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* FINAL PODIUM */}
+        {/* PODIUM */}
         {phase === "podium" && (
-          <div className="text-center space-y-6 py-4 animate-in fade-in duration-300">
-            <div className="text-5xl">👑</div>
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
             <div className="space-y-1">
-              <h1 className="text-2xl font-black text-amber-400">Hot Seat Champion!</h1>
-              <p className="text-xs text-slate-400">Who knows their hostel squad the best?</p>
+              <div className="size-16 rounded-full bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)] mb-2">
+                <Crown className="size-8 text-[var(--gold-text)]" strokeWidth={1.5} />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                Hot Seat Champion!
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Who knows their hostel squad best?
+              </p>
             </div>
 
-            {/* Leaderboard */}
-            <div className="space-y-2 text-left">
+            <div className="my-auto space-y-2 w-full text-left">
               {players
                 .slice()
                 .sort((a, b) => b.score - a.score)
                 .map((p, idx) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs ${
+                    className={`flex items-center justify-between p-3.5 rounded-[var(--radius-group)] border text-xs font-semibold ${
                       idx === 0
-                        ? "bg-amber-500/10 border-amber-500/30"
-                        : "bg-white/[0.03] border-white/5"
+                        ? "bg-[var(--card)] border-[var(--brand-gold)]/50 shadow-[0_0_16px_rgba(251,191,36,0.15)]"
+                        : "bg-[var(--card)] border-[var(--separator)]"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="font-black text-sm text-amber-400">#{idx + 1}</span>
-                      <span className="text-xl">{p.avatar}</span>
-                      <span className="font-bold text-white text-sm">{p.name}</span>
+                      <span className="font-mono text-sm text-[var(--gold-text)] font-bold tabular-nums">
+                        #{idx + 1}
+                      </span>
+                      <div className="size-8 rounded-[0.5rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)]">
+                        {renderAvatar(p.avatar, "size-4 text-current")}
+                      </div>
+                      <span className="text-[var(--text)]">{p.name}</span>
                     </div>
-                    <div className="font-black text-amber-300 text-sm">{p.score} pts</div>
+                    <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
+                      {p.score} pts
+                    </span>
                   </div>
                 ))}
             </div>
 
-            <div className="space-y-2">
+            <div className="w-full space-y-2 pt-4">
               <button
+                type="button"
                 onClick={() => {
                   setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
                   setRoundNumber(1);
                   setSeatedPlayerIndex(0);
                   setPhase("setup");
                 }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-red-600 to-amber-500 font-black text-sm text-white shadow-lg"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Play Again
+                <RotateCcw className="size-4" strokeWidth={1.5} />
+                <span>Play Again</span>
               </button>
               <Link
                 to="/"
-                className="block w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 text-xs font-bold text-center"
+                className="block w-full py-2.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] text-center"
               >
                 Back to Party Hub
               </Link>
@@ -679,10 +676,6 @@ export function HotSeatEngine() {
           </div>
         )}
       </main>
-
-      <footer className="px-4 py-2 text-center text-[10px] text-slate-600 border-t border-white/5">
-        Bro or Fraud? Hub • 100% Offline Hostel Games
-      </footer>
     </div>
   );
 }

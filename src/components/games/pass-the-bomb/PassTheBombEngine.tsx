@@ -16,8 +16,11 @@ import {
   Zap,
   Users,
   Settings as SettingsIcon,
-  ChevronDown,
   Sparkles,
+  Type,
+  ShieldAlert,
+  Trophy,
+  X,
 } from "lucide-react";
 import { buzz } from "@/lib/haptics";
 import {
@@ -43,38 +46,50 @@ interface Player {
 }
 
 const MODIFIERS = [
-  { id: "none", name: "Standard Round", desc: "Say a valid answer and pass quickly!", icon: "⚡" },
+  { id: "none", name: "Standard Round", desc: "Say a valid answer and pass quickly!", icon: Zap },
   {
     id: "reverse",
     name: "Reverse Direction!",
     desc: "Direction reversed! Pass to your opposite side.",
-    icon: "🔄",
+    icon: RotateCcw,
   },
   {
     id: "double",
     name: "Double Trouble!",
     desc: "You must name TWO answers before passing!",
-    icon: "✌️",
+    icon: Sparkles,
   },
   {
     id: "alphabet",
     name: "Alphabet Lock!",
     desc: "Your answer must start with the locked letter!",
-    icon: "🔤",
+    icon: Type,
   },
   {
     id: "no-obvious",
     name: "No Obvious Answers!",
     desc: "Skip the top 3 easiest answers or you fail!",
-    icon: "🚫",
+    icon: ShieldAlert,
   },
 ];
 
 const ALPHABET_POOL = ["A", "B", "C", "D", "K", "M", "P", "R", "S", "T"];
+const AVATAR_POOL = [
+  "Smile",
+  "Crown",
+  "Sparkles",
+  "Ghost",
+  "Flame",
+  "Bot",
+  "Shield",
+  "Zap",
+  "Star",
+  "User",
+];
 
 export function PassTheBombEngine() {
   const navigate = useNavigate();
-  const [matchSettings, setMatchSettings] = useState<MatchSettings>(loadSettings());
+  const [matchSettings] = useState<MatchSettings>(loadSettings());
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Game setup
@@ -82,7 +97,7 @@ export function PassTheBombEngine() {
     {
       id: "1",
       name: "Player 1",
-      avatar: "😎",
+      avatar: "Smile",
       lives: 3,
       isEliminated: false,
       passesCount: 0,
@@ -91,7 +106,7 @@ export function PassTheBombEngine() {
     {
       id: "2",
       name: "Player 2",
-      avatar: "🤠",
+      avatar: "Crown",
       lives: 3,
       isEliminated: false,
       passesCount: 0,
@@ -100,7 +115,7 @@ export function PassTheBombEngine() {
     {
       id: "3",
       name: "Player 3",
-      avatar: "🤓",
+      avatar: "Sparkles",
       lives: 3,
       isEliminated: false,
       passesCount: 0,
@@ -108,13 +123,12 @@ export function PassTheBombEngine() {
     },
   ]);
   const [newPlayerName, setNewPlayerName] = useState("");
-  const [selectedPackId, setSelectedPackId] = useState<string>("all");
   const [phase, setPhase] = useState<"setup" | "playing" | "exploded" | "podium">("setup");
 
   // Round State
   const [currentItem, setCurrentItem] = useState<PassTheBombItem | null>(null);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
-  const [passDirection, setPassDirection] = useState<1 | -1>(1); // 1 = clockwise, -1 = counter-clockwise
+  const [passDirection, setPassDirection] = useState<1 | -1>(1);
   const [activeModifier, setActiveModifier] = useState(MODIFIERS[0]);
   const [lockedLetter, setLockedLetter] = useState<string | null>(null);
   const [roundNumber, setRoundNumber] = useState(1);
@@ -125,17 +139,16 @@ export function PassTheBombEngine() {
   // Hidden Fuse
   const fuseSecondsRef = useRef<number>(25);
   const roundStartTimeRef = useRef<number>(0);
-  const timerIntervalRef = useRef<any>(null);
-  const tickIntervalRef = useRef<any>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const wakeLockRef = useRef<any>(null);
 
-  // Keep screen awake during gameplay
   useEffect(() => {
     if (typeof window === "undefined" || !("wakeLock" in navigator)) return;
     if (phase === "playing") {
-      navigator.wakeLock
-        .request("screen")
-        .then((lock) => {
+      (navigator as any).wakeLock
+        ?.request("screen")
+        .then((lock: any) => {
           wakeLockRef.current = lock;
         })
         .catch(() => {});
@@ -146,43 +159,130 @@ export function PassTheBombEngine() {
       }
     }
     return () => {
-      if (wakeLockRef.current) {
-        wakeLockRef.current.release().catch(() => {});
-      }
+      if (wakeLockRef.current) wakeLockRef.current.release().catch(() => {});
     };
   }, [phase]);
 
-  // Audio helper
-  const playWebAudioExplosion = () => {
-    if (!soundEnabled || typeof window === "undefined") return;
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(120, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.8);
-      gain.gain.setValueAtTime(0.8, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.9);
-    } catch {
-      // AudioContext unavailable or blocked
-    }
-  };
-
+  // Alive players
   const alivePlayers = players.filter((p) => !p.isEliminated);
   const isSuddenDeath = alivePlayers.length === 2;
 
-  // Add / remove player
+  const triggerExplosion = (victimIdx: number) => {
+    if (timerIntervalRef.current) clearTimeout(timerIntervalRef.current);
+    if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+
+    if (soundEnabled) playTimerAlarmSound();
+    buzz([80, 50, 100]);
+
+    setPlayers((prev) =>
+      prev.map((p, idx) => {
+        if (idx === victimIdx) {
+          const nextLives = p.lives - 1;
+          return {
+            ...p,
+            lives: nextLives,
+            isEliminated: nextLives <= 0,
+            timesExploded: p.timesExploded + 1,
+          };
+        }
+        return p;
+      }),
+    );
+
+    setPhase("exploded");
+  };
+
+  const startRound = () => {
+    buzz(25);
+    if (soundEnabled) playRoleRevealSound();
+
+    const item = getContentItem("pass-the-bomb") as PassTheBombItem;
+    setCurrentItem(item);
+
+    // Modifier
+    let chosenMod = MODIFIERS[0];
+    if (roundNumber > 1 && Math.random() < 0.6) {
+      const candidates = MODIFIERS.slice(1);
+      chosenMod = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    setActiveModifier(chosenMod);
+
+    if (chosenMod.id === "alphabet") {
+      setLockedLetter(ALPHABET_POOL[Math.floor(Math.random() * ALPHABET_POOL.length)]);
+    } else {
+      setLockedLetter(null);
+    }
+
+    setPassDirection(chosenMod.id === "reverse" ? -1 : 1);
+
+    // Fuse duration 18 to 42s
+    const randomFuse = Math.floor(Math.random() * (42 - 18 + 1)) + 18;
+    fuseSecondsRef.current = randomFuse;
+    roundStartTimeRef.current = Date.now();
+    setElapsedRoundSeconds(0);
+
+    const firstAliveIdx = players.findIndex((p) => !p.isEliminated);
+    setActivePlayerIndex(firstAliveIdx >= 0 ? firstAliveIdx : 0);
+
+    setShowStuckDrawer(false);
+    setShowChallengeModal(false);
+    setPhase("playing");
+
+    if (timerIntervalRef.current) clearTimeout(timerIntervalRef.current);
+    if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+
+    timerIntervalRef.current = setTimeout(() => {
+      triggerExplosion(activePlayerIndex);
+    }, randomFuse * 1000);
+
+    tickIntervalRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - roundStartTimeRef.current) / 1000);
+      setElapsedRoundSeconds(elapsed);
+      if (soundEnabled) playTimerTickSound(elapsed > 20);
+      buzz(10);
+    }, 1000);
+  };
+
+  const handlePassBomb = () => {
+    buzz(20);
+    if (soundEnabled) playVoteConfirmSound();
+
+    setPlayers((prev) =>
+      prev.map((p, idx) =>
+        idx === activePlayerIndex ? { ...p, passesCount: p.passesCount + 1 } : p,
+      ),
+    );
+
+    let nextIdx = activePlayerIndex;
+    const n = players.length;
+    for (let step = 1; step <= n; step++) {
+      const candidate = (activePlayerIndex + step * passDirection + n * 10) % n;
+      if (!players[candidate].isEliminated) {
+        nextIdx = candidate;
+        break;
+      }
+    }
+
+    setActivePlayerIndex(nextIdx);
+
+    // Update timer callback target
+    if (timerIntervalRef.current) clearTimeout(timerIntervalRef.current);
+    const elapsed = Math.floor((Date.now() - roundStartTimeRef.current) / 1000);
+    const remaining = Math.max(1, fuseSecondsRef.current - elapsed);
+
+    timerIntervalRef.current = setTimeout(() => {
+      triggerExplosion(nextIdx);
+    }, remaining * 1000);
+  };
+
+  const handleResolveChallenge = (victimIdx: number) => {
+    setShowChallengeModal(false);
+    triggerExplosion(victimIdx);
+  };
+
   const addPlayer = () => {
     if (!newPlayerName.trim()) return;
-    const avatars = ["😎", "🤠", "🤓", "👻", "🔥", "🤖", "🦊", "🍕", "⚡", "🚀"];
-    const avatar = avatars[players.length % avatars.length];
+    const avatar = AVATAR_POOL[players.length % AVATAR_POOL.length];
     setPlayers((prev) => [
       ...prev,
       {
@@ -205,237 +305,102 @@ export function PassTheBombEngine() {
     buzz(15);
   };
 
-  // Start new round
-  const startRound = () => {
-    const item = getContentItem<PassTheBombItem>("pass-the-bomb", {
-      packId: selectedPackId === "all" ? undefined : selectedPackId,
-      spiceLevel: matchSettings.contentLevel,
-    });
-    setCurrentItem(item);
-
-    // Pick random fuse duration
-    // Standard: 18 - 42 seconds; Sudden Death: 9 - 18 seconds
-    const minFuse = isSuddenDeath ? 9 : 18;
-    const maxFuse = isSuddenDeath ? 18 : 42;
-    const fuse = Math.floor(Math.random() * (maxFuse - minFuse + 1)) + minFuse;
-    fuseSecondsRef.current = fuse;
-    roundStartTimeRef.current = Date.now();
-    setElapsedRoundSeconds(0);
-    setShowStuckDrawer(false);
-    setShowChallengeModal(false);
-
-    // Pick modifier (25% chance of special modifier in regular rounds)
-    let modifier = MODIFIERS[0];
-    let letter: string | null = null;
-    const rand = Math.random();
-    if (rand < 0.25) {
-      const specialMods = MODIFIERS.slice(1);
-      modifier = specialMods[Math.floor(Math.random() * specialMods.length)];
-      if (modifier.id === "alphabet") {
-        letter = ALPHABET_POOL[Math.floor(Math.random() * ALPHABET_POOL.length)];
-      }
-    }
-    setActiveModifier(modifier);
-    setLockedLetter(letter);
-    setPassDirection(modifier.id === "reverse" ? -1 : 1);
-
-    // Find first alive player starting from next index
-    let nextIdx = (activePlayerIndex + 1) % players.length;
-    while (players[nextIdx].isEliminated) {
-      nextIdx = (nextIdx + 1) % players.length;
-    }
-    setActivePlayerIndex(nextIdx);
-
-    setPhase("playing");
-    buzz(30);
-    if (soundEnabled) playRoleRevealSound();
-  };
-
-  // Handle pass
-  const handlePassBomb = () => {
-    if (phase !== "playing") return;
-    buzz(20);
-    if (soundEnabled) playVoteConfirmSound();
-
-    // Increment player's passes
-    setPlayers((prev) =>
-      prev.map((p, idx) =>
-        idx === activePlayerIndex ? { ...p, passesCount: p.passesCount + 1 } : p,
-      ),
-    );
-
-    // Advance to next alive player
-    let nextIdx = activePlayerIndex;
-    const len = players.length;
-    do {
-      nextIdx = (nextIdx + passDirection + len) % len;
-    } while (players[nextIdx].isEliminated && nextIdx !== activePlayerIndex);
-
-    setActivePlayerIndex(nextIdx);
-  };
-
-  // Handle Explosion
-  const triggerExplosion = (victimIdx: number) => {
-    clearInterval(timerIntervalRef.current);
-    clearInterval(tickIntervalRef.current);
-
-    buzz([100, 50, 200, 50, 400]);
-    playWebAudioExplosion();
-    if (soundEnabled) playTimerAlarmSound();
-
-    setPlayers((prev) => {
-      const updated = prev.map((p, idx) => {
-        if (idx === victimIdx) {
-          const newLives = p.lives - 1;
-          return {
-            ...p,
-            lives: newLives,
-            timesExploded: p.timesExploded + 1,
-            isEliminated: newLives <= 0,
-          };
-        }
-        return p;
-      });
-
-      const stillAlive = updated.filter((p) => !p.isEliminated);
-      if (stillAlive.length <= 1) {
-        setTimeout(() => {
-          setPhase("podium");
-          if (soundEnabled) playVictorySound();
-        }, 2200);
-      }
-      return updated;
-    });
-
-    setPhase("exploded");
-  };
-
-  // Ticking and Countdown loop
-  useEffect(() => {
-    if (phase !== "playing") return;
-
-    timerIntervalRef.current = setInterval(() => {
-      const elapsed = (Date.now() - roundStartTimeRef.current) / 1000;
-      setElapsedRoundSeconds(Math.floor(elapsed));
-
-      if (elapsed >= fuseSecondsRef.current) {
-        triggerExplosion(activePlayerIndex);
-      }
-    }, 250);
-
-    // Accelerating audio tick
-    const runTick = () => {
-      if (phase !== "playing") return;
-      const elapsed = (Date.now() - roundStartTimeRef.current) / 1000;
-      const remainingRatio = Math.max(0.05, 1 - elapsed / fuseSecondsRef.current);
-      if (soundEnabled) playTimerTickSound();
-      buzz(10);
-
-      // Delay scales from 900ms down to 120ms
-      const nextDelay = 120 + remainingRatio * 780;
-      tickIntervalRef.current = setTimeout(runTick, nextDelay);
-    };
-
-    tickIntervalRef.current = setTimeout(runTick, 800);
-
-    return () => {
-      clearInterval(timerIntervalRef.current);
-      clearTimeout(tickIntervalRef.current);
-    };
-  }, [phase, activePlayerIndex, soundEnabled]);
-
-  // Challenge resolution
-  const handleResolveChallenge = (victimIdx: number) => {
-    setShowChallengeModal(false);
-    triggerExplosion(victimIdx);
-  };
-
   const activePlayer = players[activePlayerIndex];
   const lang = matchSettings.language || "hinglish";
+  const ModifierIcon = activeModifier.icon;
 
   return (
-    <div className="min-h-screen bg-[#0D0D12] text-slate-100 flex flex-col justify-between selection:bg-rose-500/30">
-      {/* Top Bar */}
-      <header className="px-4 py-3 border-b border-white/5 flex items-center justify-between backdrop-blur-md sticky top-0 z-30 bg-[#0D0D12]/80">
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
         <Link
           to="/"
-          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
         >
-          ← Hub
+          End game
         </Link>
+
         <div className="flex items-center gap-2">
-          <span className="text-sm font-black tracking-wide bg-gradient-to-r from-orange-400 to-rose-500 bg-clip-text text-transparent">
-            💣 PASS THE BOMB
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">Pass the Bomb</span>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)] tabular-nums">
+            R{roundNumber}
           </span>
-          {phase === "playing" && isSuddenDeath && (
-            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse">
-              Sudden Death
-            </span>
-          )}
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1">
           <button
+            type="button"
+            aria-label="Toggle sound"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
+            className="size-9 rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center cursor-pointer"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEnabled ? (
+              <Volume2 className="size-4 text-[var(--gold-text)]" strokeWidth={1.5} />
+            ) : (
+              <VolumeX className="size-4" strokeWidth={1.5} />
+            )}
           </button>
-          <Link
-            to="/settings"
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </Link>
         </div>
       </header>
 
-      {/* Main Content Areas */}
+      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-center">
         {/* SETUP SCREEN */}
         {phase === "setup" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-rose-600 flex items-center justify-center text-3xl shadow-lg shadow-rose-500/20">
-                💣
-              </div>
-              <h1 className="text-2xl font-black">Pass the Bomb!</h1>
-              <p className="text-xs text-slate-400">
-                Think fast, shout your answer, pass the phone before it explodes in your hands!
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="text-center space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--pink-text)] border border-[var(--separator)]">
+                <Bomb className="size-3 text-[var(--pink-text)]" strokeWidth={1.5} />
+                Speed Shouting Game
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Pass the Bomb!
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Shout your answer, tap Pass, and hand the phone before it blows up!
               </p>
             </div>
 
-            {/* Rules Card */}
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-2 text-xs text-slate-300">
-              <div className="font-bold text-amber-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> How to Play:
+            {/* Rules card */}
+            <div
+              className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-2 text-xs"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(240, 80, 138, 0.2)",
+              }}
+            >
+              <div className="font-bold text-[var(--gold-text)] flex items-center gap-1.5">
+                <Sparkles className="size-3.5" strokeWidth={1.5} />
+                <span>Quick Rules</span>
               </div>
-              <ul className="list-disc list-inside space-y-1 text-slate-400">
-                <li>Read the category aloud.</li>
-                <li>Give a unique valid answer, tap Pass, and hand the phone!</li>
-                <li>The fuse is secret (15-45s) — it will blow up at any time.</li>
-                <li>3 lives each. Last student standing wins!</li>
+              <ul className="space-y-1 text-[var(--text-secondary)] text-[11px]">
+                <li>• Read the category aloud when you receive the phone.</li>
+                <li>• Shout a unique valid answer, tap Pass, and hand over the phone!</li>
+                <li>• The fuse is secret (18-42s) — it can explode at any instant.</li>
+                <li>• 3 lives each. Last student standing wins!</li>
               </ul>
             </div>
 
-            {/* Players List */}
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" /> Players ({players.length})
-              </label>
+            {/* Players list */}
+            <div className="rounded-[var(--radius-group)] bg-[var(--card)] p-3 border border-[var(--separator)] space-y-2">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block">
+                Players ({players.length})
+              </span>
               <div className="grid grid-cols-2 gap-2">
                 {players.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.04] border border-white/5"
+                    className="flex items-center justify-between p-2 rounded-[0.5rem] bg-[var(--chip)] text-xs font-semibold"
                   >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="text-lg">{p.avatar}</span>
-                      <span className="text-xs font-semibold truncate">{p.name}</span>
+                    <div className="flex items-center gap-2">
+                      {renderAvatar(p.avatar, "size-4 text-[var(--gold-text)]")}
+                      <span className="text-[var(--text)] truncate">{p.name}</span>
                     </div>
                     {players.length > 2 && (
                       <button
+                        type="button"
+                        aria-label={`Remove ${p.name}`}
                         onClick={() => removePlayer(p.id)}
-                        className="text-slate-500 hover:text-rose-400 text-xs px-1"
+                        className="text-[var(--text-secondary)] hover:text-[var(--pink-text)] text-xs px-1"
                       >
                         ✕
                       </button>
@@ -444,135 +409,137 @@ export function PassTheBombEngine() {
                 ))}
               </div>
 
-              {/* Add player input */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   placeholder="Add friend's name..."
                   value={newPlayerName}
                   onChange={(e) => setNewPlayerName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addPlayer()}
-                  className="flex-1 text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                  className="flex-1 bg-[var(--bg)] border border-[var(--separator)] rounded-[var(--radius-btn)] px-3 py-1.5 text-xs text-[var(--text)] outline-none focus:border-[var(--brand-gold)]"
                 />
                 <button
+                  type="button"
                   onClick={addPlayer}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-colors"
+                  className="px-3 py-1.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-bold text-[var(--text)] hover:bg-[var(--chip)]/80"
                 >
                   + Add
                 </button>
               </div>
             </div>
 
-            {/* Start Button */}
-            <button
-              onClick={startRound}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-rose-600 font-black text-sm tracking-wide shadow-lg shadow-rose-600/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4 fill-current" /> START ROUND 1
-            </button>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={startRound}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Play className="size-4 fill-current" />
+                <span>Start Round 1</span>
+              </button>
+            </div>
           </div>
         )}
 
         {/* ACTIVE GAMEPLAY */}
         {phase === "playing" && currentItem && (
-          <div className="space-y-6 select-none">
-            {/* Round info bar */}
-            <div className="flex items-center justify-between text-xs">
-              <span className="px-2.5 py-1 rounded-full bg-white/5 text-slate-400 font-semibold border border-white/5">
-                Round {roundNumber}
-              </span>
-              {activeModifier.id !== "none" && (
-                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-[11px] animate-pulse">
-                  <span>{activeModifier.icon}</span>
-                  <span>{activeModifier.name}</span>
-                  {lockedLetter && <span className="underline ml-1">Letter: '{lockedLetter}'</span>}
-                </div>
-              )}
-            </div>
+          <div className="space-y-4 select-none">
+            {/* Modifier banner if active */}
+            {activeModifier.id !== "none" && (
+              <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-gold)]/15 border border-[var(--brand-gold)]/30 text-[var(--gold-text)] text-xs font-bold">
+                <ModifierIcon className="size-3.5" strokeWidth={1.5} />
+                <span>{activeModifier.name}</span>
+                {lockedLetter && (
+                  <span className="underline ml-1">Starts with '{lockedLetter}'</span>
+                )}
+              </div>
+            )}
 
             {/* Prompt Box */}
             <motion.div
               key={currentItem.id}
-              initial={{ scale: 0.95, opacity: 0 }}
+              initial={{ scale: 0.96, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="p-6 rounded-2xl bg-gradient-to-b from-white/[0.08] to-white/[0.02] border border-white/10 shadow-2xl space-y-3 text-center"
+              className="p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] text-center space-y-3"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(240, 80, 138, 0.25)",
+              }}
             >
-              <div className="text-[11px] uppercase tracking-wider font-extrabold text-orange-400 flex items-center justify-center gap-1.5">
-                <Flame className="w-3.5 h-3.5" /> Name / Shout:
+              <div className="text-[10px] uppercase tracking-wider font-bold text-[var(--gold-text)] flex items-center justify-center gap-1">
+                <Flame className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                <span>Shout Valid Answer:</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black leading-tight text-white">
+              <h2 className="text-xl sm:text-2xl font-bold leading-tight text-[var(--text)]">
                 {getLocalizedText(currentItem.prompt || (currentItem as any).category, lang)}
               </h2>
               {currentItem.bannedWords && currentItem.bannedWords.length > 0 && (
-                <div className="pt-2 border-t border-white/5 text-[11px] text-rose-400">
-                  <span className="font-bold">🚫 Banned: </span>
+                <div className="pt-2 border-t border-[var(--separator)] text-[11px] text-[var(--pink-text)] font-semibold">
+                  <span>Banned: </span>
                   {currentItem.bannedWords.join(", ")}
                 </div>
               )}
             </motion.div>
 
             {/* Active Player Card with pulsing bomb */}
-            <div className="text-center space-y-3">
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                Holding the bomb right now:
-              </div>
-              <motion.div
-                animate={{
-                  scale: [1, 1.05, 1],
-                }}
-                transition={{ repeat: Infinity, duration: 0.6 }}
-                className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 shadow-lg shadow-rose-500/10"
-              >
-                <span className="text-3xl">{activePlayer.avatar}</span>
+            <div className="text-center space-y-2">
+              <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                Holding the bomb right now
+              </span>
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--brand-pink)]/40">
+                <div className="size-10 rounded-[0.5rem] bg-[var(--chip)] grid place-items-center text-[var(--pink-text)]">
+                  {renderAvatar(activePlayer.avatar, "size-5 text-current")}
+                </div>
                 <div className="text-left">
-                  <div className="text-lg font-black text-rose-300">{activePlayer.name}</div>
+                  <div className="text-base font-bold text-[var(--text)]">{activePlayer.name}</div>
                   <div className="flex items-center gap-1">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <Heart
                         key={i}
-                        className={`w-3.5 h-3.5 ${
+                        className={`size-3.5 ${
                           i < activePlayer.lives
-                            ? "fill-rose-500 text-rose-500"
-                            : "fill-slate-700 text-slate-700"
+                            ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]"
+                            : "fill-[var(--chip)] text-[var(--chip)]"
                         }`}
                       />
                     ))}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Giant PASS Button */}
             <div className="pt-2">
-              <motion.button
-                whileTap={{ scale: 0.94 }}
+              <button
+                type="button"
                 onClick={handlePassBomb}
-                className="w-full py-6 rounded-2xl bg-gradient-to-r from-orange-500 via-rose-600 to-red-600 text-white font-black text-xl tracking-wider shadow-2xl shadow-rose-600/40 border border-white/20 flex flex-col items-center justify-center gap-1 cursor-pointer"
+                className="w-full min-h-[64px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-lg hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5"
               >
                 <div className="flex items-center gap-2">
                   <span>PASS BOMB!</span>
-                  <ArrowRight className="w-6 h-6 stroke-[3]" />
+                  <ArrowRight className="size-5 stroke-[2.5]" />
                 </div>
-                <span className="text-xs font-normal text-rose-200">
+                <span className="text-[11px] opacity-80 font-normal">
                   Say answer, tap here, hand phone!
                 </span>
-              </motion.button>
+              </button>
             </div>
 
-            {/* Actions: Stuck drawer toggle & Challenge / Repeat */}
+            {/* Actions: Stuck hint & Challenge */}
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={() => setShowStuckDrawer((v) => !v)}
-                className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold border border-white/5 flex items-center justify-center gap-1.5 transition-colors"
+                className="flex-1 min-h-[44px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text)] text-xs font-semibold border border-[var(--separator)] flex items-center justify-center gap-1.5 hover:bg-[var(--chip)]/80 cursor-pointer"
               >
-                <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                <HelpCircle className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
                 <span>Stuck? Hint</span>
               </button>
               <button
+                type="button"
                 onClick={() => setShowChallengeModal(true)}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/20 flex items-center justify-center gap-1.5 transition-colors"
+                className="flex-1 min-h-[44px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--pink-text)] text-xs font-semibold border border-[var(--separator)] flex items-center justify-center gap-1.5 hover:bg-[var(--chip)]/80 cursor-pointer"
               >
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                <AlertTriangle className="size-3.5" strokeWidth={1.5} />
                 <span>Call Repeat!</span>
               </button>
             </div>
@@ -584,16 +551,16 @@ export function PassTheBombEngine() {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1.5"
+                  className="overflow-hidden p-3 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] text-xs space-y-1.5"
                 >
-                  <div className="font-bold text-amber-300">
-                    💡 Example answers (shout one of these):
+                  <div className="font-bold text-[var(--gold-text)]">
+                    Example answers (shout one of these):
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {currentItem.examples.map((ex: any, i) => (
                       <span
                         key={i}
-                        className="px-2 py-0.5 rounded-md bg-white/10 text-slate-200 text-[11px]"
+                        className="px-2 py-0.5 rounded-md bg-[var(--card)] text-[var(--text)] text-[11px]"
                       >
                         {getLocalizedText(ex, lang)}
                       </span>
@@ -610,28 +577,31 @@ export function PassTheBombEngine() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                  className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
                 >
-                  <div className="w-full max-w-sm bg-[#16161E] border border-white/10 rounded-2xl p-5 space-y-4">
-                    <div className="flex items-center gap-2 text-rose-400 font-black">
-                      <AlertTriangle className="w-5 h-5" /> Challenge / Repeat!
+                  <div className="w-full max-w-sm bg-[var(--card)] border border-[var(--separator)] rounded-[var(--radius-card)] p-5 space-y-4">
+                    <div className="flex items-center gap-2 text-[var(--pink-text)] font-bold">
+                      <AlertTriangle className="size-5" strokeWidth={1.5} />
+                      <span>Challenge / Repeat</span>
                     </div>
-                    <p className="text-xs text-slate-300">
-                      Did <strong className="text-white">{activePlayer.name}</strong> repeat an
-                      answer already said, or make up something completely invalid?
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Did <strong className="text-[var(--text)]">{activePlayer.name}</strong> repeat
+                      an answer already said or make up something invalid?
                     </p>
                     <div className="space-y-2">
                       <button
+                        type="button"
                         onClick={() => handleResolveChallenge(activePlayerIndex)}
-                        className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                        className="w-full min-h-[44px] rounded-[var(--radius-btn)] bg-[var(--brand-pink)] text-white font-bold text-xs cursor-pointer"
                       >
-                        Yes, Invalid/Repeated! (Lose Life)
+                        Yes, Repeated / Invalid (Lose Life)
                       </button>
                       <button
+                        type="button"
                         onClick={() => setShowChallengeModal(false)}
-                        className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 font-bold text-xs"
+                        className="w-full min-h-[44px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text)] font-bold text-xs cursor-pointer"
                       >
-                        False Alarm, Resume Game
+                        False Alarm, Resume
                       </button>
                     </div>
                   </div>
@@ -644,111 +614,109 @@ export function PassTheBombEngine() {
         {/* EXPLOSION SCREEN */}
         {phase === "exploded" && (
           <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="text-center space-y-6 py-6"
+            className="flex flex-1 flex-col justify-between py-4 text-center"
           >
-            <div className="text-6xl animate-bounce">💥</div>
             <div className="space-y-2">
-              <h1 className="text-3xl font-black text-rose-500 tracking-tight">
+              <div className="size-16 rounded-full bg-[var(--brand-pink)]/20 text-[var(--pink-text)] mx-auto grid place-items-center">
+                <Bomb className="size-8 text-[var(--pink-text)] animate-bounce" strokeWidth={1.5} />
+              </div>
+              <h1 className="text-3xl font-bold text-[var(--pink-text)] tracking-tight">
                 BOOM! IT EXPLODED!
               </h1>
-              <p className="text-sm text-slate-300">
+              <p className="text-xs text-[var(--text-secondary)]">
                 The bomb went off in{" "}
-                <strong className="text-white text-base">{activePlayer.name}</strong>'s hands!
+                <strong className="text-[var(--text)]">{activePlayer.name}</strong>'s hands!
               </p>
             </div>
 
             {/* Life Lost Graphic */}
-            <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 max-w-xs mx-auto space-y-2">
-              <div className="text-2xl">{activePlayer.avatar}</div>
-              <div className="font-bold text-sm">{activePlayer.name}</div>
-              <div className="flex items-center justify-center gap-2 text-rose-500">
+            <div className="my-auto w-full p-5 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] max-w-xs mx-auto space-y-3">
+              <div className="size-12 rounded-[0.75rem] bg-[var(--chip)] mx-auto grid place-items-center text-[var(--pink-text)]">
+                {renderAvatar(activePlayer.avatar, "size-6 text-current")}
+              </div>
+              <div className="font-bold text-sm text-[var(--text)]">{activePlayer.name}</div>
+              <div className="flex items-center justify-center gap-2">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Heart
                     key={i}
-                    className={`w-5 h-5 ${
+                    className={`size-5 ${
                       i < activePlayer.lives
-                        ? "fill-rose-500 text-rose-500"
-                        : "fill-slate-800 text-slate-800"
+                        ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]"
+                        : "fill-[var(--chip)] text-[var(--chip)]"
                     }`}
                   />
                 ))}
               </div>
               {activePlayer.isEliminated ? (
-                <div className="text-xs font-black text-rose-400 bg-rose-500/20 py-1 px-2 rounded-lg">
-                  💀 ELIMINATED FROM THE GAME!
+                <div className="text-xs font-bold text-[var(--pink-text)] bg-[var(--brand-pink)]/20 py-1 px-2 rounded-lg">
+                  Eliminated from the game
                 </div>
               ) : (
-                <div className="text-xs text-slate-400">{activePlayer.lives} lives remaining</div>
+                <div className="text-xs text-[var(--text-secondary)] tabular-nums">
+                  {activePlayer.lives} lives remaining
+                </div>
               )}
             </div>
 
-            {/* Next round button */}
-            <button
-              onClick={() => {
-                setRoundNumber((r) => r + 1);
-                startRound();
-              }}
-              className="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-colors"
-            >
-              Next Round →
-            </button>
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  if (alivePlayers.length <= 1) {
+                    setPhase("podium");
+                    if (soundEnabled) playVictorySound();
+                  } else {
+                    setRoundNumber((r) => r + 1);
+                    startRound();
+                  }
+                }}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>{alivePlayers.length <= 1 ? "View Champion" : "Next Round"}</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
           </motion.div>
         )}
 
         {/* PODIUM SCREEN */}
         {phase === "podium" && (
-          <div className="text-center space-y-6 py-4 animate-in fade-in duration-300">
-            <div className="text-5xl">🏆</div>
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
             <div className="space-y-1">
-              <h1 className="text-2xl font-black text-amber-400">Survivor Champion!</h1>
-              <p className="text-xs text-slate-400">
-                Only one student survived the bomb without getting blasted!
+              <div className="size-16 rounded-full bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)] mb-2">
+                <Trophy className="size-8 text-[var(--gold-text)]" strokeWidth={1.5} />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                Survivor Champion!
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                The only student to survive without getting blasted.
               </p>
             </div>
 
-            {/* Winner Spotlight */}
             {alivePlayers[0] && (
-              <div className="p-6 rounded-2xl bg-gradient-to-b from-amber-500/20 to-transparent border border-amber-500/30 space-y-2">
-                <div className="text-4xl">{alivePlayers[0].avatar}</div>
-                <div className="text-xl font-black text-white">{alivePlayers[0].name}</div>
-                <div className="text-xs text-amber-300 font-semibold">
-                  Survived with {alivePlayers[0].lives} ❤️ left • {alivePlayers[0].passesCount}{" "}
-                  passes made
+              <div
+                className="my-auto w-full p-5 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-2"
+                style={{
+                  boxShadow: "0 0 24px -6px rgba(251, 191, 36, 0.2)",
+                }}
+              >
+                <div className="size-12 rounded-[0.75rem] bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)]">
+                  {renderAvatar(alivePlayers[0].avatar, "size-6 text-current")}
+                </div>
+                <div className="text-xl font-bold text-[var(--text)]">{alivePlayers[0].name}</div>
+                <div className="text-xs text-[var(--gold-text)] font-semibold tabular-nums">
+                  Survived with {alivePlayers[0].lives} lives • {alivePlayers[0].passesCount} passes
+                  made
                 </div>
               </div>
             )}
 
-            {/* Full Leaderboard */}
-            <div className="space-y-2 text-left">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Final Standings
-              </label>
-              {players
-                .slice()
-                .sort((a, b) => b.lives - a.lives || b.passesCount - a.passesCount)
-                .map((p, idx) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/5 text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-500">#{idx + 1}</span>
-                      <span>{p.avatar}</span>
-                      <span className="font-semibold text-white">{p.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-400">
-                      <span>{p.passesCount} passes</span>
-                      <span>{p.isEliminated ? "💀" : `${p.lives} ❤️`}</span>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Play again */}
-            <div className="space-y-2">
+            <div className="w-full space-y-2 pt-4">
               <button
+                type="button"
                 onClick={() => {
                   setPlayers((prev) =>
                     prev.map((p) => ({
@@ -762,13 +730,14 @@ export function PassTheBombEngine() {
                   setRoundNumber(1);
                   setPhase("setup");
                 }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-rose-600 font-black text-sm text-white shadow-lg shadow-rose-600/30"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Play Again
+                <RotateCcw className="size-4" strokeWidth={1.5} />
+                <span>Play Again</span>
               </button>
               <Link
                 to="/"
-                className="block w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 text-xs font-bold text-center"
+                className="block w-full py-2.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] text-center"
               >
                 Back to Party Hub
               </Link>
@@ -776,11 +745,6 @@ export function PassTheBombEngine() {
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="px-4 py-2 text-center text-[10px] text-slate-600 border-t border-white/5">
-        Bro or Fraud? Hub • 100% Offline Hostel Games
-      </footer>
     </div>
   );
 }
