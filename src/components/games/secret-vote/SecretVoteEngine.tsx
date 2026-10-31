@@ -41,6 +41,91 @@ import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContent, getLocalizedText } from "@/lib/games/loader";
 import { LocalizedText } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
+import { loadActiveRoster } from "@/lib/roster";
+
+const FALLBACK_PROMPTS: Record<string, any[]> = {
+  "never-have-i-ever": [
+    {
+      statement: {
+        hinglish: "Maine kabhi story sirf ek person ke dekhne ke liye daali.",
+        en: "Never have I ever posted a story mainly for one person to see.",
+      },
+    },
+    {
+      statement: {
+        hinglish: "Maine kabhi kisi ka profile itna stalk kiya ki 2018 ke photos tak pahunch gaya.",
+        en: "Never have I ever stalked someone so deep I reached their 2018 photos.",
+      },
+    },
+    {
+      statement: {
+        hinglish: "Maine kabhi pura assignment ChatGPT se copy kiya bina change kiye.",
+        en: "Never have I ever copied an entire assignment from ChatGPT with zero edits.",
+      },
+    },
+    {
+      statement: {
+        hinglish: "Maine kabhi room door lock karke akele Maggi party ki bina roomies ko bataye.",
+        en: "Never have I ever had a secret Maggi party in my room without telling roomies.",
+      },
+    },
+    {
+      statement: {
+        hinglish: "Maine kabhi college proxy attendance lagai aur pakde jane se bacha.",
+        en: "Never have I ever marked a fake proxy attendance and barely survived.",
+      },
+    },
+    {
+      statement: {
+        hinglish:
+          "Maine kabhi message bhejte hi unsend kiya taaki wo sirf notification dekh sakein.",
+        en: "Never have I ever sent a message and immediately unsent it just for the lockscreen preview.",
+      },
+    },
+  ],
+  "would-you-rather": [
+    {
+      optionA: {
+        hinglish: "Sabhi dost tumhara real screen-time report aur app usage dekh sakein",
+        en: "All your friends can see your real screen-time and app usage breakdown",
+      },
+      optionB: {
+        hinglish: "Sabhi dost tumhari search history aur saved posts dekh sakein",
+        en: "All your friends can see your search history and saved posts",
+      },
+    },
+    {
+      optionA: {
+        hinglish: "Hostel mess ka khana roz 1 saal tak compulsory khana padega",
+        en: "Eat hostel mess food every single day for 1 entire year",
+      },
+      optionB: {
+        hinglish: "Roz subah 8:00 AM ki lecture attend karni padegi front bench par baithkar",
+        en: "Attend an 8:00 AM lecture daily sitting on the front bench",
+      },
+    },
+    {
+      optionA: {
+        hinglish: "Phone hamesha bina back cover aur bina screen guard ke use karo",
+        en: "Always use your phone with zero case and zero screen guard",
+      },
+      optionB: {
+        hinglish: "Phone ki battery kabhi bhi 20% se zyada charge na ho sake",
+        en: "Your phone battery never charges past 20%",
+      },
+    },
+    {
+      optionA: {
+        hinglish: "Apni crush ko accidentally call lag jaye aur speaker par chala jaye",
+        en: "Accidentally call your crush and have it connect on speaker",
+      },
+      optionB: {
+        hinglish: "Apne college hostel group me family WhatsApp forward bhej do",
+        en: "Accidentally send an embarrassing family WhatsApp forward into the college group",
+      },
+    },
+  ],
+};
 
 export interface SecretVoteConfig<T = any> {
   gameId: string;
@@ -145,23 +230,14 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
   >("SETUP");
 
   const [players, setPlayers] = useState<Player[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const raw = window.localStorage.getItem("bof:roster");
-        if (raw) {
-          const list = JSON.parse(raw);
-          if (Array.isArray(list) && list.length >= 2) {
-            return list.map((p: any, i: number) => ({
-              id: `p_${i}`,
-              name: p.name,
-              emoji: p.emoji || "User",
-              score: 0,
-            }));
-          }
-        }
-      } catch {
-        /* noop */
-      }
+    const roster = loadActiveRoster();
+    if (roster && roster.length >= 2) {
+      return roster.map((name, i) => ({
+        id: `p_${i}`,
+        name,
+        emoji: "User",
+        score: 0,
+      }));
     }
     return DEFAULT_PLAYERS;
   });
@@ -216,19 +292,32 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
     };
   }, [phase]);
 
-  // Init game
+  // Init game with safety fallbacks
   const initGame = () => {
     buzz(20);
-    const contentList = getContent(config.gameId as any);
-    const shuffled = [...contentList].sort(() => Math.random() - 0.5);
+    const contentResult = getContent(config.gameId as any);
+    const pool =
+      contentResult && Array.isArray(contentResult.pool) && contentResult.pool.length > 0
+        ? contentResult.pool
+        : FALLBACK_PROMPTS[config.gameId] || [];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     let pointer = 0;
     drawBagRef.current = () => {
+      if (shuffled.length === 0) {
+        const fallbacks = FALLBACK_PROMPTS[config.gameId] || [];
+        return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      }
       if (pointer >= shuffled.length) pointer = 0;
       return shuffled[pointer++];
     };
 
     startNewRound(1);
   };
+
+  // Auto-start into round 1 on mount
+  useEffect(() => {
+    initGame();
+  }, []);
 
   const startNewRound = (roundNum: number) => {
     setCurrentRound(roundNum);
@@ -449,10 +538,10 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
           <div className="flex flex-1 flex-col justify-between py-4 text-center">
             <div className="space-y-1">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
-                Prompt Card
+                Round {currentRound} of {totalRounds}
               </span>
               <h1 className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-2">
-                Read aloud to the room
+                {promptData.choiceA ? "Dilemma for the Room" : "Read aloud to the room"}
               </h1>
             </div>
 
@@ -467,6 +556,31 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
               </h2>
               {promptData.sub && (
                 <p className="text-xs text-[var(--text-secondary)] font-medium">{promptData.sub}</p>
+              )}
+
+              {/* If Would You Rather (choiceA & choiceB exist), display both choices clearly */}
+              {promptData.choiceA && promptData.choiceB && (
+                <div className="space-y-3 pt-2 text-left">
+                  <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)]">
+                    <span className="text-[11px] font-bold text-[var(--gold-text)] uppercase tracking-wider block mb-1">
+                      Option A
+                    </span>
+                    <p className="text-sm sm:text-base font-semibold text-[var(--text)]">
+                      {promptData.choiceA}
+                    </p>
+                  </div>
+                  <div className="text-center font-black text-xs uppercase tracking-widest text-[var(--pink-text)]">
+                    — OR —
+                  </div>
+                  <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)]">
+                    <span className="text-[11px] font-bold text-[var(--pink-text)] uppercase tracking-wider block mb-1">
+                      Option B
+                    </span>
+                    <p className="text-sm sm:text-base font-semibold text-[var(--text)]">
+                      {promptData.choiceB}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -550,28 +664,53 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
 
             {/* Options list */}
             <div className="my-auto space-y-2.5">
-              {config.options.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => {
-                    buzz(20);
-                    setPendingChoice(opt.id);
-                    setPhase("VOTE_CONFIRM");
-                  }}
-                  className="w-full min-h-[60px] rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] p-4 text-left flex items-center justify-between hover:bg-[var(--chip)] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-[0.5rem] bg-[var(--chip)] text-[var(--gold-text)] grid place-items-center">
-                      {renderOptionIcon(opt.emoji, "size-5")}
+              {config.options.map((opt) => {
+                const isOptionA = opt.id === "A";
+                const isOptionB = opt.id === "B";
+                const customLabel =
+                  isOptionA && promptData.choiceA
+                    ? promptData.choiceA
+                    : isOptionB && promptData.choiceB
+                      ? promptData.choiceB
+                      : getLocalizedText(opt.label, lang);
+
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      buzz(20);
+                      setPendingChoice(opt.id);
+                      setPhase("VOTE_CONFIRM");
+                    }}
+                    className="w-full min-h-[60px] rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] p-4 text-left flex items-center justify-between hover:bg-[var(--chip)] active:scale-[0.98] transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="size-9 rounded-[0.5rem] bg-[var(--chip)] text-[var(--gold-text)] grid place-items-center flex-none">
+                        {renderOptionIcon(opt.emoji, "size-5")}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        {(isOptionA || isOptionB) && (
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider ${
+                              isOptionA ? "text-[var(--gold-text)]" : "text-[var(--pink-text)]"
+                            }`}
+                          >
+                            {isOptionA ? "Option A" : "Option B"}
+                          </span>
+                        )}
+                        <span className="text-sm font-bold text-[var(--text)] leading-snug">
+                          {customLabel}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-sm font-bold text-[var(--text)]">
-                      {getLocalizedText(opt.label, lang)}
-                    </span>
-                  </div>
-                  <ChevronRight className="size-4 text-[var(--text-secondary)]" strokeWidth={1.5} />
-                </button>
-              ))}
+                    <ChevronRight
+                      className="size-4 text-[var(--text-secondary)] flex-none ml-2"
+                      strokeWidth={1.5}
+                    />
+                  </button>
+                );
+              })}
             </div>
 
             <p className="text-center text-xs text-[var(--text-secondary)] pb-2">
@@ -594,14 +733,23 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
 
             {(() => {
               const chosenOpt = config.options.find((o) => o.id === pendingChoice);
+              const isOptionA = chosenOpt?.id === "A";
+              const isOptionB = chosenOpt?.id === "B";
+              const label =
+                isOptionA && promptData.choiceA
+                  ? promptData.choiceA
+                  : isOptionB && promptData.choiceB
+                    ? promptData.choiceB
+                    : chosenOpt
+                      ? getLocalizedText(chosenOpt.label, lang)
+                      : "";
+
               return (
                 <div className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center space-y-3">
                   <div className="size-16 rounded-[var(--radius-group)] bg-[var(--chip)] text-[var(--gold-text)] grid place-items-center">
                     {chosenOpt ? renderOptionIcon(chosenOpt.emoji, "size-8") : null}
                   </div>
-                  <h2 className="text-xl font-bold text-[var(--text)]">
-                    {chosenOpt ? getLocalizedText(chosenOpt.label, lang) : ""}
-                  </h2>
+                  <h2 className="text-xl font-bold text-[var(--text)]">{label}</h2>
                   <p className="text-xs text-[var(--text-secondary)] max-w-[26ch]">
                     Once submitted, your choice locks in. Ready to pass to the next player?
                   </p>
@@ -670,6 +818,15 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
                     {config.options.map((opt) => {
                       const count = counts[opt.id] || 0;
                       const pct = Math.round((count / totalVotes) * 100);
+                      const isOptionA = opt.id === "A";
+                      const isOptionB = opt.id === "B";
+                      const optLabel =
+                        isOptionA && promptData.choiceA
+                          ? `Option A: ${promptData.choiceA}`
+                          : isOptionB && promptData.choiceB
+                            ? `Option B: ${promptData.choiceB}`
+                            : getLocalizedText(opt.label, lang);
+
                       return (
                         <div
                           key={opt.id}
@@ -680,7 +837,7 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
                               <span className="text-[var(--gold-text)]">
                                 {renderOptionIcon(opt.emoji, "size-4")}
                               </span>
-                              <span>{getLocalizedText(opt.label, lang)}</span>
+                              <span>{optLabel}</span>
                             </span>
                             <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
                               {count} ({pct}%)

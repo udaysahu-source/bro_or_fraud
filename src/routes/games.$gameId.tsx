@@ -111,49 +111,6 @@ const WOULD_YOU_RATHER_CONFIG: SecretVoteConfig = {
   majorityScoring: true,
 };
 
-const GARMA_GARAM_CONFIG: SecretVoteConfig = {
-  gameId: "garma-garam-takes",
-  gameName: "Garma-Garam Takes",
-  gameTagline: "Campus Hot Takes • Defend your stance",
-  instructions: {
-    steps: [
-      {
-        title: "Take a Stance",
-        desc: "Vote Agree or Disagree secretly on spicy campus statements.",
-      },
-      {
-        title: "Near-Tie Debate",
-        desc: "If the room is split close to 50/50, a 30s debate is triggered!",
-      },
-      {
-        title: "Re-Vote & Flip",
-        desc: "Students can flip sides during debate for persuasion bonuses!",
-      },
-    ],
-  },
-  getPromptText: (item: any, lang) => ({
-    main: getLocalizedText(item?.statement || item?.prompt, lang),
-    sub: "Hot Take:",
-  }),
-  options: [
-    {
-      id: "agree",
-      label: { hinglish: "100% Sahi Hai (Agree)", en: "Agree" },
-      emoji: "Flame",
-      color: "from-red-600 to-amber-500",
-    },
-    {
-      id: "disagree",
-      label: { hinglish: "Bilkul Bakwas (Disagree)", en: "Disagree" },
-      emoji: "ShieldAlert",
-      color: "from-cyan-600 to-blue-600",
-    },
-  ],
-  allowDebate: true,
-  allowReVote: true,
-  debateSeconds: 30,
-};
-
 export const Route = createFileRoute("/games/$gameId")({
   component: GameRouteComponent,
 });
@@ -190,32 +147,6 @@ function GameRouteComponent() {
       break;
     case "pass-the-bomb":
       content = <PassTheBombEngine />;
-      break;
-    case "garma-garam-takes":
-      content = <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
-      break;
-    case "hot-seat":
-      content = (
-        <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="size-16 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] grid place-items-center text-[var(--gold-text)]">
-            <Lock className="size-7" strokeWidth={1.5} />
-          </div>
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--pink-text)] border border-[var(--separator)]">
-            Mode Paused
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Taking a Break</h1>
-          <p className="text-xs text-[var(--text-secondary)] max-w-[28ch]">
-            This mode has been temporarily taken offline for tuning. Check out the active party
-            modes!
-          </p>
-          <Link
-            to="/"
-            className="min-h-[44px] px-5 py-2.5 rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-xs uppercase transition-all"
-          >
-            ← Back to Party Hub
-          </Link>
-        </div>
-      );
       break;
     case "confession-roulette":
       content = <ConfessionRouletteEngine />;

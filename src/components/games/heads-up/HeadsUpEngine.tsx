@@ -35,6 +35,7 @@ import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { HeadsUpItem } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
+import { loadActiveRoster } from "@/lib/roster";
 
 interface Player {
   id: string;
@@ -67,11 +68,15 @@ export function HeadsUpEngine() {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Setup state
-  const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "Player 1", avatar: "Smile", score: 0 },
-    { id: "2", name: "Player 2", avatar: "Crown", score: 0 },
-    { id: "3", name: "Player 3", avatar: "Sparkles", score: 0 },
-  ]);
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const roster = loadActiveRoster();
+    return roster.map((name, i) => ({
+      id: `p_${i + 1}`,
+      name,
+      avatar: AVATAR_POOL[i % AVATAR_POOL.length] || "Smile",
+      score: 0,
+    }));
+  });
   const [newPlayerName, setNewPlayerName] = useState("");
   const [roundDuration, setRoundDuration] = useState<30 | 60 | 90>(60);
   const [enableForbiddenWords, setEnableForbiddenWords] = useState(true);

@@ -38,6 +38,7 @@ import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { ConfessionRouletteItem } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
+import { loadActiveRoster } from "@/lib/roster";
 
 interface Player {
   id: string;
@@ -76,12 +77,17 @@ export function ConfessionRouletteEngine() {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Setup state
-  const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "Player 1", avatar: "Smile", score: 0, hasShield: true, hasFrame: true },
-    { id: "2", name: "Player 2", avatar: "Crown", score: 0, hasShield: true, hasFrame: true },
-    { id: "3", name: "Player 3", avatar: "Sparkles", score: 0, hasShield: true, hasFrame: true },
-    { id: "4", name: "Player 4", avatar: "Ghost", score: 0, hasShield: true, hasFrame: true },
-  ]);
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const roster = loadActiveRoster();
+    return roster.map((name, i) => ({
+      id: `p_${i + 1}`,
+      name,
+      avatar: AVATAR_POOL[i % AVATAR_POOL.length] || "Smile",
+      score: 0,
+      hasShield: true,
+      hasFrame: true,
+    }));
+  });
   const [newPlayerName, setNewPlayerName] = useState("");
   const [enableChaosPowers] = useState(true);
 
@@ -764,7 +770,12 @@ export function ConfessionRouletteEngine() {
                       <span
                         className={`font-bold inline-flex items-center gap-1 ${isCorrect ? "text-[var(--gold-text)]" : "text-[var(--pink-text)]"}`}
                       >
-                        {suspectName} {isCorrect ? <Check size={12} strokeWidth={2} /> : <X size={12} strokeWidth={2} />}
+                        {suspectName}{" "}
+                        {isCorrect ? (
+                          <Check size={12} strokeWidth={2} />
+                        ) : (
+                          <X size={12} strokeWidth={2} />
+                        )}
                       </span>
                     </div>
                   );

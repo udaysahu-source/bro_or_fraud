@@ -120,28 +120,6 @@ const MODES: Mode[] = [
     minPlayers: 3,
     icon: Split,
   },
-  {
-    id: "garma-garam-takes",
-    n: "Garma Garam Takes",
-    d: "Defend your wildest campus takes.",
-    p: "3–12",
-    c: "Debate",
-    col: "#f87171",
-    route: "/games/garma-garam-takes",
-    minPlayers: 3,
-    icon: Coffee,
-  },
-  {
-    id: "hot-seat",
-    n: "Hot Seat",
-    d: "One in the seat. Everyone else roasts.",
-    p: "3–12",
-    c: "Tea",
-    col: "#2dd4bf",
-    route: "/games/hot-seat",
-    minPlayers: 3,
-    icon: Flame,
-  },
 ];
 
 const FILTERS = ["All", "Tea", "Fast", "Debate", "Spy"];

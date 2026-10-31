@@ -34,6 +34,7 @@ import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { PassTheBombItem } from "@/lib/games/types";
 import { renderAvatar } from "@/routes/play.setup";
+import { loadActiveRoster } from "@/lib/roster";
 
 interface Player {
   id: string;
@@ -93,35 +94,18 @@ export function PassTheBombEngine() {
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Game setup
-  const [players, setPlayers] = useState<Player[]>([
-    {
-      id: "1",
-      name: "Player 1",
-      avatar: "Smile",
+  const [players, setPlayers] = useState<Player[]>(() => {
+    const roster = loadActiveRoster();
+    return roster.map((name, i) => ({
+      id: `p_${i + 1}`,
+      name,
+      avatar: AVATAR_POOL[i % AVATAR_POOL.length] || "Smile",
       lives: 3,
       isEliminated: false,
       passesCount: 0,
       timesExploded: 0,
-    },
-    {
-      id: "2",
-      name: "Player 2",
-      avatar: "Crown",
-      lives: 3,
-      isEliminated: false,
-      passesCount: 0,
-      timesExploded: 0,
-    },
-    {
-      id: "3",
-      name: "Player 3",
-      avatar: "Sparkles",
-      lives: 3,
-      isEliminated: false,
-      passesCount: 0,
-      timesExploded: 0,
-    },
-  ]);
+    }));
+  });
   const [newPlayerName, setNewPlayerName] = useState("");
   const [phase, setPhase] = useState<"setup" | "playing" | "exploded" | "podium">("setup");
 

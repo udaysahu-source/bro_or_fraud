@@ -79,24 +79,6 @@ const GAME_METAS: Record<
     accentBorder: "border-cyan-500/40 hover:border-cyan-400",
     badgeBg: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   },
-  "garma-garam-takes": {
-    emoji: "☕",
-    moodTag: "Hot Takes",
-    chipCategory: "debate",
-    hostelVibe: "Defend your controversial campus takes!",
-    accentGradient: "from-orange-500/20 via-surface to-surface",
-    accentBorder: "border-orange-500/40 hover:border-orange-400",
-    badgeBg: "bg-orange-500/20 text-orange-300 border-orange-500/30",
-  },
-  "hot-seat": {
-    emoji: "🔥",
-    moodTag: "Friendly Roast",
-    chipCategory: "tea",
-    hostelVibe: "One player in the seat, rest roast anonymously!",
-    accentGradient: "from-pink-500/20 via-surface to-surface",
-    accentBorder: "border-pink-500/40 hover:border-pink-400",
-    badgeBg: "bg-pink-500/20 text-pink-300 border-pink-500/30",
-  },
 };
 
 export function getHubGames(): GameHubItem[] {
@@ -150,4 +132,3 @@ export function getHubGames(): GameHubItem[] {
 
   return [flagship, ...dynamicModes];
 }
-
