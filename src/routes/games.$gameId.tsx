@@ -1,14 +1,30 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import React from "react";
-import {
-  SecretVoteEngine,
-  SecretVoteConfig,
-} from "@/components/games/secret-vote/SecretVoteEngine";
-import { PassTheBombEngine } from "@/components/games/pass-the-bomb/PassTheBombEngine";
-import { HotSeatEngine } from "@/components/games/hot-seat/HotSeatEngine";
-import { ConfessionRouletteEngine } from "@/components/games/confession-roulette/ConfessionRouletteEngine";
-import { HeadsUpEngine } from "@/components/games/heads-up/HeadsUpEngine";
+import React, { lazy, Suspense } from "react";
+import { type SecretVoteConfig } from "@/components/games/secret-vote/SecretVoteEngine";
 import { getLocalizedText } from "@/lib/games/loader";
+import { Lock, Gamepad2, AlertCircle } from "lucide-react";
+
+// Code-split each game mode engine for performance
+const SecretVoteEngine = lazy(() =>
+  import("@/components/games/secret-vote/SecretVoteEngine").then((m) => ({
+    default: m.SecretVoteEngine,
+  })),
+);
+const PassTheBombEngine = lazy(() =>
+  import("@/components/games/pass-the-bomb/PassTheBombEngine").then((m) => ({
+    default: m.PassTheBombEngine,
+  })),
+);
+const ConfessionRouletteEngine = lazy(() =>
+  import("@/components/games/confession-roulette/ConfessionRouletteEngine").then((m) => ({
+    default: m.ConfessionRouletteEngine,
+  })),
+);
+const HeadsUpEngine = lazy(() =>
+  import("@/components/games/heads-up/HeadsUpEngine").then((m) => ({
+    default: m.HeadsUpEngine,
+  })),
+);
 
 const NEVER_HAVE_I_EVER_CONFIG: SecretVoteConfig = {
   gameId: "never-have-i-ever",
@@ -38,19 +54,19 @@ const NEVER_HAVE_I_EVER_CONFIG: SecretVoteConfig = {
     {
       id: "have",
       label: { hinglish: "Maine Kiya Hai", en: "I Have" },
-      emoji: "🙋‍♂️",
+      emoji: "Hand",
       color: "from-amber-500 to-rose-600",
     },
     {
       id: "never",
       label: { hinglish: "Kabhi Nahi Kiya", en: "I Have Never" },
-      emoji: "😇",
+      emoji: "ShieldCheck",
       color: "from-emerald-500 to-teal-600",
     },
     {
       id: "skip",
       label: { hinglish: "Paani Peeyo / Pass", en: "Sip / Pass" },
-      emoji: "🥤",
+      emoji: "Coffee",
       color: "from-slate-600 to-slate-800",
     },
   ],
@@ -80,13 +96,13 @@ const WOULD_YOU_RATHER_CONFIG: SecretVoteConfig = {
     {
       id: "A",
       label: { hinglish: "Option A", en: "Option A" },
-      emoji: "🅰️",
+      emoji: "Sparkles",
       color: "from-blue-600 to-cyan-500",
     },
     {
       id: "B",
       label: { hinglish: "Option B", en: "Option B" },
-      emoji: "🅱️",
+      emoji: "Flame",
       color: "from-purple-600 to-pink-500",
     },
   ],
@@ -123,13 +139,13 @@ const GARMA_GARAM_CONFIG: SecretVoteConfig = {
     {
       id: "agree",
       label: { hinglish: "100% Sahi Hai (Agree)", en: "Agree" },
-      emoji: "🔥",
+      emoji: "Flame",
       color: "from-red-600 to-amber-500",
     },
     {
       id: "disagree",
       label: { hinglish: "Bilkul Bakwas (Disagree)", en: "Disagree" },
-      emoji: "🧊",
+      emoji: "ShieldAlert",
       color: "from-cyan-600 to-blue-600",
     },
   ],
@@ -142,28 +158,23 @@ export const Route = createFileRoute("/games/$gameId")({
   component: GameRouteComponent,
 });
 
-function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-[#0D0D12] text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-full border-2 border-lime/20 border-t-lime animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-sm">🎮</div>
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs font-black uppercase tracking-widest text-lime">
-            Loading Game Mode
-          </p>
-          <p className="text-[11px] text-slate-400">Heating up hostel gossip & secrets...</p>
+function GameLoadingSkeleton() {
+  return (
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col items-center justify-center p-6 text-center space-y-4">
+      <div className="relative">
+        <div className="size-12 rounded-full border-2 border-[var(--separator)] border-t-[var(--brand-gold)] animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center text-[var(--gold-text)]">
+          <Gamepad2 className="size-5" strokeWidth={1.5} />
         </div>
       </div>
-    );
-  }
-  return <>{children}</>;
+      <div className="space-y-1">
+        <p className="text-xs font-bold uppercase tracking-widest text-[var(--gold-text)]">
+          Loading Mode
+        </p>
+        <p className="text-xs text-[var(--text-secondary)]">Preparing party deck...</p>
+      </div>
+    </div>
+  );
 }
 
 function GameRouteComponent() {
@@ -181,28 +192,25 @@ function GameRouteComponent() {
       content = <PassTheBombEngine />;
       break;
     case "garma-garam-takes":
+      content = <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
+      break;
     case "hot-seat":
       content = (
-        <div className="min-h-screen bg-void text-foreground flex flex-col items-center justify-center p-6 text-center space-y-4">
-          <div className="size-16 rounded-2xl bg-surface border-2.5 border-black grid place-items-center text-3xl shadow-[3px_3px_0_0_#000]">
-            🔒
+        <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="size-16 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] grid place-items-center text-[var(--gold-text)]">
+            <Lock className="size-7" strokeWidth={1.5} />
           </div>
-          <span className="sticker-badge bg-magenta text-white text-[10px]">
-            MODE CURRENTLY VAULTED
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--pink-text)] border border-[var(--separator)]">
+            Mode Paused
           </span>
-          <h1
-            className="text-2xl sm:text-3xl font-black uppercase font-display text-lime"
-            style={{ textShadow: "2px 2px 0 #000" }}
-          >
-            Taking a Break
-          </h1>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide max-w-[28ch]">
-            This mode has been temporarily taken offline for maintenance and tuning. Check out the
-            active party modes!
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">Taking a Break</h1>
+          <p className="text-xs text-[var(--text-secondary)] max-w-[28ch]">
+            This mode has been temporarily taken offline for tuning. Check out the active party
+            modes!
           </p>
           <Link
             to="/"
-            className="px-5 py-3 rounded-2xl bg-lime text-void font-black text-xs uppercase border-3 border-black shadow-[3px_3px_0_0_var(--color-magenta)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-xs uppercase transition-all"
           >
             ← Back to Party Hub
           </Link>
@@ -217,15 +225,17 @@ function GameRouteComponent() {
       break;
     default:
       content = (
-        <div className="min-h-screen bg-[#0D0D12] text-white flex flex-col items-center justify-center p-4 text-center space-y-4">
-          <div className="text-5xl">🎮</div>
-          <h1 className="text-xl font-black">Game Mode Not Found</h1>
-          <p className="text-xs text-slate-400">
+        <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="size-16 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] grid place-items-center text-[var(--pink-text)]">
+            <AlertCircle className="size-7" strokeWidth={1.5} />
+          </div>
+          <h1 className="text-xl font-bold">Game Mode Not Found</h1>
+          <p className="text-xs text-[var(--text-secondary)]">
             The game mode "{gameId}" does not exist in the party hub.
           </p>
           <Link
             to="/"
-            className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs"
+            className="min-h-[44px] px-5 py-2.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text)] font-bold text-xs"
           >
             ← Back to Party Hub
           </Link>
@@ -233,5 +243,5 @@ function GameRouteComponent() {
       );
   }
 
-  return <ClientOnly>{content}</ClientOnly>;
+  return <Suspense fallback={<GameLoadingSkeleton />}>{content}</Suspense>;
 }

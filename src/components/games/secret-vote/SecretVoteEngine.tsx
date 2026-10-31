@@ -3,7 +3,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HelpCircle,
-  Settings as SettingsIcon,
   Play,
   RotateCcw,
   Volume2,
@@ -16,14 +15,27 @@ import {
   Timer,
   CheckCircle2,
   XCircle,
+  Trophy,
+  Crown,
+  Hand,
+  ShieldCheck,
+  Coffee,
+  Sparkles,
+  ArrowRight,
+  Lock,
+  Pause,
+  X,
+  BarChart2,
+  MessageSquare,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { buzz } from "@/lib/haptics";
 import {
   playTimerTickSound,
   playTimerAlarmSound,
   playRoleRevealSound,
   playVictorySound,
-  playSuspenseHeartbeat,
+  playSuspenseHeartbeatSound,
 } from "@/lib/audio";
 import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContent, getLocalizedText } from "@/lib/games/loader";
@@ -67,25 +79,55 @@ export interface Player {
 }
 
 const DEFAULT_PLAYERS: Player[] = [
-  { id: "p1", name: "Raju", emoji: "User", score: 0 },
-  { id: "p2", name: "Farhan", emoji: "Bot", score: 0 },
-  { id: "p3", name: "Rancho", emoji: "Zap", score: 0 },
+  { id: "p1", name: "Player 1", emoji: "User", score: 0 },
+  { id: "p2", name: "Player 2", emoji: "Bot", score: 0 },
+  { id: "p3", name: "Player 3", emoji: "Zap", score: 0 },
 ];
 
-const PLAYER_COLORS = [
-  "#22c55e", // lime-green
-  "#ec4899", // pink
-  "#3b82f6", // blue
-  "#eab308", // amber
-  "#a855f7", // purple
-  "#06b6d4", // cyan
-  "#f97316", // orange
-  "#14b8a6", // teal
+const PLAYER_ACCENTS = [
+  { color: "#fbbf24", glow: "rgba(251, 191, 36, 0.25)" },
+  { color: "#f0508a", glow: "rgba(240, 80, 138, 0.25)" },
+  { color: "#38bdf8", glow: "rgba(56, 189, 248, 0.25)" },
+  { color: "#a78bfa", glow: "rgba(167, 139, 250, 0.25)" },
+  { color: "#34d399", glow: "rgba(52, 211, 153, 0.25)" },
+  { color: "#fb923c", glow: "rgba(251, 146, 60, 0.25)" },
 ];
+
+function renderOptionIcon(emojiOrIcon: string, className = "size-5") {
+  const IconComponent = (
+    LucideIcons as unknown as Record<
+      string,
+      React.ComponentType<{ className?: string; strokeWidth?: number }>
+    >
+  )[emojiOrIcon];
+
+  if (IconComponent) {
+    return <IconComponent className={className} strokeWidth={1.5} />;
+  }
+
+  // Fallback map
+  if (emojiOrIcon.includes("🙋") || emojiOrIcon.toLowerCase().includes("hand")) {
+    return <Hand className={className} strokeWidth={1.5} />;
+  }
+  if (emojiOrIcon.includes("😇") || emojiOrIcon.toLowerCase().includes("shield")) {
+    return <ShieldCheck className={className} strokeWidth={1.5} />;
+  }
+  if (emojiOrIcon.includes("🥤") || emojiOrIcon.toLowerCase().includes("coffee")) {
+    return <Coffee className={className} strokeWidth={1.5} />;
+  }
+  if (emojiOrIcon.includes("🔥") || emojiOrIcon.toLowerCase().includes("flame")) {
+    return <Flame className={className} strokeWidth={1.5} />;
+  }
+  if (emojiOrIcon.includes("🧊") || emojiOrIcon.toLowerCase().includes("alert")) {
+    return <ShieldAlert className={className} strokeWidth={1.5} />;
+  }
+
+  return <Sparkles className={className} strokeWidth={1.5} />;
+}
 
 export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<MatchSettings>(loadSettings());
+  const [settings] = useState<MatchSettings>(loadSettings());
   const [lang, setLang] = useState<"hinglish" | "en">(settings.language || "hinglish");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
@@ -98,8 +140,6 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
     | "VOTE_CONFIRM"
     | "AGGREGATE_REVEAL"
     | "DEBATE"
-    | "RE_VOTE_HANDOFF"
-    | "RE_VOTE_PRIVATE"
     | "SCOREBOARD"
     | "PODIUM"
   >("SETUP");
@@ -134,7 +174,6 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
   const [pendingChoice, setPendingChoice] = useState<string | null>(null);
   const [roundVotes, setRoundVotes] = useState<Record<string, string>>({});
-  const [reVotes, setReVotes] = useState<Record<string, string>>({});
 
   // Debate timer
   const [debateSecondsLeft, setDebateSecondsLeft] = useState(config.debateSeconds || 25);
@@ -149,104 +188,115 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
     const requestLock = async () => {
       if (typeof navigator !== "undefined" && "wakeLock" in navigator) {
         try {
-          const navAny = navigator as any;
-          wakeLock = await navAny.wakeLock.request("screen");
+          wakeLock = await (navigator as any).wakeLock.request("screen");
         } catch {
-          /* ignore */
+          /* noop */
         }
       }
     };
-    if (phase !== "SETUP" && phase !== "PODIUM") {
-      requestLock();
-    }
+    requestLock();
     return () => {
-      wakeLock?.release();
+      if (wakeLock) wakeLock.release().catch(() => {});
+    };
+  }, []);
+
+  // Auto-hide private content if screen blurred or backgrounded
+  useEffect(() => {
+    const handleHide = () => {
+      if (phase === "PRIVATE_VOTE" || phase === "VOTE_CONFIRM") {
+        setPhase("HANDOFF");
+        setPendingChoice(null);
+      }
+    };
+    window.addEventListener("blur", handleHide);
+    document.addEventListener("visibilitychange", handleHide);
+    return () => {
+      window.removeEventListener("blur", handleHide);
+      document.removeEventListener("visibilitychange", handleHide);
     };
   }, [phase]);
 
-  // Init content loader
+  // Init game
   const initGame = () => {
-    buzz(25);
-    const content = getContent(config.gameId, {
-      levels: [settings.contentLevel || "mild"],
-    });
-    drawBagRef.current = content.draw;
+    buzz(20);
+    const contentList = getContent(config.gameId as any);
+    const shuffled = [...contentList].sort(() => Math.random() - 0.5);
+    let pointer = 0;
+    drawBagRef.current = () => {
+      if (pointer >= shuffled.length) pointer = 0;
+      return shuffled[pointer++];
+    };
+
     startNewRound(1);
   };
 
   const startNewRound = (roundNum: number) => {
-    const item = drawBagRef.current ? drawBagRef.current() : null;
-    if (!item) {
-      setPhase("PODIUM");
-      return;
-    }
-    setActiveItem(item);
     setCurrentRound(roundNum);
     setRoundVotes({});
-    setReVotes({});
     setCurrentPlayerIdx(0);
     setPendingChoice(null);
+
+    const nextPrompt = drawBagRef.current ? drawBagRef.current() : null;
+    setActiveItem(nextPrompt);
     setPhase("ROUND_START");
   };
 
   const startVotingHandoff = () => {
-    buzz(20);
+    buzz(25);
+    playSuspenseHeartbeatSound();
     setCurrentPlayerIdx(0);
     setPhase("HANDOFF");
   };
 
   const handleVoteSubmit = () => {
     if (!pendingChoice) return;
-    buzz(20);
-    const p = players[currentPlayerIdx];
-    const newVotes = { ...roundVotes, [p.id]: pendingChoice };
-    setRoundVotes(newVotes);
+    buzz(30);
+
+    const playerId = players[currentPlayerIdx].id;
+    const nextVotes = { ...roundVotes, [playerId]: pendingChoice };
+    setRoundVotes(nextVotes);
     setPendingChoice(null);
 
     if (currentPlayerIdx + 1 < players.length) {
       setCurrentPlayerIdx((prev) => prev + 1);
       setPhase("HANDOFF");
     } else {
-      // All players voted! Calculate scores & reveal
-      processVotes(newVotes);
+      // Calculate majority scoring if enabled
+      if (config.majorityScoring) {
+        const counts: Record<string, number> = {};
+        Object.values(nextVotes).forEach((v) => (counts[v] = (counts[v] || 0) + 1));
+        let maxVoteChoice = "";
+        let maxCount = -1;
+        Object.entries(counts).forEach(([choice, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            maxVoteChoice = choice;
+          }
+        });
+
+        setPlayers((prev) =>
+          prev.map((p) => {
+            const playerVote = nextVotes[p.id];
+            if (playerVote === maxVoteChoice) {
+              return { ...p, score: p.score + 100 };
+            }
+            return p;
+          }),
+        );
+      }
+      playRoleRevealSound();
       setPhase("AGGREGATE_REVEAL");
     }
   };
 
-  const processVotes = (votes: Record<string, string>) => {
-    if (config.majorityScoring) {
-      // Count frequency
-      const counts: Record<string, number> = {};
-      Object.values(votes).forEach((v) => {
-        counts[v] = (counts[v] || 0) + 1;
-      });
-      let maxCount = 0;
-      let majorityOption = "";
-      Object.entries(counts).forEach(([opt, count]) => {
-        if (count > maxCount) {
-          maxCount = count;
-          majorityOption = opt;
-        }
-      });
-      // Award 1 point to majority voters
-      setPlayers((prev) =>
-        prev.map((p) => {
-          if (votes[p.id] === majorityOption) {
-            return { ...p, score: p.score + 1 };
-          }
-          return p;
-        }),
-      );
-    }
-  };
-
-  // Debate countdown
+  // Debate Countdown timer
   useEffect(() => {
-    if (phase !== "DEBATE" || !debateActive) return;
-    if (debateSecondsLeft <= 0) {
-      playTimerAlarmSound();
-      buzz([100, 50, 100]);
-      setDebateActive(false);
+    if (phase !== "DEBATE" || !debateActive || debateSecondsLeft <= 0) {
+      if (phase === "DEBATE" && debateSecondsLeft === 0) {
+        playTimerAlarmSound();
+        buzz([50, 50, 80]);
+        setDebateActive(false);
+      }
       return;
     }
 
@@ -261,670 +311,673 @@ export function SecretVoteEngine({ config }: { config: SecretVoteConfig }) {
     return () => clearInterval(timer);
   }, [phase, debateActive, debateSecondsLeft]);
 
-  // Audio helper
-  const isSound = settings.soundEnabled !== false;
-
-  // Render Prompt Info
   const promptData = activeItem ? config.getPromptText(activeItem, lang) : { main: "" };
-
   const currPlayer = players[currentPlayerIdx] || players[0];
-  const currColor = PLAYER_COLORS[currentPlayerIdx % PLAYER_COLORS.length];
+  const currAccent = PLAYER_ACCENTS[currentPlayerIdx % PLAYER_ACCENTS.length];
 
-  // ==========================================
-  // PHASE: SETUP
-  // ==========================================
-  if (phase === "SETUP") {
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe">
-        <header className="flex items-center justify-between">
-          <Link
-            to="/"
-            onClick={() => buzz(15)}
-            className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground min-h-[44px] flex items-center"
-          >
-            ← Game Hub
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                buzz(15);
-                setLang((l) => (l === "hinglish" ? "en" : "hinglish"));
-              }}
-              className="px-2.5 py-1 rounded border border-border text-[11px] font-black uppercase text-lime bg-surface min-h-[36px]"
-            >
-              {lang === "hinglish" ? "Hinglish 🇮🇳" : "English 🇬🇧"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                buzz(15);
-                setShowHowToPlay(true);
-              }}
-              className="size-9 rounded-full border border-border bg-surface flex items-center justify-center text-muted-foreground hover:text-foreground"
-            >
-              <HelpCircle className="size-4" />
-            </button>
-          </div>
-        </header>
+  return (
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
+        <Link
+          to="/"
+          onClick={() => buzz(15)}
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
+        >
+          End game
+        </Link>
 
-        <main className="mt-8 space-y-6">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-magenta">
-              // party game
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">
+            {config.gameName}
+          </span>
+          {phase !== "SETUP" && phase !== "PODIUM" && (
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)] tabular-nums">
+              R{currentRound}/{totalRounds}
             </span>
-            <h1 className="text-3xl font-black uppercase tracking-tight text-foreground mt-1">
-              {config.gameName}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1">{config.gameTagline}</p>
-          </div>
-
-          {/* Roster Summary */}
-          <div className="rounded-2xl border-2 border-border bg-surface p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                👥 Players ({players.length})
-              </span>
-              <span className="text-[10px] text-lime font-bold">Pass the Phone</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {players.map((p, idx) => (
-                <div
-                  key={p.id}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-void text-xs font-bold"
-                  style={{ borderColor: PLAYER_COLORS[idx % PLAYER_COLORS.length] }}
-                >
-                  {renderAvatar(p.emoji, "size-4 text-current")}
-                  <span>{p.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Rounds Slider */}
-          <div className="rounded-2xl border-2 border-border bg-surface p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                🎯 Number of Rounds
-              </span>
-              <span className="text-sm font-black text-lime">{totalRounds} Rounds</span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[3, 5, 7].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    buzz(15);
-                    setTotalRounds(num);
-                  }}
-                  className={`py-2 rounded-xl text-xs font-black uppercase border transition-all ${
-                    totalRounds === num
-                      ? "border-lime bg-lime text-void shadow"
-                      : "border-border bg-void text-foreground"
-                  }`}
-                >
-                  {num} Rounds
-                </button>
-              ))}
-            </div>
-          </div>
-        </main>
-
-        <footer className="pt-6 pb-4">
-          <button
-            type="button"
-            onClick={initGame}
-            className="w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink min-h-[52px] tactile tactile-press"
-          >
-            Start Round 1 →
-          </button>
-        </footer>
-
-        {/* How to play modal */}
-        <AnimatePresence>
-          {showHowToPlay && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-void/90 backdrop-blur-md p-5 flex items-center justify-center"
-            >
-              <div className="w-full max-w-sm rounded-3xl border-2 border-border bg-surface p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="text-base font-black uppercase text-foreground">
-                    How To Play {config.gameName}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowHowToPlay(false)}
-                    className="text-muted-foreground hover:text-foreground text-sm font-bold"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <div className="space-y-3 text-xs text-muted-foreground">
-                  {config.instructions.steps.map((st, i) => (
-                    <div key={i} className="flex gap-2.5">
-                      <span className="font-black text-lime">{i + 1}.</span>
-                      <div>
-                        <strong className="text-foreground block">{st.title}</strong>
-                        <span>{st.desc}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowHowToPlay(false)}
-                  className="w-full rounded-xl bg-lime py-3 text-xs font-black uppercase text-void"
-                >
-                  Got It!
-                </button>
-              </div>
-            </motion.div>
           )}
-        </AnimatePresence>
-      </div>
-    );
-  }
+        </div>
 
-  // ==========================================
-  // PHASE: ROUND_START (Show prompt to group)
-  // ==========================================
-  if (phase === "ROUND_START") {
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe">
-        <header className="flex items-center justify-between">
-          <span className="text-[11px] font-black uppercase tracking-widest text-lime bg-lime/10 px-2.5 py-1 rounded-full border border-lime/30">
-            Round {currentRound} of {totalRounds}
-          </span>
-          <button
-            type="button"
-            onClick={() => setLang((l) => (l === "hinglish" ? "en" : "hinglish"))}
-            className="text-[10px] font-black uppercase text-muted-foreground hover:text-foreground border border-border px-2 py-0.5 rounded"
-          >
-            {lang === "hinglish" ? "English" : "Hinglish"}
-          </button>
-        </header>
-
-        <main className="my-auto space-y-6 text-center">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="rounded-3xl border-2 border-border bg-surface p-6 brutal-shadow-pink space-y-4"
-          >
-            <span className="text-3xl">🔥</span>
-            <h2 className="text-xl sm:text-2xl font-black text-foreground uppercase tracking-tight leading-snug">
-              {promptData.main}
-            </h2>
-            {promptData.sub && (
-              <p className="text-xs text-muted-foreground font-medium">{promptData.sub}</p>
-            )}
-          </motion.div>
-          <p className="text-xs text-muted-foreground font-medium">
-            Read aloud to the group! Then pass the phone so each player votes privately.
-          </p>
-        </main>
-
-        <footer className="pb-4">
-          <button
-            type="button"
-            onClick={startVotingHandoff}
-            className="w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-pink min-h-[52px] tactile tactile-press"
-          >
-            Start Secret Voting →
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // PHASE: HANDOFF (Privacy curtain)
-  // ==========================================
-  if (phase === "HANDOFF") {
-    return (
-      <div
-        className="min-h-dvh flex flex-col justify-between p-6 text-void select-none"
-        style={{ backgroundColor: currColor }}
-      >
-        <header className="flex items-center justify-between pt-safe">
-          <span className="rounded-full bg-void/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-void">
-            [ SECURE HANDOFF ]
-          </span>
-          <span className="text-xs font-black uppercase">
-            Player {currentPlayerIdx + 1} of {players.length}
-          </span>
-        </header>
-
-        <main className="my-auto text-center space-y-4">
-          <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-void text-white shadow-2xl">
-            {renderAvatar(currPlayer.emoji, "size-10 text-white")}
-          </div>
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80">
-              Pass the phone to
-            </p>
-            <h2 className="text-4xl font-black uppercase tracking-tight mt-1">{currPlayer.name}</h2>
-          </div>
-          <p className="text-xs max-w-xs mx-auto font-bold opacity-80">
-            Keep the screen away from other bros. Your vote is confidential!
-          </p>
-        </main>
-
-        <footer className="pb-safe">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => {
-              buzz(25);
-              setPhase("PRIVATE_VOTE");
+              buzz(15);
+              setLang((l) => (l === "hinglish" ? "en" : "hinglish"));
             }}
-            className="w-full rounded-2xl bg-void text-white py-4 text-base font-black uppercase tracking-wide border-2 border-white/20 min-h-[54px] active:scale-95 transition-transform"
+            className="min-h-[36px] px-2.5 py-1 rounded-[var(--radius-btn)] text-[11px] font-semibold bg-[var(--chip)] text-[var(--text)] border border-[var(--separator)] transition-colors"
           >
-            I Am {currPlayer.name} — Show Options
+            {lang === "hinglish" ? "Hinglish" : "English"}
           </button>
-        </footer>
-      </div>
-    );
-  }
+          <button
+            type="button"
+            aria-label="How to play"
+            onClick={() => {
+              buzz(15);
+              setShowHowToPlay(true);
+            }}
+            className="size-9 rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center cursor-pointer"
+          >
+            <HelpCircle className="size-4" strokeWidth={1.5} />
+          </button>
+        </div>
+      </header>
 
-  // ==========================================
-  // PHASE: PRIVATE_VOTE (Secret Choice)
-  // ==========================================
-  if (phase === "PRIVATE_VOTE") {
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between p-5 pb-safe">
-        <header className="flex items-center justify-between pt-safe">
-          <div className="flex items-center gap-2">
-            <span className="size-3 rounded-full" style={{ backgroundColor: currColor }} />
-            <span className="text-xs font-black uppercase text-foreground">
-              {currPlayer.name}'s Secret Turn
-            </span>
-          </div>
-          <span className="text-[10px] font-bold text-muted-foreground uppercase">
-            Confidential
-          </span>
-        </header>
+      {/* MAIN CONTAINER */}
+      <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-center">
+        {/* PHASE: SETUP */}
+        {phase === "SETUP" && (
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="text-center space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                Party Secret Mode
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                {config.gameName}
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">{config.gameTagline}</p>
+            </div>
 
-        <main className="my-auto space-y-6">
-          <div className="rounded-2xl border border-border bg-surface p-4 text-center">
-            <p className="text-sm font-bold text-foreground">{promptData.main}</p>
-          </div>
+            {/* Roster Summary */}
+            <div
+              className="rounded-[var(--radius-card)] bg-[var(--card)] p-4 border border-[var(--separator)] space-y-3"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(251, 191, 36, 0.2)",
+              }}
+            >
+              <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+                <span>Players ({players.length})</span>
+                <span className="text-[var(--gold-text)]">Pass the phone</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {players.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)]"
+                  >
+                    {renderAvatar(p.emoji, "size-4 text-[var(--gold-text)]")}
+                    <span>{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-          <div className="space-y-3">
-            {config.options.map((opt) => (
+            {/* Rounds Selector */}
+            <div className="rounded-[var(--radius-group)] bg-[var(--card)] p-4 border border-[var(--separator)] space-y-2">
+              <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)]">
+                <span>Rounds</span>
+                <span className="text-[var(--gold-text)] font-bold tabular-nums">
+                  {totalRounds} Rounds
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[3, 5, 7].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => {
+                      buzz(15);
+                      setTotalRounds(num);
+                    }}
+                    className={`py-2 rounded-[var(--radius-btn)] text-xs font-bold tabular-nums transition-colors ${
+                      totalRounds === num
+                        ? "bg-[var(--brand-gold)] text-[var(--on-gold)]"
+                        : "bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    {num} Rounds
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2">
               <button
-                key={opt.id}
+                type="button"
+                onClick={initGame}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Start Round 1</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PHASE: ROUND_START (Show prompt to group) */}
+        {phase === "ROUND_START" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                Prompt Card
+              </span>
+              <h1 className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mt-2">
+                Read aloud to the room
+              </h1>
+            </div>
+
+            <div
+              className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-4"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(251, 191, 36, 0.2)",
+              }}
+            >
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text)] tracking-tight leading-snug">
+                {promptData.main}
+              </h2>
+              {promptData.sub && (
+                <p className="text-xs text-[var(--text-secondary)] font-medium">{promptData.sub}</p>
+              )}
+            </div>
+
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={startVotingHandoff}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Start Secret Voting</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PHASE: HANDOFF (Curtain) */}
+        {phase === "HANDOFF" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)]">
+                <Lock className="size-3 text-[var(--brand-pink)]" strokeWidth={1.5} />
+                Private Vote
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Pass the phone
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Player {currentPlayerIdx + 1} of {players.length}
+              </p>
+            </div>
+
+            <div
+              className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center"
+              style={{
+                boxShadow: `0 0 24px -6px ${currAccent.glow}`,
+              }}
+            >
+              <div
+                className="size-20 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center mb-3"
+                style={{ color: currAccent.color }}
+              >
+                {renderAvatar(currPlayer.emoji, "size-10 text-current")}
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--text)]">
+                {currPlayer.name}
+              </h2>
+              <p className="mt-2 text-xs text-[var(--text-secondary)] max-w-[28ch]">
+                Keep the screen shielded. Your answer will stay secret.
+              </p>
+            </div>
+
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  buzz(25);
+                  setPhase("PRIVATE_VOTE");
+                }}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>I Am {currPlayer.name} · Vote</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PHASE: PRIVATE_VOTE */}
+        {phase === "PRIVATE_VOTE" && (
+          <div className="flex flex-1 flex-col justify-between py-4">
+            <div className="text-center space-y-1">
+              <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] mb-1">
+                <span>Voter: {currPlayer.name}</span>
+                <span className="text-[var(--gold-text)]">Confidential</span>
+              </div>
+              <div className="p-4 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-sm font-bold text-[var(--text)]">
+                {promptData.main}
+              </div>
+            </div>
+
+            {/* Options list */}
+            <div className="my-auto space-y-2.5">
+              {config.options.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => {
+                    buzz(20);
+                    setPendingChoice(opt.id);
+                    setPhase("VOTE_CONFIRM");
+                  }}
+                  className="w-full min-h-[60px] rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] p-4 text-left flex items-center justify-between hover:bg-[var(--chip)] active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-[0.5rem] bg-[var(--chip)] text-[var(--gold-text)] grid place-items-center">
+                      {renderOptionIcon(opt.emoji, "size-5")}
+                    </div>
+                    <span className="text-sm font-bold text-[var(--text)]">
+                      {getLocalizedText(opt.label, lang)}
+                    </span>
+                  </div>
+                  <ChevronRight className="size-4 text-[var(--text-secondary)]" strokeWidth={1.5} />
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-xs text-[var(--text-secondary)] pb-2">
+              Tap your choice to confirm privately.
+            </p>
+          </div>
+        )}
+
+        {/* PHASE: VOTE_CONFIRM */}
+        {phase === "VOTE_CONFIRM" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                Confirm Selection
+              </span>
+              <h1 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                Lock in your vote
+              </h1>
+            </div>
+
+            {(() => {
+              const chosenOpt = config.options.find((o) => o.id === pendingChoice);
+              return (
+                <div className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center space-y-3">
+                  <div className="size-16 rounded-[var(--radius-group)] bg-[var(--chip)] text-[var(--gold-text)] grid place-items-center">
+                    {chosenOpt ? renderOptionIcon(chosenOpt.emoji, "size-8") : null}
+                  </div>
+                  <h2 className="text-xl font-bold text-[var(--text)]">
+                    {chosenOpt ? getLocalizedText(chosenOpt.label, lang) : ""}
+                  </h2>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-[26ch]">
+                    Once submitted, your choice locks in. Ready to pass to the next player?
+                  </p>
+                </div>
+              );
+            })()}
+
+            <div className="w-full space-y-2 pt-4">
+              <button
+                type="button"
+                onClick={handleVoteSubmit}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Lock Vote & Pass Phone</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhase("PRIVATE_VOTE")}
+                className="w-full min-h-[44px] rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)]"
+              >
+                Change Selection
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* PHASE: AGGREGATE_REVEAL (Results as ONE BIG NUMBER or SPLIT BAR) */}
+        {phase === "AGGREGATE_REVEAL" && (
+          <div className="flex flex-1 flex-col justify-between py-4">
+            {(() => {
+              const counts: Record<string, number> = {};
+              config.options.forEach((o) => (counts[o.id] = 0));
+              Object.values(roundVotes).forEach((v) => {
+                counts[v] = (counts[v] || 0) + 1;
+              });
+              const totalVotes = Object.values(roundVotes).length || 1;
+              const firstOpt = config.options[0];
+              const firstCount = counts[firstOpt?.id || ""] || 0;
+              const firstPct = Math.round((firstCount / totalVotes) * 100);
+
+              return (
+                <>
+                  <div className="text-center space-y-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                      Aggregate Reveal
+                    </span>
+
+                    {/* Big Number Summary */}
+                    <div className="py-2">
+                      <div className="text-5xl sm:text-6xl font-mono font-bold tracking-tight text-[var(--text)] tabular-nums">
+                        {firstCount} / {totalVotes}
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] mt-1 font-semibold">
+                        Bros chose {getLocalizedText(firstOpt?.label, lang)} ({firstPct}%)
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-xs text-[var(--text-secondary)]">
+                      "{promptData.main}"
+                    </div>
+                  </div>
+
+                  {/* Split Bars for all options */}
+                  <div className="my-auto space-y-3 w-full">
+                    {config.options.map((opt) => {
+                      const count = counts[opt.id] || 0;
+                      const pct = Math.round((count / totalVotes) * 100);
+                      return (
+                        <div
+                          key={opt.id}
+                          className="rounded-[var(--radius-group)] bg-[var(--card)] p-3.5 border border-[var(--separator)] space-y-2"
+                        >
+                          <div className="flex items-center justify-between text-xs font-semibold">
+                            <span className="flex items-center gap-2 text-[var(--text)]">
+                              <span className="text-[var(--gold-text)]">
+                                {renderOptionIcon(opt.emoji, "size-4")}
+                              </span>
+                              <span>{getLocalizedText(opt.label, lang)}</span>
+                            </span>
+                            <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
+                              {count} ({pct}%)
+                            </span>
+                          </div>
+                          <div className="w-full h-2 rounded-full bg-[var(--chip)] overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.6, ease: "easeOut" }}
+                              className="h-full bg-[var(--brand-gold)] rounded-full"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="w-full space-y-2 pt-4">
+                    {config.allowDebate && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          buzz(20);
+                          setDebateSecondsLeft(config.debateSeconds || 30);
+                          setDebateActive(true);
+                          setPhase("DEBATE");
+                        }}
+                        className="w-full min-h-[46px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 border border-[var(--separator)] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <MessageSquare
+                          className="size-4 text-[var(--gold-text)]"
+                          strokeWidth={1.5}
+                        />
+                        <span>Start 30s Live Roast / Debate</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        buzz(20);
+                        setPhase("SCOREBOARD");
+                      }}
+                      className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <span>View Scoreboard</span>
+                      <ArrowRight className="size-4" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* PHASE: DEBATE */}
+        {phase === "DEBATE" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+              <span className="font-semibold text-[var(--gold-text)]">Live Debate</span>
+              <button
+                type="button"
+                onClick={() => setDebateActive((prev) => !prev)}
+                className="px-2.5 py-1 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 flex items-center gap-1 cursor-pointer"
+              >
+                {debateActive ? (
+                  <>
+                    <Pause className="size-3" strokeWidth={1.5} />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="size-3" strokeWidth={1.5} />
+                    <span>Resume</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="my-auto w-full space-y-4">
+              <div className="size-44 rounded-full border-2 border-[var(--brand-gold)]/40 bg-[var(--card)] mx-auto flex flex-col items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+                <span className="font-mono text-5xl font-bold text-[var(--gold-text)] tabular-nums">
+                  {debateSecondsLeft}s
+                </span>
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase">
+                  Remaining
+                </span>
+              </div>
+
+              <div className="p-4 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-xs text-[var(--text-secondary)]">
+                Give 15 seconds to both sides to defend their choice!
+              </div>
+            </div>
+
+            <div className="w-full pt-4">
+              <button
                 type="button"
                 onClick={() => {
                   buzz(20);
-                  setPendingChoice(opt.id);
-                  setPhase("VOTE_CONFIRM");
+                  setPhase("SCOREBOARD");
                 }}
-                className="w-full rounded-2xl border-2 border-border bg-surface p-4 text-left flex items-center justify-between transition-all hover:border-lime active:scale-[0.98] min-h-[60px]"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{opt.emoji}</span>
-                  <div>
-                    <div className="text-base font-black uppercase text-foreground">
-                      {getLocalizedText(opt.label, lang)}
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="size-5 text-muted-foreground" />
+                <span>Proceed to Scoreboard</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
               </button>
-            ))}
+            </div>
           </div>
-        </main>
+        )}
 
-        <footer className="text-center text-[11px] text-muted-foreground pb-2">
-          Tap your choice to confirm privately.
-        </footer>
-      </div>
-    );
-  }
+        {/* PHASE: SCOREBOARD */}
+        {phase === "SCOREBOARD" && (
+          <div className="flex flex-1 flex-col justify-between py-4">
+            <div className="text-center space-y-1">
+              <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                Round {currentRound} of {totalRounds} Completed
+              </span>
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                {currentRound >= totalRounds ? "Final Standings" : "Current Standings"}
+              </h2>
+            </div>
 
-  // ==========================================
-  // PHASE: VOTE_CONFIRM
-  // ==========================================
-  if (phase === "VOTE_CONFIRM") {
-    const chosenOpt = config.options.find((o) => o.id === pendingChoice);
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between p-6 pb-safe text-center">
-        <header className="pt-safe">
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-            Confirm Your Choice
-          </span>
-        </header>
-
-        <main className="my-auto space-y-4">
-          <div className="size-16 rounded-3xl bg-lime/10 border-2 border-lime flex items-center justify-center mx-auto text-3xl">
-            {chosenOpt?.emoji}
-          </div>
-          <h2 className="text-2xl font-black uppercase text-foreground">
-            {getLocalizedText(chosenOpt?.label, lang)}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Once submitted, your choice locks in. Ready to pass the phone?
-          </p>
-        </main>
-
-        <footer className="space-y-3 pb-safe">
-          <button
-            type="button"
-            onClick={handleVoteSubmit}
-            className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px] active:scale-95"
-          >
-            Lock Vote & Pass Phone →
-          </button>
-          <button
-            type="button"
-            onClick={() => setPhase("PRIVATE_VOTE")}
-            className="w-full py-2.5 text-xs font-bold uppercase text-muted-foreground hover:text-foreground"
-          >
-            Change Selection
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // PHASE: AGGREGATE_REVEAL
-  // ==========================================
-  if (phase === "AGGREGATE_REVEAL") {
-    // Tally votes
-    const counts: Record<string, number> = {};
-    config.options.forEach((o) => (counts[o.id] = 0));
-    Object.values(roundVotes).forEach((v) => {
-      counts[v] = (counts[v] || 0) + 1;
-    });
-
-    const totalVotes = Object.values(roundVotes).length || 1;
-
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe">
-        <header className="flex items-center justify-between">
-          <span className="text-[11px] font-black uppercase tracking-widest text-lime bg-lime/10 px-2.5 py-1 rounded-full border border-lime/30">
-            Round {currentRound} Verdict
-          </span>
-          <span className="text-xs font-bold text-muted-foreground uppercase">
-            Aggregate Results
-          </span>
-        </header>
-
-        <main className="my-auto space-y-6">
-          <div className="rounded-2xl border border-border bg-surface p-4 text-center space-y-1">
-            <span className="text-[10px] uppercase font-black tracking-widest text-magenta">
-              The Question
-            </span>
-            <p className="text-sm font-black text-foreground">{promptData.main}</p>
-          </div>
-
-          {/* Results Bars */}
-          <div className="space-y-3">
-            {config.options.map((opt) => {
-              const count = counts[opt.id] || 0;
-              const pct = Math.round((count / totalVotes) * 100);
-              return (
-                <div
-                  key={opt.id}
-                  className="rounded-2xl border-2 border-border bg-surface p-4 space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-black uppercase flex items-center gap-2">
-                      <span>{opt.emoji}</span>
-                      <span>{getLocalizedText(opt.label, lang)}</span>
-                    </span>
-                    <span className="text-sm font-black text-lime">
-                      {count} {count === 1 ? "player" : "players"} ({pct}%)
-                    </span>
-                  </div>
-                  <div className="h-3 w-full rounded-full bg-void overflow-hidden border border-border">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${pct}%` }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      className="h-full bg-lime rounded-full"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </main>
-
-        <footer className="space-y-3 pb-4">
-          {config.allowDebate && (
-            <button
-              type="button"
-              onClick={() => {
-                buzz(20);
-                setDebateSecondsLeft(config.debateSeconds || 30);
-                setDebateActive(true);
-                setPhase("DEBATE");
-              }}
-              className="w-full rounded-2xl bg-surface py-3.5 text-xs font-black uppercase text-foreground border-2 border-border hover:border-lime transition-colors"
-            >
-              Start 30s Live Roast / Debate 🗣️
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              buzz(20);
-              setPhase("SCOREBOARD");
-            }}
-            className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px] active:scale-95"
-          >
-            View Scoreboard →
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // PHASE: DEBATE
-  // ==========================================
-  if (phase === "DEBATE") {
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe text-center">
-        <header className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-widest text-magenta">
-            // LIVE DEBATE
-          </span>
-          <button
-            type="button"
-            onClick={() => setDebateActive((prev) => !prev)}
-            className="text-xs font-bold uppercase text-muted-foreground border border-border px-2.5 py-1 rounded"
-          >
-            {debateActive ? "Pause ⏸" : "Resume ▶"}
-          </button>
-        </header>
-
-        <main className="my-auto space-y-6">
-          <div className="size-36 rounded-full border-4 border-lime mx-auto flex flex-col items-center justify-center bg-lime/10 shadow-[0_0_30px_rgba(255,214,0,0.2)]">
-            <span className="text-4xl font-black font-display text-lime">{debateSecondsLeft}s</span>
-            <span className="text-[10px] font-black uppercase text-muted-foreground">
-              Remaining
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-surface p-4">
-            <h3 className="text-sm font-black uppercase text-foreground">Defend Your Corner!</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Give 15 seconds to both sides to explain why their choice is the only correct answer.
-            </p>
-          </div>
-        </main>
-
-        <footer className="pb-4">
-          <button
-            type="button"
-            onClick={() => {
-              buzz(20);
-              setPhase("SCOREBOARD");
-            }}
-            className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px]"
-          >
-            Proceed to Scoreboard →
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // PHASE: SCOREBOARD
-  // ==========================================
-  if (phase === "SCOREBOARD") {
-    const isGameOver = currentRound >= totalRounds;
-    return (
-      <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe">
-        <header className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-            Round {currentRound} of {totalRounds} Completed
-          </span>
-          <span className="text-xs font-black uppercase text-lime">Scoreboard</span>
-        </header>
-
-        <main className="my-auto space-y-4">
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-black uppercase text-foreground">
-              {isGameOver ? "Final Scores 🏆" : "Round Standings"}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {isGameOver ? "Here is how the group ranked!" : "Next question coming up!"}
-            </p>
-          </div>
-
-          <div className="space-y-2.5">
-            {[...players]
-              .sort((a, b) => b.score - a.score)
-              .map((p, idx) => (
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-border bg-surface"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-black text-muted-foreground w-5">#{idx + 1}</span>
-                    <div className="size-8 rounded-full bg-void flex items-center justify-center">
-                      {renderAvatar(p.emoji, "size-4 text-current")}
+            <div className="my-auto space-y-2 w-full max-h-[50dvh] overflow-y-auto pr-1">
+              {[...players]
+                .sort((a, b) => b.score - a.score)
+                .map((p, idx) => (
+                  <div
+                    key={p.id}
+                    className={`flex items-center justify-between p-3.5 rounded-[var(--radius-group)] border text-xs font-semibold ${
+                      idx === 0
+                        ? "bg-[var(--card)] border-[var(--brand-gold)]/50 shadow-[0_0_16px_rgba(251,191,36,0.15)]"
+                        : "bg-[var(--card)] border-[var(--separator)]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono text-sm text-[var(--text-secondary)] tabular-nums w-5">
+                        #{idx + 1}
+                      </span>
+                      <div className="size-8 rounded-[0.5rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)]">
+                        {renderAvatar(p.emoji, "size-4 text-current")}
+                      </div>
+                      <span className="text-[var(--text)]">{p.name}</span>
                     </div>
-                    <span className="text-sm font-black uppercase text-foreground">{p.name}</span>
+                    <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
+                      {p.score} pts
+                    </span>
                   </div>
-                  <span className="text-base font-black text-lime font-display">{p.score} pts</span>
-                </div>
-              ))}
+                ))}
+            </div>
+
+            <div className="w-full pt-4">
+              {currentRound >= totalRounds ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    playVictorySound();
+                    buzz([40, 40, 80]);
+                    setPhase("PODIUM");
+                  }}
+                  className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Trophy className="size-4" strokeWidth={1.5} />
+                  <span>See Awards & Wrap Up</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startNewRound(currentRound + 1)}
+                  className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>
+                    Start Round {currentRound + 1} of {totalRounds}
+                  </span>
+                  <ArrowRight className="size-4" strokeWidth={1.5} />
+                </button>
+              )}
+            </div>
           </div>
-        </main>
+        )}
 
-        <footer className="pb-4">
-          {isGameOver ? (
-            <button
-              type="button"
-              onClick={() => {
-                playVictorySound();
-                buzz([40, 40, 80]);
-                setPhase("PODIUM");
-              }}
-              className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px]"
-            >
-              See Awards & Wrap Up 🏆
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => startNewRound(currentRound + 1)}
-              className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px]"
-            >
-              Next Round ({currentRound + 1}/{totalRounds}) →
-            </button>
-          )}
-        </footer>
-      </div>
-    );
-  }
+        {/* PHASE: PODIUM */}
+        {phase === "PODIUM" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            {(() => {
+              const sorted = [...players].sort((a, b) => b.score - a.score);
+              const winner = sorted[0];
 
-  // ==========================================
-  // PHASE: PODIUM (End of game)
-  // ==========================================
-  const sorted = [...players].sort((a, b) => b.score - a.score);
-  const winner = sorted[0];
+              return (
+                <>
+                  <div className="space-y-1">
+                    <div className="size-16 rounded-full bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)] mb-2">
+                      <Crown className="size-8 text-[var(--gold-text)]" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                      Match Champion
+                    </span>
+                    <h2 className="text-3xl font-bold tracking-tight text-[var(--text)] mt-1">
+                      {winner?.name}
+                    </h2>
+                    <p className="text-xs text-[var(--text-secondary)] font-mono tabular-nums">
+                      {winner?.score} Points Total
+                    </p>
+                  </div>
 
-  return (
-    <div className="min-h-dvh bg-void text-foreground flex flex-col justify-between px-5 pt-6 pb-safe text-center">
-      <header className="flex items-center justify-between">
-        <span className="text-xs font-black uppercase tracking-widest text-magenta">
-          // MATCH CONCLUDED
-        </span>
-        <Link
-          to="/"
-          onClick={() => buzz(15)}
-          className="text-xs font-black uppercase text-muted-foreground hover:text-foreground"
-        >
-          Exit to Hub ✕
-        </Link>
-      </header>
+                  {/* Fun Awards */}
+                  <div className="my-auto space-y-2 w-full text-left">
+                    <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Most Unhinged Mind</span>
+                      <span className="text-[var(--text)]">{sorted[0]?.name}</span>
+                    </div>
+                    <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Secret Keeper</span>
+                      <span className="text-[var(--text)]">
+                        {sorted[1]?.name || sorted[0]?.name}
+                      </span>
+                    </div>
+                    <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Pure Innocent Soul</span>
+                      <span className="text-[var(--text)]">{sorted[sorted.length - 1]?.name}</span>
+                    </div>
+                  </div>
 
-      <main className="my-auto space-y-6">
-        <div className="size-20 rounded-3xl bg-lime text-void flex items-center justify-center text-4xl mx-auto shadow-2xl">
-          👑
-        </div>
-
-        <div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-lime">
-            Top Scoring Bro
-          </span>
-          <h2 className="text-3xl font-black uppercase text-foreground mt-1">{winner?.name}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5 font-bold">
-            Champion with {winner?.score} Points
-          </p>
-        </div>
-
-        {/* Fun Campus Awards */}
-        <div className="rounded-2xl border-2 border-border bg-surface p-4 text-left space-y-2">
-          <div className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-            🎖️ Campus Superlatives
+                  <div className="w-full space-y-2 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        buzz(25);
+                        setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
+                        initGame();
+                      }}
+                      className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="size-4" strokeWidth={1.5} />
+                      <span>Play Again</span>
+                    </button>
+                    <Link
+                      to="/"
+                      onClick={() => buzz(15)}
+                      className="block w-full py-2.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] text-center"
+                    >
+                      Back to Party Hub
+                    </Link>
+                  </div>
+                </>
+              );
+            })()}
           </div>
-          <div className="flex items-center justify-between text-xs py-1 border-b border-border">
-            <span className="text-muted-foreground">Most Unhinged Mind</span>
-            <span className="font-black text-foreground">{sorted[0]?.name}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs py-1 border-b border-border">
-            <span className="text-muted-foreground">Secret Keeper</span>
-            <span className="font-black text-foreground">{sorted[1]?.name || sorted[0]?.name}</span>
-          </div>
-          <div className="flex items-center justify-between text-xs py-1">
-            <span className="text-muted-foreground">Pure Innocent Soul</span>
-            <span className="font-black text-foreground">{sorted[sorted.length - 1]?.name}</span>
-          </div>
-        </div>
+        )}
       </main>
 
-      <footer className="space-y-3 pb-4">
-        <button
-          type="button"
-          onClick={() => {
-            buzz(25);
-            setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
-            initGame();
-          }}
-          className="w-full rounded-2xl bg-lime py-4 text-base font-black uppercase text-void border-2 border-void brutal-shadow-pink min-h-[52px] active:scale-95"
-        >
-          Play Again (Same Players) 🔄
-        </button>
-        <Link
-          to="/"
-          onClick={() => buzz(15)}
-          className="block w-full py-3 text-xs font-black uppercase text-muted-foreground hover:text-foreground"
-        >
-          Back To Hub
-        </Link>
-      </footer>
+      {/* HOW TO PLAY MODAL */}
+      <AnimatePresence>
+        {showHowToPlay && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm p-4 flex items-center justify-center"
+          >
+            <div className="w-full max-w-sm rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-[var(--separator)] pb-3">
+                <h3 className="text-sm font-bold text-[var(--text)]">
+                  How To Play {config.gameName}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowHowToPlay(false)}
+                  className="size-8 rounded-full bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center"
+                >
+                  <X className="size-4" strokeWidth={1.5} />
+                </button>
+              </div>
+              <div className="space-y-3 text-xs text-[var(--text-secondary)]">
+                {config.instructions.steps.map((st, i) => (
+                  <div key={i} className="flex gap-2.5">
+                    <span className="font-mono font-bold text-[var(--gold-text)] tabular-nums">
+                      {i + 1}.
+                    </span>
+                    <div>
+                      <strong className="text-[var(--text)] block">{st.title}</strong>
+                      <span>{st.desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHowToPlay(false)}
+                className="w-full min-h-[44px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-bold text-[var(--text)] hover:bg-[var(--chip)]/80"
+              >
+                Got It
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
