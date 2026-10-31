@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Smartphone,
   CheckCircle2,
@@ -16,6 +16,12 @@ import {
   Users,
   Award,
   Settings as SettingsIcon,
+  ShieldAlert,
+  Trophy,
+  ArrowRight,
+  HelpCircle,
+  Check,
+  X,
 } from "lucide-react";
 import { buzz } from "@/lib/haptics";
 import {
@@ -28,6 +34,7 @@ import {
 import { loadSettings, MatchSettings } from "@/lib/settings";
 import { getContentItem, getLocalizedText } from "@/lib/games/loader";
 import { HeadsUpItem } from "@/lib/games/types";
+import { renderAvatar } from "@/routes/play.setup";
 
 interface Player {
   id: string;
@@ -41,27 +48,39 @@ interface RoundResultItem {
   guessed: boolean;
 }
 
+const AVATAR_POOL = [
+  "Smile",
+  "Crown",
+  "Sparkles",
+  "Ghost",
+  "Flame",
+  "Bot",
+  "Shield",
+  "Zap",
+  "Star",
+  "User",
+];
+
 export function HeadsUpEngine() {
   const navigate = useNavigate();
-  const [matchSettings, setMatchSettings] = useState<MatchSettings>(loadSettings());
+  const [matchSettings] = useState<MatchSettings>(loadSettings());
   const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Setup state
   const [players, setPlayers] = useState<Player[]>([
-    { id: "1", name: "Player 1", avatar: "😎", score: 0 },
-    { id: "2", name: "Player 2", avatar: "🤠", score: 0 },
-    { id: "3", name: "Player 3", avatar: "🤓", score: 0 },
+    { id: "1", name: "Player 1", avatar: "Smile", score: 0 },
+    { id: "2", name: "Player 2", avatar: "Crown", score: 0 },
+    { id: "3", name: "Player 3", avatar: "Sparkles", score: 0 },
   ]);
   const [newPlayerName, setNewPlayerName] = useState("");
-  const [selectedPackId, setSelectedPackId] = useState<string>("all");
   const [roundDuration, setRoundDuration] = useState<30 | 60 | 90>(60);
   const [enableForbiddenWords, setEnableForbiddenWords] = useState(true);
   const [activePlayerIndex, setActivePlayerIndex] = useState(0);
 
-  // Phases: setup -> countdown -> playing -> recap -> podium
-  const [phase, setPhase] = useState<"setup" | "countdown" | "playing" | "recap" | "podium">(
-    "setup",
-  );
+  // Phases: setup -> explainer -> countdown -> playing -> recap -> podium
+  const [phase, setPhase] = useState<
+    "setup" | "explainer" | "countdown" | "playing" | "recap" | "podium"
+  >("setup");
 
   // Gameplay state
   const [countdownSeconds, setCountdownSeconds] = useState(3);
@@ -75,7 +94,7 @@ export function HeadsUpEngine() {
   const [motionActive, setMotionActive] = useState(false);
   const motionLastActionTimeRef = useRef<number>(0);
   const isNeutralRef = useRef<boolean>(true);
-  const timerIntervalRef = useRef<any>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const wakeLockRef = useRef<any>(null);
 
   const lang = matchSettings.language || "hinglish";
@@ -85,9 +104,9 @@ export function HeadsUpEngine() {
   useEffect(() => {
     if (typeof window === "undefined" || !("wakeLock" in navigator)) return;
     if (phase === "playing") {
-      navigator.wakeLock
-        .request("screen")
-        .then((lock) => {
+      (navigator as any).wakeLock
+        ?.request("screen")
+        .then((lock: any) => {
           wakeLockRef.current = lock;
         })
         .catch(() => {});
@@ -104,7 +123,7 @@ export function HeadsUpEngine() {
     };
   }, [phase]);
 
-  // Request motion permission (iOS Safari 13+)
+  // Request motion permission (iOS Safari 13+ requires tap trigger)
   const requestMotionPermission = async () => {
     if (typeof window === "undefined") return;
     if (typeof (DeviceMotionEvent as any)?.requestPermission === "function") {
@@ -115,7 +134,7 @@ export function HeadsUpEngine() {
           setMotionActive(true);
         }
       } catch (err) {
-        console.warn("Motion permission denied:", err);
+        console.warn("Motion permission denied or unavailable:", err);
       }
     } else if ("DeviceMotionEvent" in window) {
       setMotionSupported(true);
@@ -129,13 +148,11 @@ export function HeadsUpEngine() {
 
     const handleDeviceMotion = (event: DeviceMotionEvent) => {
       const now = Date.now();
-      if (now - motionLastActionTimeRef.current < 900) return; // Debounce actions
+      if (now - motionLastActionTimeRef.current < 900) return;
 
       const acc = event.accelerationIncludingGravity;
       if (!acc) return;
 
-      // In portrait orientation held on forehead facing outwards:
-      // Z-axis or Y-axis tilts forward (screen towards floor) or backwards (screen towards ceiling)
       const z = acc.z || 0;
       const y = acc.y || 0;
 
@@ -164,9 +181,11 @@ export function HeadsUpEngine() {
     return () => window.removeEventListener("devicemotion", handleDeviceMotion);
   }, [phase, motionActive, currentItem]);
 
-  // Start round countdown
-  const startCountdown = async () => {
-    await requestMotionPermission();
+  // Start round countdown after explainer / permission
+  const proceedToCountdown = async (withMotion: boolean) => {
+    if (withMotion) {
+      await requestMotionPermission();
+    }
     setCountdownSeconds(3);
     setPhase("countdown");
     buzz(20);
@@ -180,77 +199,72 @@ export function HeadsUpEngine() {
       } else {
         setCountdownSeconds(count);
         buzz(15);
-        if (soundEnabled) playTimerTickSound();
+        if (soundEnabled) playTimerTickSound(true);
       }
     }, 1000);
   };
 
-  // Start gameplay
   const startGameplay = () => {
-    const item = getContentItem<HeadsUpItem>("heads-up-tilt", {
-      packId: selectedPackId === "all" ? undefined : selectedPackId,
-      spiceLevel: matchSettings.contentLevel,
-    });
-    setCurrentItem(item);
-    setRoundResults([]);
     setTimeRemaining(roundDuration);
-    setFlashFeedback(null);
+    setRoundResults([]);
     setPhase("playing");
-    buzz(30);
+    drawNextCard();
     if (soundEnabled) playRoleRevealSound();
+    buzz([30, 40]);
 
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     timerIntervalRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          clearInterval(timerIntervalRef.current);
-          finishRound();
+          if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+          endRound();
           return 0;
         }
-        if (prev <= 6 && soundEnabled) {
-          playTimerTickSound();
+        if (prev <= 5) {
+          buzz(20);
+          if (soundEnabled) playTimerTickSound(true);
+        } else if (prev <= 10) {
+          buzz(10);
+          if (soundEnabled) playTimerTickSound(false);
         }
         return prev - 1;
       });
     }, 1000);
   };
 
-  // Handle guess or pass
-  const handleAnswer = (guessed: boolean) => {
-    if (!currentItem || phase !== "playing") return;
+  const drawNextCard = () => {
+    const item = getContentItem("heads-up-tilt") as HeadsUpItem;
+    setCurrentItem(item);
+  };
 
-    if (guessed) {
-      buzz(30);
-      setFlashFeedback("correct");
-      if (soundEnabled) playVoteConfirmSound();
-    } else {
-      buzz([10, 40, 10]);
-      setFlashFeedback("pass");
-    }
+  const handleAnswer = (guessed: boolean) => {
+    if (!currentItem) return;
 
     setRoundResults((prev) => [...prev, { item: currentItem, guessed }]);
 
+    if (guessed) {
+      buzz([30, 40]);
+      if (soundEnabled) playVoteConfirmSound();
+      setFlashFeedback("correct");
+    } else {
+      buzz(40);
+      setFlashFeedback("pass");
+    }
+
     setTimeout(() => {
       setFlashFeedback(null);
-    }, 350);
+    }, 280);
 
-    // Fetch next card
-    const nextItem = getContentItem<HeadsUpItem>("heads-up-tilt", {
-      packId: selectedPackId === "all" ? undefined : selectedPackId,
-      spiceLevel: matchSettings.contentLevel,
-    });
-    setCurrentItem(nextItem);
+    drawNextCard();
   };
 
-  // End of round
-  const finishRound = () => {
-    clearInterval(timerIntervalRef.current);
-    buzz([100, 50, 100]);
+  const endRound = () => {
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     if (soundEnabled) playTimerAlarmSound();
-
+    buzz([50, 40, 60]);
     setPhase("recap");
   };
 
-  // Tally score and proceed
   const finalizeRoundRecap = () => {
     const correctCount = roundResults.filter((r) => r.guessed).length;
     setPlayers((prev) =>
@@ -268,11 +282,9 @@ export function HeadsUpEngine() {
     }
   };
 
-  // Add / remove player
   const addPlayer = () => {
     if (!newPlayerName.trim()) return;
-    const avatars = ["😎", "🤠", "🤓", "👻", "🔥", "🤖", "🦊", "🍕", "⚡", "🚀"];
-    const avatar = avatars[players.length % avatars.length];
+    const avatar = AVATAR_POOL[players.length % AVATAR_POOL.length];
     setPlayers((prev) => [
       ...prev,
       {
@@ -293,76 +305,91 @@ export function HeadsUpEngine() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D12] text-slate-100 flex flex-col justify-between selection:bg-emerald-500/30">
-      {/* Top Bar */}
-      <header className="px-4 py-3 border-b border-white/5 flex items-center justify-between backdrop-blur-md sticky top-0 z-30 bg-[#0D0D12]/80">
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
         <Link
           to="/"
-          className="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
         >
-          ← Hub
+          End game
         </Link>
+
         <div className="flex items-center gap-2">
-          <span className="text-sm font-black tracking-wide bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent">
-            📱 HEADS UP / TILT
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">Heads Up</span>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)] tabular-nums">
+            P{activePlayerIndex + 1}/{players.length}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1">
           <button
+            type="button"
+            aria-label="Toggle Sound"
             onClick={() => setSoundEnabled((v) => !v)}
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
+            className="size-9 rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center cursor-pointer"
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEnabled ? (
+              <Volume2 className="size-4 text-[var(--gold-text)]" strokeWidth={1.5} />
+            ) : (
+              <VolumeX className="size-4" strokeWidth={1.5} />
+            )}
           </button>
-          <Link
-            to="/settings"
-            className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </Link>
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* MAIN CONTAINER */}
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-center">
         {/* SETUP SCREEN */}
         {phase === "setup" && (
-          <div className="space-y-6 animate-in fade-in duration-300">
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-3xl shadow-lg shadow-emerald-500/20">
-                📱
-              </div>
-              <h1 className="text-2xl font-black">Heads Up / Forehead Tilt</h1>
-              <p className="text-xs text-slate-400">
-                Hold phone to your forehead! Friends shout clues. Tilt down for Correct, tilt up to
-                Pass!
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="text-center space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                <Smartphone className="size-3 text-[var(--gold-text)]" strokeWidth={1.5} />
+                Forehead Charades
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Round Setup
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Hold phone to your forehead. Friends shout clues without saying taboo words.
               </p>
             </div>
 
             {/* Turn info */}
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1">
-              <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
-                Up next on forehead:
+            <div
+              className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] text-center space-y-2"
+              style={{
+                boxShadow: "0 0 24px -6px rgba(251, 191, 36, 0.2)",
+              }}
+            >
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
+                Up next on forehead
               </span>
-              <div className="text-xl font-black text-white flex items-center justify-center gap-2">
-                <span>{activePlayer.avatar}</span>
-                <span>{activePlayer.name}</span>
+              <div className="flex items-center justify-center gap-2">
+                <div className="size-10 rounded-[0.75rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)]">
+                  {renderAvatar(activePlayer.avatar, "size-5 text-current")}
+                </div>
+                <span className="text-xl font-bold text-[var(--text)]">{activePlayer.name}</span>
               </div>
             </div>
 
-            {/* Timer duration & forbidden words toggles */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/5 space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase">Duration</label>
+            {/* Options */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] space-y-1.5">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase block">
+                  Duration
+                </label>
                 <div className="flex gap-1">
                   {[30, 60, 90].map((sec) => (
                     <button
                       key={sec}
+                      type="button"
                       onClick={() => setRoundDuration(sec as any)}
-                      className={`flex-1 py-1 rounded-lg text-xs font-bold ${
+                      className={`flex-1 py-1 rounded-[0.5rem] text-xs font-bold tabular-nums transition-colors ${
                         roundDuration === sec
-                          ? "bg-emerald-500 text-slate-950"
-                          : "bg-white/5 text-slate-400 hover:bg-white/10"
+                          ? "bg-[var(--brand-gold)] text-[var(--on-gold)]"
+                          : "bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)]"
                       }`}
                     >
                       {sec}s
@@ -371,88 +398,207 @@ export function HeadsUpEngine() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/5 space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase">Taboo Mode</label>
+              <div className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] space-y-1.5">
+                <label className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase block">
+                  Taboo Mode
+                </label>
                 <button
+                  type="button"
                   onClick={() => setEnableForbiddenWords((v) => !v)}
-                  className={`w-full py-1 rounded-lg text-xs font-bold ${
+                  className={`w-full py-1 rounded-[0.5rem] text-xs font-bold transition-colors ${
                     enableForbiddenWords
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                      : "bg-white/5 text-slate-400"
+                      ? "bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--brand-gold)]/40"
+                      : "bg-[var(--chip)] text-[var(--text-secondary)]"
                   }`}
                 >
-                  {enableForbiddenWords ? "Forbidden Words ON" : "Normal Only"}
+                  {enableForbiddenWords ? "Taboo ON" : "Taboo OFF"}
                 </button>
               </div>
             </div>
 
-            {/* How to play instruction */}
-            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-slate-300 space-y-1">
-              <div className="font-bold text-emerald-400 flex items-center gap-1">
-                <Smartphone className="w-3.5 h-3.5" /> Quick Gesture Controls:
+            {/* Players list */}
+            <div className="rounded-[var(--radius-group)] bg-[var(--card)] p-3 border border-[var(--separator)] space-y-2">
+              <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block">
+                Players ({players.length})
+              </span>
+              <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                {players.map((p, idx) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between py-1.5 px-2 rounded-[0.5rem] bg-[var(--chip)] text-xs font-semibold"
+                  >
+                    <div className="flex items-center gap-2">
+                      {renderAvatar(p.avatar, "size-4 text-[var(--gold-text)]")}
+                      <span className="text-[var(--text)]">{p.name}</span>
+                    </div>
+                    {players.length > 2 && (
+                      <button
+                        type="button"
+                        aria-label={`Remove ${p.name}`}
+                        onClick={() => removePlayer(p.id)}
+                        className="text-[var(--text-secondary)] hover:text-[var(--pink-text)] text-xs"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-              <p className="text-slate-400 text-[11px]">
-                Tilt phone <strong>DOWN</strong> towards floor when guessed correctly (or tap green
-                button). Tilt <strong>UP</strong> towards ceiling to Pass (or tap gray button).
-              </p>
+              <div className="flex gap-2 pt-1">
+                <input
+                  type="text"
+                  value={newPlayerName}
+                  onChange={(e) => setNewPlayerName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") addPlayer();
+                  }}
+                  placeholder="Add player..."
+                  className="flex-1 bg-[var(--bg)] border border-[var(--separator)] rounded-[var(--radius-btn)] px-3 py-1.5 text-xs text-[var(--text)] outline-none focus:border-[var(--brand-gold)]"
+                />
+                <button
+                  type="button"
+                  onClick={addPlayer}
+                  className="px-3 py-1.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-bold text-[var(--text)] hover:bg-[var(--chip)]/80"
+                >
+                  + Add
+                </button>
+              </div>
             </div>
 
             {/* Start Button */}
-            <button
-              onClick={startCountdown}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-black text-sm tracking-wide shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4 fill-current" /> PLACE ON FOREHEAD & START
-            </button>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setPhase("explainer")}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Play className="size-4 fill-current" />
+                <span>Start Forehead Round</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* 3-SECOND COUNTDOWN SCREEN */}
+        {/* SHORT EXPLAINER & TAP-TRIGGERED PERMISSION */}
+        {phase === "explainer" && (
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                Forehead Position
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Hold phone to forehead
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Screen faces outward towards friends.
+              </p>
+            </div>
+
+            {/* Tilt instructions card */}
+            <div className="my-auto w-full p-5 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-4 text-left">
+              <div className="flex items-start gap-3">
+                <div className="size-8 rounded-[0.5rem] bg-[var(--brand-gold)]/20 text-[var(--gold-text)] grid place-items-center shrink-0">
+                  <ArrowDown className="size-4" strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[var(--text)]">Tilt DOWN = Correct</div>
+                  <div className="text-[11px] text-[var(--text-secondary)]">
+                    Nod phone towards floor when friends say you got it right.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="size-8 rounded-[0.5rem] bg-[var(--chip)] text-[var(--text-secondary)] grid place-items-center shrink-0">
+                  <ArrowUp className="size-4" strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-[var(--text)]">Tilt UP = Pass</div>
+                  <div className="text-[11px] text-[var(--text-secondary)]">
+                    Tilt head back towards ceiling to skip a tough word.
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-[var(--separator)] flex items-center gap-2 text-[11px] text-[var(--text-secondary)]">
+                <CheckCircle2
+                  className="size-3.5 text-[var(--gold-text)] shrink-0"
+                  strokeWidth={1.5}
+                />
+                <span>On-screen buttons are always available if tilt isn't preferred.</span>
+              </div>
+            </div>
+
+            {/* Actions: Enable Motion vs Fallback Buttons */}
+            <div className="w-full space-y-2 pt-4">
+              <button
+                type="button"
+                onClick={() => proceedToCountdown(true)}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>Enable Tilt & Start (3s)</span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => proceedToCountdown(false)}
+                className="w-full min-h-[46px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors cursor-pointer"
+              >
+                Play with buttons only
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 3-SECOND COUNTDOWN */}
         {phase === "countdown" && (
           <motion.div
             key={countdownSeconds}
-            initial={{ scale: 0.5, opacity: 0 }}
+            initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.5, opacity: 0 }}
-            className="text-center space-y-4 py-12"
+            className="flex flex-1 flex-col items-center justify-center text-center my-auto py-12 space-y-4"
           >
-            <div className="text-7xl font-black text-emerald-400 font-mono animate-pulse">
+            <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+              Get Ready
+            </span>
+            <div className="font-mono text-8xl font-bold text-[var(--gold-text)] tabular-nums animate-pulse">
               {countdownSeconds}
             </div>
-            <div className="text-sm font-bold text-slate-300 uppercase tracking-widest">
+            <div className="text-xs text-[var(--text-secondary)] uppercase tracking-widest">
               Hold Phone to Forehead!
             </div>
           </motion.div>
         )}
 
-        {/* ACTIVE PLAYING SCREEN (Landscape friendly & high contrast) */}
+        {/* ACTIVE PLAYING SCREEN */}
         {phase === "playing" && currentItem && (
           <div
-            className={`min-h-[75vh] flex flex-col justify-between p-4 rounded-3xl transition-colors duration-200 ${
+            className={`min-h-[75vh] flex flex-col justify-between p-4 rounded-[var(--radius-card)] transition-colors duration-200 border ${
               flashFeedback === "correct"
-                ? "bg-emerald-600/40 border-2 border-emerald-400"
+                ? "bg-[var(--brand-gold)]/20 border-[var(--brand-gold)]"
                 : flashFeedback === "pass"
-                  ? "bg-amber-600/40 border-2 border-amber-400"
-                  : "bg-white/[0.04] border border-white/10"
+                  ? "bg-[var(--chip)] border-[var(--brand-pink)]/40"
+                  : "bg-[var(--card)] border-[var(--separator)]"
             }`}
           >
             {/* Top Stats */}
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="px-2.5 py-1 rounded-full bg-white/10 text-white flex items-center gap-1.5">
-                <Timer className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="font-mono text-base">{timeRemaining}s</span>
+            <div className="flex items-center justify-between text-xs font-semibold">
+              <span className="px-3 py-1 rounded-full bg-[var(--chip)] text-[var(--text)] flex items-center gap-1.5 tabular-nums">
+                <Timer className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                <span className="font-mono text-sm font-bold">{timeRemaining}s</span>
               </span>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
+              <span className="px-3 py-1 rounded-full bg-[var(--chip)] text-[var(--gold-text)] font-mono font-bold tabular-nums">
                 Score: {roundResults.filter((r) => r.guessed).length}
               </span>
             </div>
 
-            {/* Word Card (Extra large for friends across the room to read clearly) */}
-            <div className="text-center space-y-4 my-auto select-none">
-              <div className="text-[11px] uppercase font-black tracking-widest text-emerald-400">
+            {/* Word Card: Large readable text */}
+            <div className="text-center space-y-3 my-auto select-none py-6">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-[var(--gold-text)]">
                 {getLocalizedText(currentItem.word, "en")}
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-white leading-tight drop-shadow-md">
+              <h2 className="text-3xl sm:text-5xl font-bold text-[var(--text)] tracking-tight leading-tight">
                 {getLocalizedText(currentItem.word, lang)}
               </h2>
 
@@ -460,11 +606,12 @@ export function HeadsUpEngine() {
               {enableForbiddenWords &&
                 currentItem.forbiddenWords &&
                 currentItem.forbiddenWords.length > 0 && (
-                  <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 max-w-xs mx-auto space-y-1">
-                    <div className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">
-                      🚫 Do NOT say these words:
+                  <div className="p-3 rounded-[var(--radius-group)] bg-[var(--bg)] border border-[var(--brand-pink)]/30 max-w-xs mx-auto space-y-1">
+                    <div className="text-[10px] font-bold text-[var(--pink-text)] uppercase tracking-wider flex items-center justify-center gap-1">
+                      <ShieldAlert className="size-3 text-[var(--pink-text)]" strokeWidth={1.5} />
+                      <span>Forbidden Taboo Words</span>
                     </div>
-                    <div className="text-xs font-semibold text-rose-200">
+                    <div className="text-xs font-semibold text-[var(--text-secondary)]">
                       {currentItem.forbiddenWords
                         .map((w: any) => getLocalizedText(w, lang))
                         .join(" • ")}
@@ -476,25 +623,29 @@ export function HeadsUpEngine() {
             {/* Always-on Fallback Tap Buttons */}
             <div className="grid grid-cols-2 gap-3 pt-4">
               <button
+                type="button"
                 onClick={() => handleAnswer(false)}
-                className="py-5 rounded-2xl bg-white/10 active:bg-white/20 text-slate-300 font-black text-sm flex flex-col items-center justify-center gap-1 border border-white/10 shadow-lg cursor-pointer"
+                className="min-h-[56px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] font-bold text-sm flex flex-col items-center justify-center border border-[var(--separator)] cursor-pointer active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center gap-1">
-                  <ArrowUp className="w-4 h-4" />
+                <div className="flex items-center gap-1.5">
+                  <ArrowUp className="size-4" strokeWidth={1.5} />
                   <span>PASS</span>
                 </div>
-                <span className="text-[10px] font-normal text-slate-400">(or Tilt Up)</span>
+                <span className="text-[10px] text-[var(--text-secondary)] font-normal">
+                  (or Tilt Up)
+                </span>
               </button>
 
               <button
+                type="button"
                 onClick={() => handleAnswer(true)}
-                className="py-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 active:brightness-125 text-white font-black text-sm flex flex-col items-center justify-center gap-1 shadow-lg shadow-emerald-500/30 cursor-pointer"
+                className="min-h-[56px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-sm flex flex-col items-center justify-center cursor-pointer active:scale-[0.98] transition-all"
               >
-                <div className="flex items-center gap-1">
-                  <ArrowDown className="w-4 h-4" />
-                  <span>CORRECT ✓</span>
+                <div className="flex items-center gap-1.5">
+                  <ArrowDown className="size-4" strokeWidth={2} />
+                  <span>CORRECT</span>
                 </div>
-                <span className="text-[10px] font-normal text-emerald-100">(or Tilt Down)</span>
+                <span className="text-[10px] opacity-80 font-normal">(or Tilt Down)</span>
               </button>
             </div>
           </div>
@@ -502,92 +653,114 @@ export function HeadsUpEngine() {
 
         {/* ROUND RECAP */}
         {phase === "recap" && (
-          <div className="space-y-6 py-2">
+          <div className="flex flex-1 flex-col justify-between py-4">
             <div className="text-center space-y-1">
-              <span className="text-xs uppercase font-extrabold text-emerald-400 tracking-wider">
-                Time's Up!
+              <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                Time's Up
               </span>
-              <h2 className="text-2xl font-black text-white">
-                {activePlayer.name} scored {roundResults.filter((r) => r.guessed).length} points!
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--text)]">
+                {activePlayer.name} scored{" "}
+                <span className="font-mono text-[var(--gold-text)] tabular-nums">
+                  {roundResults.filter((r) => r.guessed).length}
+                </span>{" "}
+                points!
               </h2>
             </div>
 
             {/* List of cards */}
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <div className="my-auto space-y-1.5 max-h-72 overflow-y-auto pr-1">
               {roundResults.map((res, i) => (
                 <div
                   key={i}
-                  className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                  className={`p-3 rounded-[0.75rem] border flex items-center justify-between text-xs font-semibold ${
                     res.guessed
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-white font-bold"
-                      : "bg-white/[0.03] border-white/5 text-slate-400 line-through"
+                      ? "bg-[var(--brand-gold)]/15 border-[var(--brand-gold)]/30 text-[var(--text)]"
+                      : "bg-[var(--chip)] border-[var(--separator)] text-[var(--text-secondary)] line-through"
                   }`}
                 >
                   <span>{getLocalizedText(res.item.word, lang)}</span>
-                  <span>{res.guessed ? "✓ Guessed" : "Skipped"}</span>
+                  <span>{res.guessed ? "Guessed" : "Skipped"}</span>
                 </div>
               ))}
             </div>
 
-            <button
-              onClick={finalizeRoundRecap}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-sm shadow-lg shadow-emerald-500/30"
-            >
-              {activePlayerIndex + 1 < players.length
-                ? "Next Player's Turn →"
-                : "View Final Leaderboard 🏆"}
-            </button>
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={finalizeRoundRecap}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>
+                  {activePlayerIndex + 1 < players.length
+                    ? "Next Player's Turn"
+                    : "View Final Leaderboard"}
+                </span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
+              </button>
+            </div>
           </div>
         )}
 
         {/* FINAL PODIUM */}
         {phase === "podium" && (
-          <div className="text-center space-y-6 py-4 animate-in fade-in duration-300">
-            <div className="text-5xl">🏆</div>
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
             <div className="space-y-1">
-              <h1 className="text-2xl font-black text-emerald-400">Forehead Charades Champion!</h1>
-              <p className="text-xs text-slate-400">
-                Quickest wits and sharpest guessing in the hostel!
+              <div className="size-16 rounded-full bg-[var(--chip)] mx-auto grid place-items-center text-[var(--gold-text)] mb-2">
+                <Trophy className="size-8 text-[var(--gold-text)]" strokeWidth={1.5} />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                Charades Champion!
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Quickest wits and sharpest guessing in the hostel.
               </p>
             </div>
 
-            <div className="space-y-2 text-left">
+            <div className="my-auto space-y-2 w-full text-left">
               {players
                 .slice()
                 .sort((a, b) => b.score - a.score)
                 .map((p, idx) => (
                   <div
                     key={p.id}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs ${
+                    className={`flex items-center justify-between p-3.5 rounded-[var(--radius-group)] border text-xs font-semibold ${
                       idx === 0
-                        ? "bg-emerald-500/10 border-emerald-500/30"
-                        : "bg-white/[0.03] border-white/5"
+                        ? "bg-[var(--card)] border-[var(--brand-gold)]/50 shadow-[0_0_20px_rgba(251,191,36,0.15)]"
+                        : "bg-[var(--card)] border-[var(--separator)]"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="font-black text-sm text-emerald-400">#{idx + 1}</span>
-                      <span className="text-xl">{p.avatar}</span>
-                      <span className="font-bold text-white text-sm">{p.name}</span>
+                      <span className="font-mono font-bold text-sm text-[var(--gold-text)] tabular-nums">
+                        #{idx + 1}
+                      </span>
+                      <div className="size-8 rounded-[0.5rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)]">
+                        {renderAvatar(p.avatar, "size-4 text-current")}
+                      </div>
+                      <span className="text-[var(--text)]">{p.name}</span>
                     </div>
-                    <div className="font-black text-emerald-300 text-sm">{p.score} pts</div>
+                    <div className="font-mono font-bold text-[var(--gold-text)] tabular-nums">
+                      {p.score} pts
+                    </div>
                   </div>
                 ))}
             </div>
 
-            <div className="space-y-2">
+            <div className="w-full space-y-2 pt-4">
               <button
+                type="button"
                 onClick={() => {
                   setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
                   setActivePlayerIndex(0);
                   setPhase("setup");
                 }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-black text-sm text-white shadow-lg"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Play Again
+                <RotateCcw className="size-4" strokeWidth={1.5} />
+                <span>Play Again</span>
               </button>
               <Link
                 to="/"
-                className="block w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 text-xs font-bold text-center"
+                className="block w-full py-2.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] text-center"
               >
                 Back to Party Hub
               </Link>
@@ -595,10 +768,6 @@ export function HeadsUpEngine() {
           </div>
         )}
       </main>
-
-      <footer className="px-4 py-2 text-center text-[10px] text-slate-600 border-t border-white/5">
-        Bro or Fraud? Hub • 100% Offline Hostel Games
-      </footer>
     </div>
   );
 }
