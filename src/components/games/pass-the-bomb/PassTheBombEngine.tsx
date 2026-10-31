@@ -402,7 +402,7 @@ export function PassTheBombEngine() {
                         onClick={() => removePlayer(p.id)}
                         className="text-[var(--text-secondary)] hover:text-[var(--pink-text)] text-xs px-1"
                       >
-                        ✕
+                        <X size={12} strokeWidth={1.5} />
                       </button>
                     )}
                   </div>

@@ -398,7 +398,7 @@ export function ConfessionRouletteEngine() {
                         onClick={() => removePlayer(p.id)}
                         className="text-[var(--text-secondary)] hover:text-[var(--pink-text)] text-xs px-1"
                       >
-                        ✕
+                        <X size={12} strokeWidth={1.5} />
                       </button>
                     )}
                   </div>
@@ -762,9 +762,9 @@ export function ConfessionRouletteEngine() {
                     >
                       <span className="text-[var(--text-secondary)]">{voter?.name} voted for:</span>
                       <span
-                        className={`font-bold ${isCorrect ? "text-[var(--gold-text)]" : "text-[var(--pink-text)]"}`}
+                        className={`font-bold inline-flex items-center gap-1 ${isCorrect ? "text-[var(--gold-text)]" : "text-[var(--pink-text)]"}`}
                       >
-                        {suspectName} {isCorrect ? "✓" : "✗"}
+                        {suspectName} {isCorrect ? <Check size={12} strokeWidth={2} /> : <X size={12} strokeWidth={2} />}
                       </span>
                     </div>
                   );

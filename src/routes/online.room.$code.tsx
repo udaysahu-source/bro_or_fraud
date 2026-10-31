@@ -41,6 +41,7 @@ import {
   RefreshCw,
   XCircle,
   Fingerprint,
+  MessageSquare,
 } from "lucide-react";
 import { PACKS } from "@/lib/mcp/packs";
 import { fetchCustomPacks } from "@/lib/customPacks";
@@ -87,17 +88,17 @@ const AVATARS = [
 ];
 
 const ROASTS_WIN = [
-  "Bros saw right through you. Go back to acting school 🎭",
-  "Bro got cooked faster than Maggi in a hostel kettle 💀",
-  "Bros caught the Fraud red-handed. Better luck next time 🤓",
-  "Fraud got exposed. Rizz level: -100 📉",
+  "Bros saw right through you. Go back to acting school.",
+  "Bro got cooked faster than Maggi in a hostel kettle.",
+  "Bros caught the Fraud red-handed. Better luck next time.",
+  "Fraud got exposed. Rizz level: -100.",
 ];
 
 const ROASTS_LOSE = [
-  "Fraud escaped. Bros got played worse than a proxy attendance scam 🕵️",
-  "The Fraud was right there and you voted for a Bro. Brain cells: 0 🧠",
-  "Fraud gaslit the entire room. Rizz Master at work 👑",
-  "Bros are certified clowns. You got absolutely cooked 🤡",
+  "Fraud escaped. Bros got played worse than a proxy attendance scam.",
+  "The Fraud was right there and you voted for a Bro. Brain cells: 0.",
+  "Fraud gaslit the entire room. Rizz Master at work.",
+  "Bros are certified clowns. You got absolutely cooked.",
 ];
 
 export function OnlineRoom() {
@@ -950,7 +951,7 @@ export function OnlineRoom() {
                 <div className="absolute inset-2 border border-lime/10 rounded-2xl pointer-events-none" />
                 <Eye size={48} className="text-lime/60 animate-pulse" />
                 <span className="text-[9px] font-black uppercase tracking-[0.3em] text-lime mt-4 bg-lime/10 px-2 py-0.5 rounded border border-lime/20">
-                  ⚠️ PANEL SENSITIVE
+                  PANEL SENSITIVE
                 </span>
                 <h2 className="mt-3 text-3xl font-title uppercase tracking-wider text-foreground">
                   TAP TO PEEK
@@ -982,7 +983,7 @@ export function OnlineRoom() {
                       : "border-lime text-lime shadow-lime/15"
                   }`}
                 >
-                  🙈 Hide Card
+                  Hide Card
                 </button>
 
                 <div className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-2">
@@ -1096,7 +1097,7 @@ export function OnlineRoom() {
                     <span
                       className={`text-[10px] font-black uppercase tracking-wider ${p.isReady ? "text-lime" : "text-magenta animate-pulse"}`}
                     >
-                      {p.isReady ? "READY ✅" : "WAITING ⏳"}
+                      {p.isReady ? "READY" : "WAITING"}
                     </span>
                   </div>
                 ))}
@@ -1147,7 +1148,7 @@ export function OnlineRoom() {
             [ PANEL ACTION ]
           </span>
           <h1 className="mt-2 text-3xl font-black uppercase text-off-white leading-tight">
-            {allSubmitted ? "Let the Roast Begin! 🎤" : "Panel is Presenting"}
+            {allSubmitted ? "Let the Roast Begin!" : "Panel is Presenting"}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-[28ch] mx-auto">
             {allSubmitted
@@ -1240,7 +1241,7 @@ export function OnlineRoom() {
                       </p>
                     ) : (
                       <p className="text-xs italic text-magenta/40 bg-void/25 p-2 rounded-lg border border-dashed border-white/5">
-                        writing claim... ✍️
+                        writing claim...
                       </p>
                     )}
                   </div>
@@ -1258,7 +1259,7 @@ export function OnlineRoom() {
               onClick={advanceToVoting}
               className="w-full rounded-xl bg-magenta px-6 py-5 text-lg font-black uppercase tracking-wide text-white border-2 border-void brutal-shadow-white tactile tactile-press"
             >
-              Start Audience Voting 🗳️
+              Start Audience Voting
             </button>
           )}
           {!isHost && allSubmitted && (
@@ -1282,11 +1283,11 @@ export function OnlineRoom() {
     );
     const totalExpected = gameState.audienceIds?.length || 0;
 
-    let voteHeader = "Who is the FRAUD? 🕵️";
+    let voteHeader = "Who is the FRAUD?";
     let voteDesc = "Cast your vote secretly. Spot the player who is bluffing.";
 
     if (gameState.subMode === "TRIPLE_CLAIM") {
-      voteHeader = "Who is the BRO? 👑";
+      voteHeader = "Who is the BRO?";
       voteDesc = "Only ONE panelist is telling the truth. Who is the real owner?";
     }
 
@@ -1404,7 +1405,7 @@ export function OnlineRoom() {
                 onClick={() => updateAndBroadcast((prev) => ({ ...prev, phase: "REVEAL" }))}
                 className="mt-6 w-full rounded-xl bg-magenta px-4 py-2.5 text-xs font-black uppercase text-white border-2 border-void brutal-shadow-white tactile"
               >
-                Skip & Show Results 🔎
+                Skip & Show Results
               </button>
             )}
           </div>
@@ -1443,7 +1444,7 @@ export function OnlineRoom() {
       const pld = payload as SoloBluffPayload;
       correctId = pld.fraudId;
       isWin = highestVotedId === correctId;
-      verdictTitle = isWin ? "Fraud Exposed! 🕵️" : "Fraud Escaped! 🏃";
+      verdictTitle = isWin ? "Fraud Exposed!" : "Fraud Escaped!";
       verdictSubtitle = isWin
         ? "The audience successfully found the Solo Bluffer."
         : "The bluffer gaslit the entire audience.";
@@ -1452,7 +1453,7 @@ export function OnlineRoom() {
       correctId = pld.ownerId;
       roleText = "BRO (Owner)";
       isWin = highestVotedId === correctId;
-      verdictTitle = isWin ? "Bro Found! 👑" : "Bros Gaslit! 🤡";
+      verdictTitle = isWin ? "Bro Found!" : "Bros Gaslit!";
       verdictSubtitle = isWin
         ? "The audience spotted the real story owner."
         : "The audience fell for a fake claim.";
@@ -1461,7 +1462,7 @@ export function OnlineRoom() {
       const pld = payload as PhotoCounterfeitPayload;
       correctId = pld.counterfeitId;
       isWin = highestVotedId === correctId;
-      verdictTitle = isWin ? "Counterfeit Artist Exposed! 🎨" : "Counterfeit Escaped! 🕵️";
+      verdictTitle = isWin ? "Counterfeit Artist Exposed!" : "Counterfeit Escaped!";
       verdictSubtitle = isWin
         ? "The audience caught the photo counterfeiter."
         : "The counterfeiter's description was too believable.";
@@ -1634,7 +1635,7 @@ export function OnlineRoom() {
               className="w-full bg-electric-pink text-off-white px-8 py-4.5 rounded-xl text-lg font-title uppercase tracking-wider border-2 border-void brutal-shadow-white active:scale-95 transition-transform"
             >
               {gameState.currentRound >= (gameState.maxRounds || 3)
-                ? "Finish Match 🏆"
+                ? "Finish Match"
                 : "Next Round →"}
             </button>
           ) : (
@@ -1778,7 +1779,7 @@ export function OnlineRoom() {
                 onClick={copyRoomCode}
                 className="mt-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground bg-surface border border-white/5 px-2.5 py-1 rounded hover:text-lime"
               >
-                {copiedCode ? "Copied Room Code! ✅" : "Tap Code to Copy 📋"}
+                {copiedCode ? "Copied Room Code!" : "Tap Code to Copy"}
               </button>
             </div>
 
@@ -2029,7 +2030,7 @@ export function OnlineRoom() {
                           p.isReady ? "text-lime" : "text-magenta animate-pulse"
                         }`}
                       >
-                        {p.isReady ? "Ready ✅" : "Waiting ⏳"}
+                        {p.isReady ? "Ready" : "Waiting"}
                       </div>
                     </div>
                   </div>
@@ -2048,7 +2049,7 @@ export function OnlineRoom() {
                   className="w-full rounded-xl bg-magenta text-white py-4.5 text-center text-lg font-black uppercase tracking-wide border-2 border-void brutal-shadow-white tactile tactile-press flex items-center justify-center gap-2"
                 >
                   <RefreshCw size={20} className="animate-spin" />
-                  {isHost ? "Re-register Room 🔄" : "Retry Connection 🔄"}
+                  {isHost ? "Re-register Room" : "Retry Connection"}
                 </button>
               ) : isHost ? (
                 <button
@@ -2071,7 +2072,7 @@ export function OnlineRoom() {
                       : "bg-magenta text-white"
                   }`}
                 >
-                  {myPlayer?.isReady ? "I'm Ready! (Cancel)" : "Ready Up 🎮"}
+                  {myPlayer?.isReady ? "I'm Ready! (Cancel)" : "Ready Up"}
                 </button>
               )}
             </div>
@@ -2121,7 +2122,7 @@ export function OnlineRoom() {
                         <div className="absolute inset-2 border border-lime/10 rounded-2xl pointer-events-none" />
                         <Eye size={48} className="text-lime/60 animate-pulse" />
                         <span className="text-[9px] font-black uppercase tracking-[0.3em] text-lime mt-4 bg-lime/10 px-2 py-0.5 rounded border border-lime/20">
-                          ⚠️ PRIVATE SENSITIVE
+                          PRIVATE SENSITIVE
                         </span>
                         <h2 className="mt-3 text-3xl font-title uppercase tracking-wider text-foreground">
                           TAP TO PEEK
@@ -2153,7 +2154,7 @@ export function OnlineRoom() {
                               : "border-lime text-lime shadow-lime/15"
                           }`}
                         >
-                          🙈 Hide Role
+                          Hide Role
                         </button>
 
                         <div className="w-full flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-2">
@@ -2349,7 +2350,7 @@ export function OnlineRoom() {
                         </div>
                       ) : (
                         <div className="mt-6 rounded-2xl border border-white/10 bg-surface px-6 py-5">
-                          <span className="text-4xl">💬</span>
+                          <MessageSquare size={32} className="text-lime mx-auto" />
                           <div className="text-sm font-black uppercase tracking-widest text-lime mt-2">
                             No Time Limit
                           </div>
@@ -2360,7 +2361,7 @@ export function OnlineRoom() {
                               }
                               className="mt-4 w-full rounded-xl bg-magenta px-4 py-3 text-sm font-black uppercase text-white border-2 border-void brutal-shadow-white tactile tactile-press"
                             >
-                              Force Start Voting 🗳️
+                              Force Start Voting
                             </button>
                           )}
                         </div>
@@ -2410,7 +2411,7 @@ export function OnlineRoom() {
                     <h1 className="mt-2 text-4xl font-black uppercase leading-[0.9] text-off-white">
                       Who is the
                       <br />
-                      <span className="text-magenta text-glitch">FRAUD? 🕵️</span>
+                      <span className="text-magenta text-glitch">FRAUD?</span>
                     </h1>
                     <p className="text-xs text-muted-foreground mt-2 max-w-[28ch] mx-auto">
                       Cast your vote secretly. You cannot change after submission.
@@ -2441,14 +2442,14 @@ export function OnlineRoom() {
                           <div className="flex items-center justify-between">
                             {renderAvatar(p.avatar, "size-8 text-magenta")}
                             <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                              {hasVoted ? "Voted ✅" : "Voting..."}
+                              {hasVoted ? "Voted" : "Voting..."}
                             </span>
                           </div>
                           <div className="mt-4 text-base font-black uppercase truncate text-off-white">
                             {p.name}
                           </div>
                           <div className="mt-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                            {isSelf ? "YOU" : active ? "NOMINATED 🚨" : "SELECT SUSPECT"}
+                            {isSelf ? "YOU" : active ? "NOMINATED" : "SELECT SUSPECT"}
                           </div>
                         </button>
                       );
