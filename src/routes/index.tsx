@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback, memo } from "react";
 import {
   Search,
   Bomb,
@@ -176,6 +176,42 @@ const TAGS = [
 
 const AVC = ["#fbbf24", "#f0508a", "#fb923c", "#a78bfa", "#38bdf8"];
 
+interface ModeCardProps {
+  mode: Mode;
+  isActive: boolean;
+  onSelect: (fullIdx: number) => void;
+  fullIdx: number;
+}
+
+const ModeCard = memo(function ModeCard({ mode, isActive, onSelect, fullIdx }: ModeCardProps) {
+  const IconComp = mode.icon;
+  return (
+    <button
+      className="v6-card"
+      style={{ "--c": mode.col } as React.CSSProperties}
+      data-on={isActive ? "1" : "0"}
+      onClick={() => onSelect(fullIdx)}
+      aria-label={`${mode.n}. ${mode.d}`}
+    >
+      {mode.flag ? <span className="v6-stk fl">Flagship</span> : null}
+      <span className="top">
+        <span className="pill">{mode.c}</span>
+        <span className="flex items-center gap-1.5 font-bold">
+          <Users className="size-4" strokeWidth={1.5} />
+          {mode.p}
+        </span>
+      </span>
+      <span className="v6-em" aria-hidden="true">
+        <IconComp className="size-8" strokeWidth={1.5} />
+      </span>
+      <span>
+        <h3>{mode.n}</h3>
+        <p>{mode.d}</p>
+      </span>
+    </button>
+  );
+});
+
 export function Home() {
   const navigate = useNavigate();
 
@@ -282,11 +318,11 @@ export function Home() {
     }
   };
 
-  const openSetup = (idx: number) => {
+  const openSetup = useCallback((idx: number) => {
     buzz(12);
     setSelectedModeIdx(idx);
     setActiveSheet("setup");
-  };
+  }, []);
 
   const addPlayer = () => {
     if (players.length < 20) {
@@ -408,32 +444,14 @@ export function Home() {
             {filteredModes.map((m, i) => {
               const fullIdx = MODES.findIndex((orig) => orig.id === m.id);
               const isActive = i === activeIdx;
-              const IconComp = m.icon;
               return (
-                <button
+                <ModeCard
                   key={m.id}
-                  className="v6-card"
-                  style={{ "--c": m.col } as React.CSSProperties}
-                  data-on={isActive ? "1" : "0"}
-                  onClick={() => openSetup(fullIdx)}
-                  aria-label={`${m.n}. ${m.d}`}
-                >
-                  {m.flag ? <span className="v6-stk fl">Flagship</span> : null}
-                  <span className="top">
-                    <span className="pill">{m.c}</span>
-                    <span className="flex items-center gap-1.5 font-bold">
-                      <Users className="size-4" strokeWidth={1.5} />
-                      {m.p}
-                    </span>
-                  </span>
-                  <span className="v6-em" aria-hidden="true">
-                    <IconComp className="size-8" strokeWidth={1.5} />
-                  </span>
-                  <span>
-                    <h3>{m.n}</h3>
-                    <p>{m.d}</p>
-                  </span>
-                </button>
+                  mode={m}
+                  isActive={isActive}
+                  fullIdx={fullIdx}
+                  onSelect={openSetup}
+                />
               );
             })}
           </div>
