@@ -31,9 +31,22 @@ import {
   Flame,
   Crown,
   Eye,
+  EyeOff,
   Clock,
   CheckCircle2,
   AlertTriangle,
+  ArrowRight,
+  Lock,
+  Unlock,
+  MessageSquare,
+  Vote,
+  BarChart2,
+  Search,
+  Award,
+  Drama,
+  Check,
+  X,
+  Volume2,
 } from "lucide-react";
 import { PACKS } from "@/lib/mcp/packs";
 import { fetchCustomPacks, type CustomPack } from "@/lib/customPacks";
@@ -72,61 +85,35 @@ interface MatchConfig {
   scores: Record<string, number>;
   usedWords?: string[];
   votingMode?: "pointing" | "secret";
-  // Historical stats for awards
   fraudEscapes?: Record<string, number>;
   innocentAccusations?: Record<string, number>;
 }
 
 type Phase = "pass" | "reveal" | "discussion" | "voting" | "suspense" | "verdict" | "game_over";
 
-const PLAYER_COLORS = [
-  { text: "text-lime", border: "border-lime", bg: "bg-lime/10", accent: "rgba(255,214,0,0.5)" },
-  {
-    text: "text-magenta",
-    border: "border-magenta",
-    bg: "bg-magenta/10",
-    accent: "rgba(255,45,85,0.5)",
-  },
-  {
-    text: "text-cyan-400",
-    border: "border-cyan-400",
-    bg: "bg-cyan-400/10",
-    accent: "rgba(34,211,238,0.5)",
-  },
-  {
-    text: "text-amber-400",
-    border: "border-amber-400",
-    bg: "bg-amber-400/10",
-    accent: "rgba(251,191,36,0.5)",
-  },
-  {
-    text: "text-purple-400",
-    border: "border-purple-400",
-    bg: "bg-purple-400/10",
-    accent: "rgba(192,132,252,0.5)",
-  },
-  {
-    text: "text-emerald-400",
-    border: "border-emerald-400",
-    bg: "bg-emerald-400/10",
-    accent: "rgba(52,211,153,0.5)",
-  },
+const PLAYER_ACCENTS = [
+  { color: "#fbbf24", glow: "rgba(251, 191, 36, 0.25)" },
+  { color: "#f0508a", glow: "rgba(240, 80, 138, 0.25)" },
+  { color: "#38bdf8", glow: "rgba(56, 189, 248, 0.25)" },
+  { color: "#a78bfa", glow: "rgba(167, 139, 250, 0.25)" },
+  { color: "#34d399", glow: "rgba(52, 211, 153, 0.25)" },
+  { color: "#fb923c", glow: "rgba(251, 146, 60, 0.25)" },
 ];
 
 const ROASTS_WIN = [
-  "Bro got cooked faster than Maggi in a hostel kettle 💀",
-  "Bros saw right through your bluff, clean your glasses next time 🤓",
-  "You lied worse than a student claiming they read the syllabus 📚",
-  "Fraud got caught red-handed. Go back to acting school 🎭",
-  "Bro was shaking while bluffing. Rizz level: -100 📉",
+  "Bro got cooked faster than Maggi in a hostel kettle",
+  "Bros saw right through your bluff, clean your glasses next time",
+  "You lied worse than a student claiming they read the syllabus",
+  "Fraud got caught red-handed. Go back to acting school",
+  "Bro was shaking while bluffing. Rizz level: zero",
 ];
 
 const ROASTS_LOSE = [
-  "Fraud escaped. Bros got played worse than a proxy attendance scam 🕵️",
-  "The Fraud was literally right there and you voted for a Bro. Brain cells: 0 🧠",
-  "Bro got gaslit into thinking they were clean. Rizz Master at work 👑",
-  "The Fraud is laughing all the way back to their hostel room 🏃‍♂️",
-  "Bros are certified clowns. You got absolutely cooked 🤡",
+  "Fraud escaped. Bros got played worse than a proxy attendance scam",
+  "The Fraud was literally right there and you voted for a Bro. Brain cells: 0",
+  "Bro got gaslit into thinking they were clean. Rizz Master at work",
+  "The Fraud is laughing all the way back to their hostel room",
+  "Bros are certified clowns. You got absolutely cooked",
 ];
 
 export function PassPhoneGame() {
@@ -168,6 +155,23 @@ export function PassPhoneGame() {
   const [broWon, setBroWon] = useState(false);
   const [roastCopy, setRoastCopy] = useState("");
   const [scoreChanges, setScoreChanges] = useState<Record<string, number>>({});
+
+  // Peek word modal
+  const [showPeekModal, setShowPeekModal] = useState(false);
+  const [peekPlayerIdx, setPeekPlayerIdx] = useState<number | null>(null);
+  const [peekHeld, setPeekHeld] = useState(false);
+
+  // Share card preview
+  const [sharing, setSharing] = useState(false);
+
+  // Candidates for next round
+  const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
+  const [wordCandidates, setWordCandidates] = useState<
+    { target: string; bluff: string; category: string }[]
+  >([]);
+  const [selectedCandidateIdx, setSelectedCandidateIdx] = useState<number | "custom" | "replay">(0);
+  const [customTargetWord, setCustomTargetWord] = useState("");
+  const [customBluffWord, setCustomBluffWord] = useState("");
 
   const clearSuspenseTimer = () => {
     if (suspenseTimerRef.current) {
@@ -230,25 +234,7 @@ export function PassPhoneGame() {
     return () => clearSuspenseTimer();
   }, []);
 
-  // Next round candidate choices
-  const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
-  const [wordCandidates, setWordCandidates] = useState<
-    { target: string; bluff: string; category: string }[]
-  >([]);
-  const [selectedCandidateIdx, setSelectedCandidateIdx] = useState<number | "custom" | "replay">(0);
-  const [customTargetWord, setCustomTargetWord] = useState("");
-  const [customBluffWord, setCustomBluffWord] = useState("");
-  const [showCustomWordModal, setShowCustomWordModal] = useState(false);
-
-  // Peek word modal
-  const [showPeekModal, setShowPeekModal] = useState(false);
-  const [peekPlayerIdx, setPeekPlayerIdx] = useState<number | null>(null);
-  const [peekHeld, setPeekHeld] = useState(false);
-
-  // Share card preview
-  const [sharing, setSharing] = useState(false);
-
-  // 1. Screen Wake Lock API integration
+  // Screen Wake Lock API integration
   useEffect(() => {
     let wakeLock: { release: () => Promise<void> } | null = null;
     const requestWakeLock = async () => {
@@ -282,7 +268,22 @@ export function PassPhoneGame() {
     };
   }, []);
 
-  // 2. Load Config from sessionStorage & persist in localStorage
+  // Hide private content when app is backgrounded or window blurs
+  useEffect(() => {
+    const handleHide = () => {
+      setIsRevealed(false);
+      setHeld(false);
+      setPeekHeld(false);
+    };
+    window.addEventListener("blur", handleHide);
+    document.addEventListener("visibilitychange", handleHide);
+    return () => {
+      window.removeEventListener("blur", handleHide);
+      document.removeEventListener("visibilitychange", handleHide);
+    };
+  }, []);
+
+  // Load Config from sessionStorage & restore progress if any
   useEffect(() => {
     const raw = sessionStorage.getItem("bof_match_config");
     if (!raw) {
@@ -298,7 +299,6 @@ export function PassPhoneGame() {
       setConfig(parsed);
       setSecondsLeft(parsed.timerSeconds > 0 ? parsed.timerSeconds : 30);
 
-      // Check for saved in-progress state to restore if refreshed
       const savedProgress = localStorage.getItem("bof_active_session_v1");
       if (savedProgress) {
         try {
@@ -319,7 +319,7 @@ export function PassPhoneGame() {
     setCustomPacks(fetchCustomPacks());
   }, []);
 
-  // 3. Save in-progress state
+  // Save in-progress session
   useEffect(() => {
     if (!config) return;
     try {
@@ -336,14 +336,14 @@ export function PassPhoneGame() {
     }
   }, [config, phase, currentPlayer]);
 
-  // 4. Hold to reveal circular progress animation (Phase 1 & 2)
+  // Hold-to-reveal animation
   useEffect(() => {
     if (!held) {
       setHoldProgress(0);
       return;
     }
     const start = Date.now();
-    const duration = 500; // 0.5s hold time
+    const duration = 500;
     const tick = () => {
       const p = Math.min(1, (Date.now() - start) / duration);
       setHoldProgress(p);
@@ -363,7 +363,7 @@ export function PassPhoneGame() {
     };
   }, [held]);
 
-  // 5. Auto-reveal style timer countdown (when revealStyle === 'auto')
+  // Auto-reveal style timer countdown
   useEffect(() => {
     if (phase === "reveal" && config?.revealStyle === "auto" && !isRevealed) {
       const timer = setInterval(() => {
@@ -383,7 +383,7 @@ export function PassPhoneGame() {
     }
   }, [phase, config?.revealStyle, isRevealed]);
 
-  // 6. Auto-hide timer for secret word protection
+  // Auto-hide timer for secret word protection
   useEffect(() => {
     if (phase === "reveal" && isRevealed) {
       setAutoHideCountdown(7);
@@ -406,7 +406,7 @@ export function PassPhoneGame() {
     }
   }, [phase, isRevealed]);
 
-  // 7. Discussion countdown timer
+  // Discussion countdown timer
   useEffect(() => {
     if (!timerActive || secondsLeft <= 0) return;
     const interval = setInterval(() => {
@@ -431,7 +431,7 @@ export function PassPhoneGame() {
     return () => clearInterval(interval);
   }, [timerActive, secondsLeft]);
 
-  // 8. Physical pointing countdown
+  // Physical pointing countdown
   useEffect(() => {
     if (phase === "voting" && votingCountdown !== null) {
       if (votingCountdown > 0) {
@@ -457,8 +457,8 @@ export function PassPhoneGame() {
 
   if (!config) {
     return (
-      <div className="min-h-dvh bg-void grid place-items-center">
-        <div className="text-center font-black uppercase text-lime tracking-widest">
+      <div className="min-h-dvh bg-[var(--bg)] grid place-items-center text-[var(--text)]">
+        <div className="text-center font-bold uppercase text-[var(--gold-text)] tracking-widest text-sm">
           Loading Match...
         </div>
       </div>
@@ -474,7 +474,7 @@ export function PassPhoneGame() {
   const totalRounds = config.rounds || 5;
   const scores = config.scores || {};
   const isFraud = fraudsIndices.includes(currentPlayer);
-  const playerColor = PLAYER_COLORS[currentPlayer % PLAYER_COLORS.length];
+  const playerAccent = PLAYER_ACCENTS[currentPlayer % PLAYER_ACCENTS.length];
 
   const generateCandidates = (currentConfig: MatchConfig) => {
     const packsToUse: { id: string; title: string; words: string[] }[] = [];
@@ -551,7 +551,6 @@ export function PassPhoneGame() {
     setTimerActive(true);
   };
 
-  // Submit and start Dramatic Suspense Sequence
   const triggerDramaticReveal = (accusedIdx: number) => {
     buzz([40, 20, 60]);
     playVoteConfirmSound();
@@ -568,7 +567,6 @@ export function PassPhoneGame() {
     const roast = roasts[Math.floor(Math.random() * roasts.length)];
     setRoastCopy(roast);
 
-    // Update scores and awards immediately
     const changes: Record<string, number> = {};
     const updatedScores = { ...scores };
     const fraudEscapes = { ...(config.fraudEscapes || {}) };
@@ -690,7 +688,7 @@ export function PassPhoneGame() {
         title: broWon ? "Bros Exposed the Fraud!" : "Fraud Escaped Clean!",
         subtitle: `Match Result · Round ${currentRound} of ${totalRounds}`,
         fraudName: fraudsIndices.map((i) => players[i]?.name).join(", "),
-        fraudEmoji: "🦊",
+        fraudEmoji: "User",
         word: targetWord,
         roast: roastCopy,
         scores: players.map((p) => ({
@@ -701,7 +699,7 @@ export function PassPhoneGame() {
       });
       await shareCard(
         blob,
-        `Bro or Fraud match result! ${highestScorePlayer.name} is on top 🔥`,
+        `Bro or Fraud match result! ${highestScorePlayer.name} is on top`,
         "native",
       );
       hapticSuccess();
@@ -712,83 +710,93 @@ export function PassPhoneGame() {
     }
   };
 
-  // Timer Color logic (Green -> Yellow -> Red)
   const timerPct = config.timerSeconds > 0 ? (secondsLeft / config.timerSeconds) * 100 : 100;
-  const timerColor =
-    timerPct > 50
-      ? "text-lime bg-lime"
-      : timerPct > 20
-        ? "text-yellow-400 bg-yellow-400"
-        : "text-magenta bg-magenta";
 
   return (
-    <div className="min-h-dvh bg-void text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-8">
-        {/* Navigation & Match Header */}
-        <header className="flex items-center justify-between">
-          <Link
-            to="/play/setup"
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
+        <Link
+          to="/play/setup"
+          onClick={() => {
+            buzz(15);
+            localStorage.removeItem("bof_active_session_v1");
+          }}
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
+        >
+          End game
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">
+            <span className="text-[var(--gold-text)]">Bro</span> or{" "}
+            <span className="text-[var(--pink-text)]">Fraud?</span>
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)] tabular-nums">
+            R{currentRound}/{totalRounds}
+          </span>
+        </div>
+
+        {phase !== "pass" && phase !== "reveal" && phase !== "suspense" && phase !== "game_over" ? (
+          <button
+            type="button"
             onClick={() => {
               buzz(15);
-              localStorage.removeItem("bof_active_session_v1");
+              setShowPeekModal(true);
+              setPeekPlayerIdx(null);
+              setPeekHeld(false);
             }}
-            className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-white flex items-center gap-1 min-h-[44px] px-1"
+            className="flex items-center gap-1.5 min-h-[44px] px-3 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold bg-[var(--chip)] text-[var(--text)] hover:bg-[var(--chip)]/80 border border-[var(--separator)] transition-colors cursor-pointer"
           >
-            ← Quit
-          </Link>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black bg-surface text-[10px] font-black uppercase tracking-wider text-foreground shadow-[2px_2px_0_0_#000]">
-            <span className="text-lime font-black">Round {currentRound}</span> of {totalRounds}
-          </div>
-          {phase !== "pass" &&
-            phase !== "reveal" &&
-            phase !== "suspense" &&
-            phase !== "game_over" && (
-              <button
-                type="button"
-                onClick={() => {
-                  buzz(15);
-                  setShowPeekModal(true);
-                  setPeekPlayerIdx(null);
-                  setPeekHeld(false);
-                }}
-                className="rounded-xl border-2 border-black bg-surface px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-lime shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none hover:border-lime transition-all min-h-[36px] cursor-pointer"
-              >
-                👀 Peek Word
-              </button>
-            )}
-        </header>
+            <Eye className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+            <span>Peek</span>
+          </button>
+        ) : (
+          <div className="w-11" />
+        )}
+      </header>
 
-        {/* PHASE 1: FULL-SCREEN HANDOFF */}
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 flex flex-col justify-center">
+        {/* PHASE 1: PASS THE PHONE (SECURE HANDOFF) */}
         {phase === "pass" && (
-          <div className="flex flex-1 flex-col items-center justify-between text-center pt-8 pb-4 animate-[fade-in_0.2s_ease-out_both]">
-            <span className="sticker-badge bg-magenta text-white rotate-[-1deg] text-[10px] animate-pulse">
-              🛡️ SECURE HANDOFF
-            </span>
-
-            <div className="w-full my-auto flex flex-col items-center">
-              <span className="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground">
-                Pass Phone Directly To
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)]">
+                <Lock className="size-3 text-[var(--brand-pink)]" strokeWidth={1.5} />
+                Private Screen
               </span>
-              <div
-                className={`mt-4 w-full p-6 rounded-3xl border-3 border-black ${playerColor.bg} flex flex-col items-center shadow-[6px_6px_0_0_#000]`}
-              >
-                <div className="size-22 rounded-2xl bg-void border-2.5 border-black grid place-items-center mb-3 shadow-[3px_3px_0_0_#000]">
-                  {renderAvatar(players[currentPlayer].emoji, `size-11 ${playerColor.text}`)}
-                </div>
-                <h1
-                  className={`text-4xl sm:text-5xl font-black uppercase tracking-tight font-display ${playerColor.text}`}
-                  style={{ textShadow: "3px 3px 0 #000" }}
-                >
-                  {players[currentPlayer].name}
-                </h1>
-                <p className="mt-2 text-xs font-bold text-muted-foreground/90 max-w-[26ch] uppercase tracking-wide">
-                  Keep screen shielded from curious bros! 🤫
-                </p>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Pass the phone
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Hand the phone directly to the next player.
+              </p>
             </div>
 
-            {/* Hold to reveal barrier */}
-            <div className="w-full space-y-3">
+            {/* Recipient Card */}
+            <div
+              className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center"
+              style={{
+                boxShadow: `0 0 24px -6px ${playerAccent.glow}`,
+              }}
+            >
+              <div
+                className="size-20 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center mb-3"
+                style={{ color: playerAccent.color }}
+              >
+                {renderAvatar(players[currentPlayer].emoji, "size-10 text-current")}
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--text)]">
+                {players[currentPlayer].name}
+              </h2>
+              <p className="mt-2 text-xs text-[var(--text-secondary)] max-w-[28ch]">
+                Keep the screen shielded from curious friends.
+              </p>
+            </div>
+
+            {/* Unlock Action: Hold or Tap */}
+            <div className="w-full space-y-2 pt-4">
               {config.revealStyle === "tap" ? (
                 <button
                   type="button"
@@ -798,9 +806,10 @@ export function PassPhoneGame() {
                     setIsRevealed(true);
                     playRoleRevealSound();
                   }}
-                  className="w-full rounded-2xl bg-lime px-6 py-5 text-lg font-black uppercase tracking-wide text-void border-3 border-black shadow-[5px_5px_0_0_var(--color-magenta)] hover:shadow-[7px_7px_0_0_var(--color-magenta)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none min-h-[58px] transition-all cursor-pointer"
+                  className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  I'm {players[currentPlayer].name} (Tap) →
+                  <span>I'm {players[currentPlayer].name} (Tap)</span>
+                  <ArrowRight className="size-4" strokeWidth={1.5} />
                 </button>
               ) : (
                 <button
@@ -812,20 +821,17 @@ export function PassPhoneGame() {
                   onPointerUp={() => setHeld(false)}
                   onPointerLeave={() => setHeld(false)}
                   onPointerCancel={() => setHeld(false)}
-                  className="relative w-full overflow-hidden rounded-2xl border-3 border-black bg-surface px-6 py-5 text-base font-black uppercase tracking-wide text-foreground min-h-[58px] touch-none select-none shadow-[4px_4px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+                  className="relative w-full min-h-[52px] overflow-hidden rounded-[var(--radius-btn)] bg-[var(--chip)] text-[var(--text)] border border-[var(--separator)] font-bold text-base touch-none select-none active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {/* Progress fill */}
                   <div
-                    className="absolute inset-y-0 left-0 bg-lime/30 transition-all duration-75"
+                    className="absolute inset-y-0 left-0 bg-[var(--brand-gold)]/25 transition-all duration-75 pointer-events-none"
                     style={{ width: `${holdProgress * 100}%` }}
                   />
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    <Fingerprint className="size-6 text-lime animate-pulse" />
-                    <span>
-                      {held
-                        ? "Verifying Fingerprint…"
-                        : `I am ${players[currentPlayer].name} (Hold to Unlock)`}
-                    </span>
+                  <Fingerprint className="size-5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                  <span className="relative z-10">
+                    {held
+                      ? "Unlocking role..."
+                      : `I am ${players[currentPlayer].name} (Hold to Reveal)`}
                   </span>
                 </button>
               )}
@@ -833,76 +839,114 @@ export function PassPhoneGame() {
           </div>
         )}
 
-        {/* PHASE 2: ROLE REVEAL WITH AUTO-HIDE & PROGRESS RING */}
+        {/* PHASE 2: ROLE REVEAL (HOLD-TO-PEEK ROLE CARD) */}
         {phase === "reveal" && (
-          <div className="flex flex-1 flex-col items-center justify-between text-center pt-6 pb-2 animate-[fade-in_0.2s_ease-out_both]">
-            <div className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              <span>{players[currentPlayer].name}'s Secret</span>
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
+              <span className="font-semibold">{players[currentPlayer].name}'s secret</span>
               {isRevealed && (
-                <span className="text-magenta flex items-center gap-1">
-                  <Clock className="size-3" /> Auto-hiding in {autoHideCountdown}s
+                <span className="flex items-center gap-1 text-[var(--pink-text)] font-semibold tabular-nums">
+                  <Clock className="size-3.5" strokeWidth={1.5} /> {autoHideCountdown}s
                 </span>
               )}
             </div>
 
-            <div className="w-full my-auto flex flex-col items-center">
+            {/* Revealed Card with Split Logo & Pop-in */}
+            <div className="my-auto w-full">
               {isRevealed ? (
                 <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
+                  initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.94, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`w-full rounded-3xl border-3 border-black p-6 bg-surface shadow-[6px_6px_0_0_#000]`}
+                  transition={{ duration: 0.25 }}
+                  className={`w-full rounded-[var(--radius-card)] p-6 bg-[var(--card)] border ${
+                    isFraud
+                      ? "border-[var(--brand-pink)]/50 shadow-[0_0_30px_rgba(240,80,138,0.2)]"
+                      : "border-[var(--brand-gold)]/50 shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                  } flex flex-col items-center space-y-4`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="sticker-badge bg-black text-white text-[9px]">
+                  {/* Badge & Half-logo */}
+                  <div className="flex items-center justify-between w-full">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[var(--chip)] text-[var(--text-secondary)] border border-[var(--separator)]">
                       {categoryName}
                     </span>
                     <span
-                      className={`sticker-badge ${isFraud ? "bg-magenta text-white" : "bg-lime text-void"}`}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                        isFraud
+                          ? "bg-[var(--brand-pink)]/20 text-[var(--pink-text)] border border-[var(--brand-pink)]/30"
+                          : "bg-[var(--brand-gold)]/20 text-[var(--gold-text)] border border-[var(--brand-gold)]/30"
+                      }`}
                     >
-                      {isFraud ? "⚠️ BLUFF WORD" : "🤫 SECRET WORD"}
+                      {isFraud ? "Bluff Word" : "Secret Word"}
                     </span>
                   </div>
 
+                  {/* Half-logo icon: Smiley for Bro, Spy for Fraud */}
+                  <div className="size-24 rounded-full overflow-hidden flex items-center justify-center p-1 bg-[var(--chip)]/50 border border-[var(--separator)]">
+                    <img
+                      src={isFraud ? "/logo-fraud.webp" : "/logo-bro.webp"}
+                      alt={isFraud ? "Fraud Spy" : "Bro Smiley"}
+                      className="size-20 object-contain drop-shadow"
+                      width={80}
+                      height={80}
+                    />
+                  </div>
+
+                  {/* The Word */}
+                  <div className="w-full py-5 px-3 rounded-[var(--radius-group)] bg-[var(--bg)] border border-[var(--separator)]">
+                    <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                      {isFraud ? "Decoy" : "Target"}
+                    </span>
+                    <span
+                      className={`text-3xl sm:text-4xl font-bold tracking-tight uppercase select-none ${
+                        isFraud ? "text-[var(--pink-text)]" : "text-[var(--gold-text)]"
+                      }`}
+                    >
+                      {isFraud ? bluffWord : targetWord}
+                    </span>
+                  </div>
+
+                  {/* Role explanation */}
                   <div
-                    className={`py-7 px-4 rounded-2xl bg-void border-2.5 border-black text-3xl sm:text-4xl font-black font-mono tracking-widest uppercase select-none shadow-[4px_4px_0_0_#000] ${
+                    className={`w-full p-3 rounded-[var(--radius-group)] border flex items-center justify-between text-xs font-semibold ${
                       isFraud
-                        ? "text-magenta drop-shadow-[0_0_12px_rgba(255,45,85,0.6)]"
-                        : "text-lime drop-shadow-[0_0_12px_rgba(255,214,0,0.6)]"
+                        ? "bg-[var(--brand-pink)]/10 border-[var(--brand-pink)]/30 text-[var(--pink-text)]"
+                        : "bg-[var(--brand-gold)]/10 border-[var(--brand-gold)]/30 text-[var(--gold-text)]"
                     }`}
                   >
-                    {isFraud ? bluffWord : targetWord}
+                    <span className="text-[var(--text-secondary)]">Your Role</span>
+                    <span className="flex items-center gap-1.5 font-bold">
+                      {isFraud ? (
+                        <>
+                          <ShieldAlert className="size-4" strokeWidth={1.5} />
+                          <span>Fraud (Blend In)</span>
+                        </>
+                      ) : (
+                        <>
+                          <User className="size-4" strokeWidth={1.5} />
+                          <span>Bro (Catch Fraud)</span>
+                        </>
+                      )}
+                    </span>
                   </div>
 
-                  <div
-                    className={`mt-4 rounded-xl p-3 border-2 border-black flex items-center justify-between shadow-[2px_2px_0_0_#000] ${
-                      isFraud ? "bg-magenta/20 text-magenta" : "bg-lime/20 text-lime"
-                    }`}
-                  >
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
-                      YOUR ROLE:
-                    </span>
-                    <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5">
-                      {isFraud ? <ShieldAlert className="size-4" /> : <User className="size-4" />}
-                      {isFraud ? "FRAUD (BLUFF THE BROS)" : "BRO (CATCH THE FRAUD)"}
-                    </span>
-                  </div>
-
-                  {/* Auto-hide countdown progress bar */}
-                  <div className="mt-4 h-2 w-full bg-void rounded-full overflow-hidden border-2 border-black">
+                  {/* Auto-hide progress bar */}
+                  <div className="w-full h-1.5 rounded-full bg-[var(--chip)] overflow-hidden">
                     <div
-                      className={`h-full transition-all duration-1000 ${isFraud ? "bg-magenta" : "bg-lime"}`}
+                      className={`h-full transition-all duration-1000 ${
+                        isFraud ? "bg-[var(--brand-pink)]" : "bg-[var(--brand-gold)]"
+                      }`}
                       style={{ width: `${(autoHideCountdown / 7) * 100}%` }}
                     />
                   </div>
                 </motion.div>
               ) : (
-                <div className="w-full rounded-3xl border-3 border-black bg-surface p-8 flex flex-col items-center shadow-[6px_6px_0_0_#000]">
-                  <Fingerprint className="size-16 text-muted-foreground/40 animate-pulse mb-3" />
-                  <span className="text-sm font-black uppercase tracking-wide text-foreground">
-                    Word is Hidden
-                  </span>
-                  <p className="mt-1 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Tap below to peek again, or pass the phone.
+                <div className="w-full rounded-[var(--radius-card)] p-8 bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center space-y-3">
+                  <div className="size-16 rounded-full bg-[var(--chip)] grid place-items-center">
+                    <EyeOff className="size-7 text-[var(--text-secondary)]" strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-lg font-bold text-[var(--text)]">Word is shielded</h3>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-[26ch]">
+                    Tap below to peek again, or pass the phone onward.
                   </p>
                   <button
                     type="button"
@@ -910,16 +954,16 @@ export function PassPhoneGame() {
                       buzz(15);
                       setIsRevealed(true);
                     }}
-                    className="mt-4 px-5 py-2.5 rounded-xl border-2 border-black bg-void text-xs font-black uppercase text-lime shadow-[3px_3px_0_0_#000] hover:border-lime transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                    className="mt-2 min-h-[44px] px-4 py-2 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 border border-[var(--separator)] transition-colors cursor-pointer"
                   >
-                    Re-Show Word 👁️
+                    Show Word Again
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Bottom Actions: Quick Hide + Next Player */}
-            <div className="w-full space-y-2.5">
+            {/* Bottom Actions */}
+            <div className="w-full space-y-2 pt-4">
               {isRevealed && (
                 <button
                   type="button"
@@ -927,183 +971,202 @@ export function PassPhoneGame() {
                     buzz(15);
                     setIsRevealed(false);
                   }}
-                  className="w-full rounded-xl border-2 border-black bg-surface px-5 py-3 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-white shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all min-h-[46px] cursor-pointer"
+                  className="w-full min-h-[46px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors cursor-pointer"
                 >
-                  🙈 Hide Word Now
+                  Hide Word
                 </button>
               )}
               <button
                 type="button"
                 onClick={handleNextPlayerOrDiscussion}
-                className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] hover:shadow-[6px_6px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all min-h-[54px] cursor-pointer"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                {currentPlayer + 1 < players.length
-                  ? "Got It · Pass to Next Bro →"
-                  : "Start Discussion 💬 →"}
+                <span>
+                  {currentPlayer + 1 < players.length ? "Got it, Pass to Next" : "Start Discussion"}
+                </span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
               </button>
             </div>
           </div>
         )}
 
-        {/* PHASE 3: DISCUSSION & DYNAMIC TIMER */}
+        {/* PHASE 3: DISCUSSION & TIMER */}
         {phase === "discussion" && (
-          <div className="flex flex-1 flex-col items-center justify-between text-center pt-6 pb-2 animate-[fade-in_0.2s_ease-out_both]">
-            <span className="sticker-badge bg-lime text-void rotate-[-1deg] text-[10px] animate-pulse">
-              🔥 INTERROGATION PHASE
-            </span>
-
-            <div className="w-full my-auto flex flex-col items-center">
-              <h1 className="text-3xl sm:text-4xl font-black uppercase leading-[0.95] text-foreground select-none">
-                Let the{" "}
-                <span className="text-magenta" style={{ textShadow: "3px 3px 0 #000" }}>
-                  Roasting
-                </span>{" "}
-                Begin!
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                <Flame className="size-3 text-[var(--gold-text)]" strokeWidth={1.5} />
+                Interrogation
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                Drop your clues
               </h1>
-              <p className="mt-2 text-xs font-bold text-muted-foreground max-w-[28ch] uppercase tracking-wider">
-                Take turns dropping 1-word or subtle hints. Detect who is bluffing.
+              <p className="text-xs text-[var(--text-secondary)] max-w-[32ch] mx-auto">
+                Give one-word hints about the secret word. Find who is bluffing.
               </p>
+            </div>
 
-              {/* Discussion Starter spotlight */}
+            <div className="my-auto w-full space-y-4">
+              {/* First Speaker spotlight */}
               {discussionStarter !== null && (
-                <div className="mt-5 w-full rounded-2xl border-2.5 border-black bg-magenta/20 p-3.5 shadow-[4px_4px_0_0_#000]">
-                  <span className="sticker-badge bg-black text-magenta text-[9px] mb-1">
-                    📢 FIRST SPEAKER
+                <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center justify-center gap-2">
+                  <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                    First up:
                   </span>
-                  <div className="mt-1 text-base font-black uppercase text-foreground flex items-center justify-center gap-2">
-                    {renderAvatar(players[discussionStarter].emoji, "size-5 text-magenta")}
-                    <span>{players[discussionStarter].name} starts first!</span>
+                  <div className="flex items-center gap-1.5 font-bold text-[var(--text)]">
+                    {renderAvatar(
+                      players[discussionStarter].emoji,
+                      "size-4 text-[var(--gold-text)]",
+                    )}
+                    <span>{players[discussionStarter].name}</span>
                   </div>
                 </div>
               )}
 
-              {/* Dynamic Color-Shifting Discussion Timer */}
+              {/* Big Tabular Countdown Timer */}
               {config.timerSeconds > 0 && (
-                <div className="mt-6 w-full rounded-3xl border-3 border-black bg-surface p-5 shadow-[5px_5px_0_0_#000]">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                      Discussion Clock
-                    </span>
-                    <span
-                      className={`font-display text-4xl sm:text-5xl font-black tabular-nums transition-colors drop-shadow-[2px_2px_0_#000] ${
-                        secondsLeft <= 5
-                          ? "text-magenta animate-pulse scale-105"
-                          : timerColor.split(" ")[0]
-                      }`}
-                    >
-                      0:{secondsLeft.toString().padStart(2, "0")}
-                    </span>
+                <div
+                  className="w-full rounded-[var(--radius-card)] p-6 bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center"
+                  style={{
+                    boxShadow: "0 0 24px -6px rgba(251, 191, 36, 0.2)",
+                  }}
+                >
+                  <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
+                    Time Remaining
+                  </span>
+                  <div
+                    role="timer"
+                    aria-live="polite"
+                    className={`font-mono text-5xl sm:text-6xl font-bold tabular-nums tracking-tight ${
+                      secondsLeft <= 5
+                        ? "text-[var(--pink-text)] animate-pulse"
+                        : "text-[var(--text)]"
+                    }`}
+                  >
+                    0:{secondsLeft.toString().padStart(2, "0")}
                   </div>
 
-                  <div className="h-3 w-full rounded-full bg-void border-2 border-black overflow-hidden shadow-inner">
+                  {/* Progress Bar */}
+                  <div className="w-full h-2 rounded-full bg-[var(--chip)] overflow-hidden mt-4">
                     <div
-                      className={`h-full transition-all duration-1000 ease-linear ${timerColor.split(" ")[1]}`}
+                      className={`h-full transition-all duration-1000 ease-linear ${
+                        secondsLeft <= 5 ? "bg-[var(--brand-pink)]" : "bg-[var(--brand-gold)]"
+                      }`}
                       style={{ width: `${timerPct}%` }}
                     />
                   </div>
 
-                  {/* Timer Controls: Pause & Overtime */}
-                  <div className="mt-4 flex items-center justify-between gap-2 pt-3 border-t-2 border-black/40">
+                  {/* Timer Controls */}
+                  <div className="flex items-center justify-between w-full gap-2 mt-4 pt-3 border-t border-[var(--separator)]">
                     <button
                       type="button"
                       onClick={() => {
                         buzz(15);
                         setTimerActive((a) => !a);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-void text-xs font-black uppercase tracking-wider text-white shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                      className="min-h-[44px] px-3 py-1.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
                       {timerActive ? (
-                        <Pause className="size-3.5 text-yellow-400" />
+                        <>
+                          <Pause className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                          <span>Pause</span>
+                        </>
                       ) : (
-                        <Play className="size-3.5 text-lime" />
+                        <>
+                          <Play className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                          <span>Resume</span>
+                        </>
                       )}
-                      <span>{timerActive ? "Pause" : "Resume"}</span>
                     </button>
 
                     <button
                       type="button"
                       disabled={overtimeUsed}
                       onClick={handleOvertime}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl border-2 border-black bg-void text-xs font-black uppercase tracking-wider text-lime shadow-[2px_2px_0_0_#000] hover:border-lime active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-30 transition-all cursor-pointer"
+                      className="min-h-[44px] px-3 py-1.5 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 disabled:opacity-40 transition-colors cursor-pointer"
                     >
-                      <span>+15s Overtime</span>
+                      +15s Overtime
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={startVotingPhase}
-              className="w-full rounded-2xl bg-magenta px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-white border-3 border-black shadow-[4px_4px_0_0_var(--color-lime)] hover:shadow-[6px_6px_0_0_var(--color-lime)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] transition-all cursor-pointer"
-            >
-              Vote the Fraud Now 🗳️ →
-            </button>
+            <div className="w-full pt-4">
+              <button
+                type="button"
+                onClick={startVotingPhase}
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Vote className="size-5" strokeWidth={1.5} />
+                <span>Vote the Fraud</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* PHASE 4: VOTING (Secret Ballot or Pointing) */}
+        {/* PHASE 4: VOTING (SECRET BALLOT OR POINTING) */}
         {phase === "voting" && config.votingMode === "secret" && (
-          <div className="flex flex-1 flex-col justify-between pt-6 pb-2 animate-[fade-in_0.2s_ease-out_both]">
+          <div className="flex flex-1 flex-col justify-between py-4">
             {secretVotePhase === "pass" ? (
-              <div className="flex flex-1 flex-col items-center justify-between text-center my-auto py-8">
-                <span className="sticker-badge bg-magenta text-white rotate-[-1deg] text-[10px] animate-pulse">
-                  🗳️ SECRET BALLOT HANDOFF
-                </span>
-
-                <div className="my-auto flex flex-col items-center w-full">
-                  <span className="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground">
-                    Pass Phone to Voter
+              <div className="flex flex-1 flex-col justify-between text-center py-4">
+                <div className="space-y-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--pink-text)] border border-[var(--separator)]">
+                    <Vote className="size-3 text-[var(--pink-text)]" strokeWidth={1.5} />
+                    Confidential Ballot
                   </span>
-                  <div className="mt-4 w-full p-6 rounded-3xl border-3 border-black bg-surface flex flex-col items-center shadow-[6px_6px_0_0_#000]">
-                    <div className="size-20 rounded-2xl bg-void border-2.5 border-black grid place-items-center mb-3 shadow-[3px_3px_0_0_#000]">
-                      {renderAvatar(players[secretVoteCurrentPlayer].emoji, "size-10 text-lime")}
-                    </div>
-                    <h2
-                      className="text-3xl sm:text-4xl font-black uppercase text-foreground font-display"
-                      style={{ textShadow: "2px 2px 0 #000" }}
-                    >
-                      {players[secretVoteCurrentPlayer].name}
-                    </h2>
-                    <p className="mt-2 text-xs font-bold text-muted-foreground max-w-[24ch] uppercase tracking-wide">
-                      Cast your private vote without showing anyone else! 🤫
-                    </p>
-                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
+                    Pass phone to voter
+                  </h1>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    buzz(20);
-                    setSecretVotePhase("vote");
-                  }}
-                  className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] hover:shadow-[6px_6px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
-                >
-                  I'm {players[secretVoteCurrentPlayer].name} · Cast Vote →
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-1 flex-col justify-between py-2 animate-[fade-in_0.2s_ease-out_both]">
-                <div>
-                  <span className="sticker-badge bg-magenta text-white text-[9px]">
-                    CONFIDENTIAL BALLOT
-                  </span>
-                  <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-foreground font-display">
-                    Who is the{" "}
-                    <span className="text-magenta" style={{ textShadow: "2px 2px 0 #000" }}>
-                      Fraud?
-                    </span>{" "}
-                    🕵️‍♂️
-                  </h1>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
-                    Voter:{" "}
-                    <strong className="text-lime">{players[secretVoteCurrentPlayer].name}</strong>
+                <div className="my-auto w-full p-6 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] flex flex-col items-center">
+                  <div className="size-20 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center mb-3 text-[var(--gold-text)]">
+                    {renderAvatar(players[secretVoteCurrentPlayer].emoji, "size-10 text-current")}
+                  </div>
+                  <h2 className="text-3xl font-bold tracking-tight text-[var(--text)]">
+                    {players[secretVoteCurrentPlayer].name}
+                  </h2>
+                  <p className="mt-2 text-xs text-[var(--text-secondary)]">
+                    Cast your private vote without showing anyone.
                   </p>
                 </div>
 
-                {/* Candidate Tiles with Confirmation */}
-                <div className="mt-4 space-y-2.5 flex-1 overflow-y-auto pr-1">
+                <div className="w-full pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      buzz(20);
+                      setSecretVotePhase("vote");
+                    }}
+                    className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>I'm {players[secretVoteCurrentPlayer].name} · Vote</span>
+                    <ArrowRight className="size-4" strokeWidth={1.5} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-1 flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] mb-1">
+                    <span>Secret Ballot</span>
+                    <span>
+                      Voter:{" "}
+                      <strong className="text-[var(--text)]">
+                        {players[secretVoteCurrentPlayer].name}
+                      </strong>
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">
+                    Who is the <span className="text-[var(--pink-text)]">Fraud?</span>
+                  </h1>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Select the player you believe was bluffing.
+                  </p>
+                </div>
+
+                <div className="my-auto space-y-2 max-h-[50dvh] overflow-y-auto pr-1">
                   {players
                     .map((p, idx) => ({ p, idx }))
                     .filter(({ idx }) => idx !== secretVoteCurrentPlayer)
@@ -1117,38 +1180,38 @@ export function PassPhoneGame() {
                             buzz(20);
                             setPendingSuspectVote(idx);
                           }}
-                          className={`w-full rounded-2xl border-2.5 border-black p-3.5 text-left flex items-center justify-between transition-all min-h-[64px] cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
+                          className={`w-full min-h-[56px] rounded-[var(--radius-group)] p-3 text-left flex items-center justify-between transition-all cursor-pointer border ${
                             selected
-                              ? "bg-magenta/20 border-magenta shadow-[4px_4px_0_0_#FF2D55]"
-                              : "bg-surface hover:bg-surface/80"
+                              ? "bg-[var(--card)] border-[var(--brand-pink)] shadow-[0_0_16px_rgba(240,80,138,0.2)]"
+                              : "bg-[var(--card)] border-[var(--separator)] hover:bg-[var(--chip)]"
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="size-11 rounded-xl bg-void border-2 border-black grid place-items-center shadow-[2px_2px_0_0_#000]">
-                              {renderAvatar(p.emoji, "size-6 text-magenta")}
+                            <div className="size-10 rounded-[0.75rem] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center text-[var(--pink-text)]">
+                              {renderAvatar(p.emoji, "size-5 text-current")}
                             </div>
                             <div>
-                              <div className="text-sm font-black uppercase text-foreground">
-                                {p.name}
-                              </div>
-                              <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">
+                              <div className="text-sm font-bold text-[var(--text)]">{p.name}</div>
+                              <span className="text-[10px] text-[var(--text-secondary)]">
                                 Suspect
                               </span>
                             </div>
                           </div>
                           <div
-                            className={`size-6 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
-                              selected ? "bg-magenta text-white" : "bg-void"
+                            className={`size-6 rounded-full border flex items-center justify-center ${
+                              selected
+                                ? "bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white"
+                                : "border-[var(--separator)]"
                             }`}
                           >
-                            {selected && <span className="text-[10px] font-black">✓</span>}
+                            {selected && <Check className="size-3.5 stroke-[2.5]" />}
                           </div>
                         </button>
                       );
                     })}
                 </div>
 
-                <div className="pt-3">
+                <div className="w-full pt-4">
                   <button
                     type="button"
                     disabled={pendingSuspectVote === null}
@@ -1165,7 +1228,6 @@ export function PassPhoneGame() {
                         setSecretVoteCurrentPlayer((curr) => curr + 1);
                         setSecretVotePhase("pass");
                       } else {
-                        // Tally votes
                         const tallies: Record<number, number> = {};
                         players.forEach((_, i) => {
                           tallies[i] = 0;
@@ -1184,10 +1246,13 @@ export function PassPhoneGame() {
                         triggerDramaticReveal(maxIdx);
                       }
                     }}
-                    className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-40 min-h-[54px] cursor-pointer transition-all"
+                    className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] disabled:opacity-40 transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Confirm Vote for{" "}
-                    {pendingSuspectVote !== null ? players[pendingSuspectVote].name : "Suspect"} →
+                    <span>
+                      Vote for{" "}
+                      {pendingSuspectVote !== null ? players[pendingSuspectVote].name : "Suspect"}
+                    </span>
+                    <ArrowRight className="size-4" strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
@@ -1195,74 +1260,69 @@ export function PassPhoneGame() {
           </div>
         )}
 
-        {/* PHASE 4 (Alternative): Physical Pointing Vote */}
+        {/* PHASE 4 (ALTERNATIVE): PHYSICAL POINTING */}
         {phase === "voting" && config.votingMode !== "secret" && (
-          <div className="flex flex-1 flex-col justify-between pt-6 pb-2 animate-[fade-in_0.2s_ease-out_both]">
+          <div className="flex flex-1 flex-col justify-between py-4">
             {votingCountdown !== null ? (
-              <div className="flex flex-1 flex-col items-center justify-center text-center my-auto py-12">
-                <span className="sticker-badge bg-magenta text-white rotate-[-1deg] text-[10px] animate-pulse">
-                  👆 PHYSICAL POINTING
+              <div className="flex flex-1 flex-col items-center justify-center text-center my-auto py-8">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                  Physical Pointing
                 </span>
-                <h2
-                  className="mt-4 text-3xl font-black uppercase text-foreground font-display"
-                  style={{ textShadow: "2px 2px 0 #000" }}
-                >
-                  Get Ready to Point!
+                <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                  Ready to point
                 </h2>
-                <p className="mt-1.5 text-xs font-bold text-muted-foreground uppercase tracking-wide max-w-[26ch]">
-                  On ZERO, everyone points simultaneously at the suspect!
+                <p className="mt-1 text-xs text-[var(--text-secondary)] max-w-[28ch]">
+                  On ZERO, everyone simultaneously points at their primary suspect!
                 </p>
 
-                <div className="my-10 p-8 rounded-3xl border-3 border-black bg-surface shadow-[6px_6px_0_0_#000] w-full max-w-[240px]">
+                <div className="my-8 size-44 rounded-full border-2 border-[var(--brand-gold)]/40 bg-[var(--card)] flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.2)]">
                   <motion.div
                     key={votingCountdown}
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1.15, opacity: 1 }}
-                    className={`font-display text-8xl font-black drop-shadow-[4px_4px_0_#000] ${
-                      votingCountdown === 0 ? "text-magenta scale-125 animate-bounce" : "text-lime"
-                    }`}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="font-mono text-7xl font-bold text-[var(--gold-text)] tabular-nums"
                   >
-                    {votingCountdown === 0 ? "POINT! 👉" : votingCountdown}
+                    {votingCountdown === 0 ? "POINT!" : votingCountdown}
                   </motion.div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setVotingCountdown(null)}
-                  className="px-4 py-2 rounded-xl border-2 border-black bg-surface text-[10px] font-black uppercase tracking-wider text-muted-foreground hover:text-white shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                  className="min-h-[44px] px-4 py-2 rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors cursor-pointer"
                 >
-                  Skip Countdown ⏩
+                  Skip countdown
                 </button>
               </div>
             ) : (
-              <div className="flex flex-1 flex-col justify-between py-2">
+              <div className="flex flex-1 flex-col justify-between">
                 <div>
-                  <span className="sticker-badge bg-lime text-void text-[9px]">VOTE TALLIES</span>
-                  <h1 className="mt-2 text-3xl font-black uppercase leading-tight text-foreground font-display">
-                    Tally the Points 📊
+                  <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                    Vote Tallies
+                  </span>
+                  <h1 className="text-2xl font-bold tracking-tight text-[var(--text)] mt-1">
+                    Count the fingers
                   </h1>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Count how many fingers were pointed at each suspect.
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    Enter the count of votes each person received.
                   </p>
                 </div>
 
-                <div className="mt-4 space-y-2.5 flex-1 overflow-y-auto pr-1">
+                <div className="my-auto space-y-2 max-h-[50dvh] overflow-y-auto pr-1">
                   {players.map((p, idx) => {
                     const count = voteTallies[idx] || 0;
                     return (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-2xl border-2.5 border-black bg-surface p-3.5 shadow-[3px_3px_0_0_#000]"
+                        className="flex items-center justify-between rounded-[var(--radius-group)] bg-[var(--card)] p-3 border border-[var(--separator)]"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="size-11 rounded-xl bg-void border-2 border-black grid place-items-center shadow-[2px_2px_0_0_#000]">
-                            {renderAvatar(p.emoji, "size-6 text-lime")}
+                          <div className="size-10 rounded-[0.75rem] bg-[var(--chip)] border border-[var(--separator)] grid place-items-center text-[var(--gold-text)]">
+                            {renderAvatar(p.emoji, "size-5 text-current")}
                           </div>
                           <div>
-                            <div className="text-sm font-black uppercase text-foreground">
-                              {p.name}
-                            </div>
-                            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                            <div className="text-sm font-bold text-[var(--text)]">{p.name}</div>
+                            <span className="text-[10px] text-[var(--text-secondary)] tabular-nums">
                               {count} {count === 1 ? "vote" : "votes"}
                             </span>
                           </div>
@@ -1278,11 +1338,11 @@ export function PassPhoneGame() {
                                 [idx]: Math.max(0, (prev[idx] || 0) - 1),
                               }));
                             }}
-                            className="size-9 rounded-xl border-2 border-black bg-void text-lg font-black text-foreground shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center min-h-[36px] cursor-pointer"
+                            className="size-9 rounded-[0.75rem] bg-[var(--chip)] text-base font-bold text-[var(--text)] border border-[var(--separator)] hover:bg-[var(--chip)]/80 flex items-center justify-center cursor-pointer"
                           >
                             -
                           </button>
-                          <span className="w-7 text-center text-xl font-mono font-black text-lime">
+                          <span className="w-8 text-center text-lg font-mono font-bold text-[var(--gold-text)] tabular-nums">
                             {count}
                           </span>
                           <button
@@ -1294,7 +1354,7 @@ export function PassPhoneGame() {
                                 [idx]: (prev[idx] || 0) + 1,
                               }));
                             }}
-                            className="size-9 rounded-xl border-2 border-black bg-void text-lg font-black text-lime shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none flex items-center justify-center min-h-[36px] cursor-pointer"
+                            className="size-9 rounded-[0.75rem] bg-[var(--chip)] text-base font-bold text-[var(--text)] border border-[var(--separator)] hover:bg-[var(--chip)]/80 flex items-center justify-center cursor-pointer"
                           >
                             +
                           </button>
@@ -1304,7 +1364,7 @@ export function PassPhoneGame() {
                   })}
                 </div>
 
-                <div className="pt-3">
+                <div className="w-full pt-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -1318,9 +1378,10 @@ export function PassPhoneGame() {
                       });
                       triggerDramaticReveal(maxIdx);
                     }}
-                    className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
+                    className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Submit Votes & Reveal Verdict →
+                    <span>Submit Votes & Reveal Verdict</span>
+                    <ArrowRight className="size-4" strokeWidth={1.5} />
                   </button>
                 </div>
               </div>
@@ -1328,7 +1389,7 @@ export function PassPhoneGame() {
           </div>
         )}
 
-        {/* DRAMATIC SUSPENSE SEQUENCE */}
+        {/* PHASE 5: SUSPENSE SEQUENCE */}
         {phase === "suspense" && (
           <div
             role="button"
@@ -1340,40 +1401,37 @@ export function PassPhoneGame() {
                 advanceSuspenseSequence();
               }
             }}
-            className="flex flex-1 flex-col items-center justify-center text-center my-auto py-12 cursor-pointer select-none animate-[fade-in_0.2s_ease-out_both]"
+            className="flex flex-1 flex-col items-center justify-center text-center my-auto py-8 cursor-pointer select-none"
             aria-label="Tap to skip suspense sequence"
           >
             {suspenseStep === "tally" && (
               <motion.div
-                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
-                className="w-full p-8 rounded-3xl border-3 border-black bg-surface shadow-[6px_6px_0_0_#000]"
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-full p-8 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] shadow-[0_0_24px_rgba(251,191,36,0.15)] space-y-3"
               >
-                <span className="sticker-badge bg-black text-lime text-[10px] animate-pulse">
-                  LOCKING IN VOTES...
+                <span className="text-xs font-semibold text-[var(--gold-text)] uppercase tracking-wider">
+                  Tallying Votes
                 </span>
-                <h2
-                  className="mt-4 text-3xl sm:text-4xl font-black uppercase font-display text-foreground"
-                  style={{ textShadow: "2px 2px 0 #000" }}
-                >
-                  Tallying the Suspects... 🔍
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text)]">
+                  Locking in the room...
                 </h2>
               </motion.div>
             )}
 
             {suspenseStep === "accused" && votedPlayerIndex !== null && (
               <motion.div
-                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1.05, opacity: 1 }}
-                className="w-full p-8 rounded-3xl border-3 border-black bg-surface shadow-[6px_6px_0_0_#000]"
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-full p-8 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] shadow-[0_0_30px_rgba(240,80,138,0.2)] space-y-3"
               >
-                <span className="sticker-badge bg-magenta text-white text-[10px]">
-                  THE ACCUSED SUSPECT IS
+                <span className="text-xs font-semibold text-[var(--pink-text)] uppercase tracking-wider">
+                  The Accused Suspect
                 </span>
-                <h1 className="mt-4 text-5xl sm:text-6xl font-black uppercase font-display text-lime drop-shadow-[3px_3px_0_#000]">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-[var(--text)]">
                   {players[votedPlayerIndex].name}
                 </h1>
-                <p className="mt-3 text-xs font-black text-muted-foreground uppercase tracking-widest animate-pulse">
+                <p className="text-xs text-[var(--text-secondary)] animate-pulse">
                   Revealing true identity...
                 </p>
               </motion.div>
@@ -1381,14 +1439,20 @@ export function PassPhoneGame() {
 
             {suspenseStep === "verdict" && votedPlayerIndex !== null && (
               <motion.div
-                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
-                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
-                className="w-full p-8 rounded-3xl border-3 border-black bg-surface shadow-[6px_6px_0_0_#000]"
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-full p-8 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] shadow-[0_0_36px_rgba(251,191,36,0.25)] space-y-4"
               >
-                <div className="text-7xl mb-3">{broWon ? "🚨" : "🤡"}</div>
+                <div className="size-16 rounded-full bg-[var(--chip)] mx-auto grid place-items-center">
+                  {broWon ? (
+                    <ShieldAlert className="size-8 text-[var(--pink-text)]" strokeWidth={1.5} />
+                  ) : (
+                    <User className="size-8 text-[var(--gold-text)]" strokeWidth={1.5} />
+                  )}
+                </div>
                 <h1
-                  className={`text-4xl sm:text-5xl font-black uppercase font-display tracking-tight drop-shadow-[3px_3px_0_#000] ${
-                    broWon ? "text-magenta" : "text-lime"
+                  className={`text-3xl sm:text-4xl font-bold tracking-tight ${
+                    broWon ? "text-[var(--pink-text)]" : "text-[var(--gold-text)]"
                   }`}
                 >
                   {broWon
@@ -1398,57 +1462,66 @@ export function PassPhoneGame() {
               </motion.div>
             )}
 
-            <p className="mt-8 text-[11px] font-black text-muted-foreground/80 uppercase tracking-widest">
-              Tap anywhere to skip →
+            <p className="mt-6 text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-widest">
+              Tap anywhere to advance
             </p>
           </div>
         )}
 
-        {/* PHASE 5: VERDICT / ROUND SCOREBOARD */}
+        {/* PHASE 6: VERDICT / ROUND SCOREBOARD */}
         {phase === "verdict" && (
-          <div className="flex flex-1 flex-col justify-between pt-4 pb-2 animate-[fade-in_0.2s_ease-out_both]">
-            <div className="text-center">
+          <div className="flex flex-1 flex-col justify-between py-4">
+            <div className="text-center space-y-2">
               <span
-                className={`sticker-badge ${
-                  broWon ? "bg-lime text-void" : "bg-magenta text-white"
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                  broWon
+                    ? "bg-[var(--brand-gold)]/20 text-[var(--gold-text)] border border-[var(--brand-gold)]/30"
+                    : "bg-[var(--brand-pink)]/20 text-[var(--pink-text)] border border-[var(--brand-pink)]/30"
                 }`}
               >
-                {broWon ? "BRO CAUGHT THE FRAUD!" : "FRAUD ESCAPED!"}
+                {broWon ? "Bros Caught the Fraud" : "Fraud Escaped"}
               </span>
-              <h1
-                className="text-4xl sm:text-5xl font-black font-display uppercase mt-2 text-foreground"
-                style={{ textShadow: "3px 3px 0 #000" }}
-              >
-                {broWon ? "+100 XP to Bros" : "+150 XP to Fraud"}
-              </h1>
-              <div className="mt-3 p-3 rounded-xl border-2 border-black bg-void shadow-[3px_3px_0_0_#000] max-w-[34ch] mx-auto">
-                <p className="text-xs font-bold italic text-lime">"{roastCopy}"</p>
+
+              {/* Big Score / Split Number Display */}
+              <div className="py-2">
+                <div className="text-4xl sm:text-5xl font-mono font-bold tracking-tight text-[var(--text)] tabular-nums">
+                  {broWon ? "+100" : "+150"}{" "}
+                  <span className="text-base font-sans text-[var(--text-secondary)]">XP</span>
+                </div>
+                <div className="text-xs text-[var(--text-secondary)] mt-1">
+                  {broWon ? "Awarded to innocent bros" : "Awarded to the fraud for escaping"}
+                </div>
+              </div>
+
+              {/* Roast summary */}
+              <div className="p-3 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] max-w-sm mx-auto text-xs italic text-[var(--text)]">
+                "{roastCopy}"
               </div>
             </div>
 
-            {/* Secret Summary Card */}
-            <div className="mt-4 rounded-3xl border-3 border-black bg-surface p-4 shadow-[5px_5px_0_0_#000]">
-              <div className="grid grid-cols-2 gap-2 pb-3 border-b-2 border-black/50">
-                <div className="rounded-xl bg-void p-3 border-2 border-black shadow-[2px_2px_0_0_#000]">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
+            {/* Split Bar & Secret Words */}
+            <div className="my-auto w-full space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-left">
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase block">
                     Secret Word
                   </span>
-                  <span className="text-base font-black uppercase text-lime">{targetWord}</span>
+                  <span className="text-sm font-bold text-[var(--gold-text)]">{targetWord}</span>
                 </div>
-                <div className="rounded-xl bg-void p-3 border-2 border-black shadow-[2px_2px_0_0_#000]">
-                  <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground block">
+                <div className="p-3 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] text-left">
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase block">
                     Actual Fraud
                   </span>
-                  <span className="text-base font-black uppercase text-magenta">
+                  <span className="text-sm font-bold text-[var(--pink-text)]">
                     {fraudsIndices.map((i) => players[i]?.name).join(", ")}
                   </span>
                 </div>
               </div>
 
-              {/* Leaderboard table */}
-              <div className="mt-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">
-                  Match Leaderboard
+              {/* Match Leaderboard */}
+              <div className="rounded-[var(--radius-card)] bg-[var(--card)] p-4 border border-[var(--separator)]">
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-2">
+                  Leaderboard
                 </span>
                 <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
                   {players.map((p, idx) => {
@@ -1457,22 +1530,24 @@ export function PassPhoneGame() {
                     return (
                       <div
                         key={idx}
-                        className="flex items-center justify-between rounded-xl bg-void px-3 py-2 border-2 border-black text-xs font-bold shadow-[2px_2px_0_0_#000]"
+                        className="flex items-center justify-between rounded-[0.75rem] bg-[var(--chip)] px-3 py-2 text-xs font-semibold"
                       >
                         <div className="flex items-center gap-2">
-                          {renderAvatar(p.emoji, "size-4 text-lime")}
-                          <span className="text-foreground uppercase">{p.name}</span>
+                          {renderAvatar(p.emoji, "size-4 text-[var(--gold-text)]")}
+                          <span className="text-[var(--text)]">{p.name}</span>
                           {isPlayerFraud && (
-                            <span className="text-[8px] font-black bg-magenta text-white px-1.5 py-0.5 rounded border border-black uppercase">
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-[var(--brand-pink)]/20 text-[var(--pink-text)] font-bold">
                               Fraud
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
                           {delta > 0 && (
-                            <span className="text-lime text-[11px] font-black">+{delta}</span>
+                            <span className="text-[var(--gold-text)] text-[11px] font-bold tabular-nums">
+                              +{delta}
+                            </span>
                           )}
-                          <span className="font-mono text-foreground font-black">
+                          <span className="font-mono text-[var(--text)] font-bold tabular-nums">
                             {scores[p.name] || 0} pts
                           </span>
                         </div>
@@ -1483,107 +1558,116 @@ export function PassPhoneGame() {
               </div>
             </div>
 
-            {/* Next Round Controls */}
-            <div className="mt-4 space-y-2">
+            <div className="w-full pt-4">
               <button
                 type="button"
                 onClick={handleNextRound}
-                className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] hover:shadow-[6px_6px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Start Round {currentRound + 1} of {totalRounds} →
+                <span>
+                  Start Round {currentRound + 1} of {totalRounds}
+                </span>
+                <ArrowRight className="size-4" strokeWidth={1.5} />
               </button>
             </div>
           </div>
         )}
 
-        {/* PHASE 6: END OF GAME & AWARDS PODIUM */}
+        {/* PHASE 7: GAME OVER PODIUM */}
         {phase === "game_over" && (
-          <div className="flex flex-1 flex-col justify-between pt-4 pb-2 animate-[fade-in_0.3s_ease-out_both]">
-            <div className="text-center">
-              <span className="sticker-badge bg-lime text-void text-[10px]">🏆 MATCH COMPLETE</span>
-              <h1
-                className="mt-2 text-4xl sm:text-5xl font-black font-display uppercase text-foreground"
-                style={{ textShadow: "3px 3px 0 #000" }}
-              >
+          <div className="flex flex-1 flex-col justify-between py-4 text-center">
+            <div className="space-y-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--chip)] text-[var(--gold-text)] border border-[var(--separator)]">
+                <Trophy className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+                Match Complete
+              </span>
+              <h1 className="text-3xl font-bold tracking-tight text-[var(--text)] mt-2">
                 Final Awards
               </h1>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
-                All {totalRounds} rounds finished. Here's how the hostel fared.
+              <p className="text-xs text-[var(--text-secondary)]">
+                All {totalRounds} rounds finished.
               </p>
             </div>
 
-            {/* Award Badges */}
-            <div className="mt-4 space-y-2.5">
-              {/* 1. Best Liar */}
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl border-2.5 border-black bg-magenta/15 shadow-[4px_4px_0_0_#000]">
-                <div className="text-3xl">🎭</div>
-                <div className="flex-1 text-left">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-magenta">
-                    Best Liar Award
-                  </div>
-                  <div className="text-base font-black uppercase text-foreground">
+            {/* Awards cards */}
+            <div className="my-auto space-y-2.5 w-full">
+              {/* Best Liar */}
+              <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center gap-3 text-left">
+                <div className="size-11 rounded-[0.75rem] bg-[var(--chip)] grid place-items-center text-[var(--pink-text)] shrink-0">
+                  <Drama className="size-5" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-semibold text-[var(--pink-text)] uppercase tracking-wider block">
+                    Best Liar
+                  </span>
+                  <div className="text-sm font-bold text-[var(--text)]">
                     {fraudsIndices.map((i) => players[i]?.name).join(", ")}
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground">
-                    Bluffed with confidence and escaped the roast!
-                  </p>
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    Bluffed with confidence and escaped the roast
+                  </span>
                 </div>
               </div>
 
-              {/* 2. Sharpest Detective */}
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl border-2.5 border-black bg-lime/15 shadow-[4px_4px_0_0_#000]">
-                <div className="text-3xl">🕵️‍♂️</div>
-                <div className="flex-1 text-left">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-lime">
+              {/* Sharpest Detective */}
+              <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center gap-3 text-left">
+                <div className="size-11 rounded-[0.75rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)] shrink-0">
+                  <Search className="size-5" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-semibold text-[var(--gold-text)] uppercase tracking-wider block">
                     Sharpest Detective
-                  </div>
-                  <div className="text-base font-black uppercase text-foreground">
+                  </span>
+                  <div className="text-sm font-bold text-[var(--text)]">
                     {
                       [...players].sort((a, b) => (scores[b.name] || 0) - (scores[a.name] || 0))[0]
                         ?.name
                     }
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground">
-                    Highest score across all {totalRounds} rounds!
-                  </p>
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    Highest score across all {totalRounds} rounds
+                  </span>
                 </div>
               </div>
 
-              {/* 3. Most Suspicious */}
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl border-2.5 border-black bg-cyan-400/15 shadow-[4px_4px_0_0_#000]">
-                <div className="text-3xl">🤡</div>
-                <div className="flex-1 text-left">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-cyan-400">
+              {/* Most Sus */}
+              <div className="p-3.5 rounded-[var(--radius-group)] bg-[var(--card)] border border-[var(--separator)] flex items-center gap-3 text-left">
+                <div className="size-11 rounded-[0.75rem] bg-[var(--chip)] grid place-items-center text-[var(--text-secondary)] shrink-0">
+                  <HelpCircle className="size-5" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block">
                     Most Sus Bro
-                  </div>
-                  <div className="text-base font-black uppercase text-foreground">
+                  </span>
+                  <div className="text-sm font-bold text-[var(--text)]">
                     {players[votedPlayerIndex ?? 0]?.name}
                   </div>
-                  <p className="text-[10px] font-bold text-muted-foreground">
-                    Acted innocent but ended up in the interrogation seat.
-                  </p>
+                  <span className="text-[11px] text-[var(--text-secondary)]">
+                    Innocent but caught the most accusations
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Final Actions */}
-            <div className="mt-4 space-y-2.5">
+            {/* Actions */}
+            <div className="w-full space-y-2 pt-4">
               <button
                 type="button"
                 onClick={handleShareResults}
                 disabled={sharing}
-                className="flex items-center justify-center gap-2 w-full rounded-2xl border-2.5 border-black bg-surface px-6 py-3.5 text-xs font-black uppercase tracking-widest text-foreground hover:border-lime shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all min-h-[48px] cursor-pointer"
+                className="w-full min-h-[48px] rounded-[var(--radius-btn)] bg-[var(--chip)] text-xs font-semibold text-[var(--text)] hover:bg-[var(--chip)]/80 border border-[var(--separator)] transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Share2 className="size-4 text-lime" />
-                <span>{sharing ? "Rendering Card..." : "Share Result Card 📸"}</span>
+                <Share2 className="size-4 text-[var(--gold-text)]" strokeWidth={1.5} />
+                <span>{sharing ? "Rendering..." : "Share Result Card"}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePlayAgainSamePlayers}
-                className="w-full rounded-2xl bg-lime px-6 py-4.5 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
+                className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                Play Again (Same Players) 🔄 →
+                <RotateCcw className="size-4" strokeWidth={1.5} />
+                <span>Play Again (Same Players)</span>
               </button>
 
               <Link
@@ -1592,33 +1676,29 @@ export function PassPhoneGame() {
                   buzz(15);
                   localStorage.removeItem("bof_active_session_v1");
                 }}
-                className="block text-center text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground py-2"
+                className="block text-center text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] py-2"
               >
                 Change Players / Setup
               </Link>
             </div>
           </div>
         )}
-      </div>
+      </main>
 
-      {/* Peek Word Modal */}
+      {/* PEEK WORD MODAL */}
       {showPeekModal && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end animate-[fade-in_0.2s_ease-out_both]">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end animate-in fade-in duration-200">
           <button
             type="button"
             aria-label="Close"
             onClick={() => setShowPeekModal(false)}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
-          <div className="relative mx-auto w-full max-w-md rounded-t-3xl border-t-3 border-x-3 border-black bg-void p-5 max-h-[85dvh] flex flex-col shadow-[0_-6px_0_0_#000] animate-[slide-up_0.25s_ease-out_both]">
-            <div className="flex items-center justify-between pb-3 border-b-2 border-black">
+          <div className="relative mx-auto w-full max-w-md rounded-t-[var(--radius-card)] bg-[var(--card)] border-t border-[var(--separator)] p-5 max-h-[85dvh] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--separator)]">
               <div>
-                <h3 className="text-lg font-black uppercase tracking-wide font-display text-lime">
-                  👀 Peek Word
-                </h3>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Check your secret word privately
-                </p>
+                <h3 className="text-base font-bold text-[var(--text)]">Peek Secret Word</h3>
+                <p className="text-xs text-[var(--text-secondary)]">Check your word privately</p>
               </div>
               <button
                 type="button"
@@ -1626,16 +1706,16 @@ export function PassPhoneGame() {
                   buzz(15);
                   setShowPeekModal(false);
                 }}
-                className="grid size-9 place-items-center rounded-xl border-2 border-black bg-surface text-foreground font-black shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                className="size-8 rounded-full bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)] grid place-items-center cursor-pointer"
               >
-                ✕
+                <X className="size-4" strokeWidth={1.5} />
               </button>
             </div>
 
             {peekPlayerIdx === null ? (
-              <div className="mt-4 space-y-3 pb-6 flex-1 overflow-y-auto">
-                <p className="text-xs text-center text-muted-foreground uppercase tracking-wider mb-2 font-bold">
-                  Select your name to peek:
+              <div className="mt-4 space-y-2 pb-6 flex-1 overflow-y-auto">
+                <p className="text-xs text-center text-[var(--text-secondary)] mb-2">
+                  Select your name:
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {players.map((p, idx) => (
@@ -1646,15 +1726,16 @@ export function PassPhoneGame() {
                         buzz(15);
                         setPeekPlayerIdx(idx);
                       }}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-surface border-2 border-black px-4 py-3 text-sm font-black uppercase text-foreground hover:border-lime shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none min-h-[48px] cursor-pointer"
+                      className="flex items-center justify-center gap-2 rounded-[var(--radius-group)] bg-[var(--chip)] border border-[var(--separator)] px-4 py-3 text-xs font-bold text-[var(--text)] hover:border-[var(--brand-gold)] min-h-[48px] cursor-pointer"
                     >
-                      {renderAvatar(p.emoji, "size-4 text-lime")} {p.name}
+                      {renderAvatar(p.emoji, "size-4 text-[var(--gold-text)]")}
+                      <span>{p.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="mt-5 flex flex-col items-center justify-center text-center space-y-5 pb-6">
+              <div className="mt-4 flex flex-col items-center justify-center text-center space-y-4 pb-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -1662,35 +1743,38 @@ export function PassPhoneGame() {
                     setPeekPlayerIdx(null);
                     setPeekHeld(false);
                   }}
-                  className="text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-white"
+                  className="text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)]"
                 >
                   ← Select different player
                 </button>
 
-                <div className="w-full max-w-sm rounded-2xl border-3 border-black bg-surface p-6 flex flex-col items-center justify-center min-h-[180px] shadow-[4px_4px_0_0_#000]">
+                <div className="w-full rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--bg)] p-6 flex flex-col items-center justify-center min-h-[160px]">
                   {peekHeld ? (
-                    <div className="w-full flex flex-col items-center animate-[fade-in_0.15s_ease-out_both]">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block mb-2">
-                        {fraudsIndices.includes(peekPlayerIdx)
-                          ? "YOUR DECOY WORD"
-                          : "YOUR SECRET WORD"}
+                    <div className="w-full flex flex-col items-center">
+                      <span className="text-[10px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                        {fraudsIndices.includes(peekPlayerIdx) ? "Decoy Word" : "Secret Word"}
                       </span>
                       <div
-                        className={`text-2xl font-black font-mono tracking-widest uppercase py-4 px-3 w-full rounded-xl bg-void border-2 border-black mb-3 shadow-[2px_2px_0_0_#000] ${
-                          fraudsIndices.includes(peekPlayerIdx) ? "text-magenta" : "text-lime"
+                        className={`text-2xl font-bold tracking-tight uppercase py-3 px-4 w-full rounded-[0.75rem] bg-[var(--chip)] border border-[var(--separator)] mb-2 ${
+                          fraudsIndices.includes(peekPlayerIdx)
+                            ? "text-[var(--pink-text)]"
+                            : "text-[var(--gold-text)]"
                         }`}
                       >
                         {fraudsIndices.includes(peekPlayerIdx) ? bluffWord : targetWord}
                       </div>
-                      <span className="text-xs font-black uppercase text-muted-foreground">
-                        ROLE: {fraudsIndices.includes(peekPlayerIdx) ? "FRAUD" : "BRO"}
+                      <span className="text-xs font-bold text-[var(--text-secondary)]">
+                        Role: {fraudsIndices.includes(peekPlayerIdx) ? "FRAUD" : "BRO"}
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <Fingerprint className="size-12 text-lime animate-pulse mb-2" />
-                      <p className="text-xs text-muted-foreground max-w-[20ch] uppercase font-bold">
-                        Press and hold below to view your word
+                      <Fingerprint
+                        className="size-10 text-[var(--gold-text)] mb-2"
+                        strokeWidth={1.5}
+                      />
+                      <p className="text-xs text-[var(--text-secondary)] max-w-[22ch]">
+                        Press and hold below to view word
                       </p>
                     </div>
                   )}
@@ -1705,9 +1789,10 @@ export function PassPhoneGame() {
                   onPointerUp={() => setPeekHeld(false)}
                   onPointerLeave={() => setPeekHeld(false)}
                   onPointerCancel={() => setPeekHeld(false)}
-                  className="w-full rounded-2xl bg-lime px-6 py-4.5 text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none touch-none select-none min-h-[54px] cursor-pointer"
+                  className="w-full min-h-[52px] rounded-[var(--radius-btn)] bg-[var(--brand-gold)] text-[var(--on-gold)] font-bold text-base hover:brightness-105 active:scale-[0.98] transition-all touch-none select-none cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {peekHeld ? "Release to Hide" : "Hold to Peek Word"}
+                  <Eye className="size-4" strokeWidth={1.5} />
+                  <span>{peekHeld ? "Release to Hide" : "Hold to Peek Word"}</span>
                 </button>
               </div>
             )}
