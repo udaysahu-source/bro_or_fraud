@@ -155,7 +155,9 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
           <div className="absolute inset-0 flex items-center justify-center text-sm">🎮</div>
         </div>
         <div className="space-y-1">
-          <p className="text-xs font-black uppercase tracking-widest text-lime">Loading Game Mode</p>
+          <p className="text-xs font-black uppercase tracking-widest text-lime">
+            Loading Game Mode
+          </p>
           <p className="text-[11px] text-slate-400">Heating up hostel gossip & secrets...</p>
         </div>
       </div>
@@ -175,14 +177,37 @@ function GameRouteComponent() {
     case "would-you-rather":
       content = <SecretVoteEngine config={WOULD_YOU_RATHER_CONFIG} />;
       break;
-    case "garma-garam-takes":
-      content = <SecretVoteEngine config={GARMA_GARAM_CONFIG} />;
-      break;
     case "pass-the-bomb":
       content = <PassTheBombEngine />;
       break;
+    case "garma-garam-takes":
     case "hot-seat":
-      content = <HotSeatEngine />;
+      content = (
+        <div className="min-h-screen bg-void text-foreground flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="size-16 rounded-2xl bg-surface border-2.5 border-black grid place-items-center text-3xl shadow-[3px_3px_0_0_#000]">
+            🔒
+          </div>
+          <span className="sticker-badge bg-magenta text-white text-[10px]">
+            MODE CURRENTLY VAULTED
+          </span>
+          <h1
+            className="text-2xl sm:text-3xl font-black uppercase font-display text-lime"
+            style={{ textShadow: "2px 2px 0 #000" }}
+          >
+            Taking a Break
+          </h1>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide max-w-[28ch]">
+            This mode has been temporarily taken offline for maintenance and tuning. Check out the
+            active party modes!
+          </p>
+          <Link
+            to="/"
+            className="px-5 py-3 rounded-2xl bg-lime text-void font-black text-xs uppercase border-3 border-black shadow-[3px_3px_0_0_var(--color-magenta)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+          >
+            ← Back to Party Hub
+          </Link>
+        </div>
+      );
       break;
     case "confession-roulette":
       content = <ConfessionRouletteEngine />;

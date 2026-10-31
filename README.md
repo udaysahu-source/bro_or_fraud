@@ -15,9 +15,9 @@
 
 ## 🎯 What is "Bro or Fraud"?
 
-**Bro or Fraud?** is a high-energy party game hub crafted for authentic college and youth banter. 
+**Bro or Fraud?** is a high-energy party game hub crafted for authentic college and youth banter.
 
-Whether you're sitting in a cramped hostel room sharing Maggi, waiting between lectures in the canteen, or chilling on a weekend hangout, pull out a single phone or host a room where friends join from their own devices. 
+Whether you're sitting in a cramped hostel room sharing Maggi, waiting between lectures in the canteen, or chilling on a weekend hangout, pull out a single phone or host a room where friends join from their own devices.
 
 No app store downloads, no account registrations, and no trackers — just pure bluffing, quick thinking, and chaotic roasting.
 
@@ -37,18 +37,18 @@ No app store downloads, no account registrations, and no trackers — just pure 
 
 ## 🎮 Game Modes (Party Hub)
 
-In addition to the flagship **Bro or Fraud?** deduction game, the platform features a complete party suite with **7 additional game modes**, **23 curated content packs**, and **690+ verified items**:
+In addition to the flagship **Bro or Fraud?** deduction game, the platform features a complete party suite with **6 active party modes** (plus vaulted modes undergoing tuning):
 
-| # | Mode | Category | Description | Engine |
-|---|------|----------|-------------|--------|
-| **1** | **Bro or Fraud?** *(Flagship)* | Social Deduction | Secret words are distributed to "Bros", while the "Fraud" receives nothing. Drop clues, sniff out the faker, and vote them out before they decipher the secret word. | `play.local.tsx` / `online.room.$code.tsx` |
-| **2** | **Pass the Bomb** | Word Recall | A ticking time bomb passes around the circle. Shout a valid word matching the category before the fuse explodes in your hands. | `PassTheBombEngine.tsx` |
-| **3** | **Heads Up / Forehead Tilt** | Charades | Place the phone on your forehead! Friends shout clues while you tilt up for Pass or tilt down for Correct. Supports gyro tilt controls. | `HeadsUpEngine.tsx` |
-| **4** | **Confession Roulette** | Bluff & Party | One anonymous player confession is masked among 4+ plausible ghost/bot answers. Guess whose confession it really is. | `ConfessionRouletteEngine.tsx` |
-| **5** | **Never Have I Ever** | Synchronized Voting | Reveal the wildest things your squad has (or hasn't) done with synchronous anonymous voting and percentage reveals. | `SecretVoteEngine.tsx` |
-| **6** | **Would You Rather** | Dilemmas & Debates | Brutal 50/50 campus dilemmas. Vote on impossible choices and debate who picked what. | `SecretVoteEngine.tsx` |
-| **7** | **Garma-Garam Takes** | Hot Takes | Unfiltered, controversial college opinions that spark loud debates across the room. | `SecretVoteEngine.tsx` |
-| **8** | **The Hot Seat** | Roast & Rapid Fire | One chosen player enters the hot seat. The squad fires tailored rapid-fire questions and roasts. | `HotSeatEngine.tsx` |
+| #     | Mode                           | Category            | Status       | Description                                                                                                                                                          | Engine                                     |
+| ----- | ------------------------------ | ------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **1** | **Bro or Fraud?** _(Flagship)_ | Social Deduction    | ✅ Active    | Secret words are distributed to "Bros", while the "Fraud" receives nothing. Drop clues, sniff out the faker, and vote them out before they decipher the secret word. | `play.local.tsx` / `online.room.$code.tsx` |
+| **2** | **Pass the Bomb**              | Word Recall         | ✅ Active    | A ticking time bomb passes around the circle. Shout a valid word matching the category before the fuse explodes in your hands.                                       | `PassTheBombEngine.tsx`                    |
+| **3** | **Heads Up / Forehead Tilt**   | Charades            | ✅ Active    | Place the phone on your forehead! Friends shout clues while you tilt up for Pass or tilt down for Correct. Supports gyro tilt controls.                              | `HeadsUpEngine.tsx`                        |
+| **4** | **Confession Roulette**        | Bluff & Party       | ✅ Active    | One anonymous player confession is masked among 4+ plausible ghost/bot answers. Guess whose confession it really is.                                                 | `ConfessionRouletteEngine.tsx`             |
+| **5** | **Never Have I Ever**          | Synchronized Voting | ✅ Active    | Reveal the wildest things your squad has (or hasn't) done with synchronous anonymous voting and percentage reveals.                                                  | `SecretVoteEngine.tsx`                     |
+| **6** | **Would You Rather**           | Dilemmas & Debates  | ✅ Active    | Brutal 50/50 campus dilemmas. Vote on impossible choices and debate who picked what.                                                                                 | `SecretVoteEngine.tsx`                     |
+| **—** | **Garma-Garam Takes**          | Hot Takes           | 🔒 _Vaulted_ | Controversial college opinions that spark loud debates. _(Temporarily vaulted for tuning)._                                                                          | `SecretVoteEngine.tsx`                     |
+| **—** | **The Hot Seat**               | Roast & Rapid Fire  | 🔒 _Vaulted_ | One chosen player enters the hot seat for tailored rapid-fire questions and roasts. _(Temporarily vaulted for tuning)._                                              | `HotSeatEngine.tsx`                        |
 
 ---
 
@@ -156,6 +156,7 @@ npm run content:check
 ```
 
 What the validator asserts:
+
 - ✅ Schema conformance for all 7 game modes and 23 content packs.
 - ✅ Strict presence of both `hinglish` and `en` localized strings.
 - ✅ Confession Roulette packs have at least 4 ghost answer options per topic.
@@ -167,6 +168,7 @@ What the validator asserts:
 ## 🔒 Privacy & Security
 
 We believe party games shouldn't track you:
+
 - **No Private Data Stored**: No phone numbers, passwords, emails, or personal identification are collected or sent to remote servers.
 - **Client-Side First**: Game histories and scores reside in `sessionStorage` / `localStorage` on your own browser.
 - **Direct P2P**: Multiplayer rooms communicate via encrypted WebRTC DataChannels directly between peer browsers.

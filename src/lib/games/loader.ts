@@ -3,18 +3,21 @@ import { GameHubContent, GameMode, AnyGameItem, ContentLevel } from "./types";
 
 export const CONTENT = rawContent as unknown as GameHubContent;
 
+export const DISABLED_GAME_IDS = new Set(["garma-garam-takes", "hot-seat"]);
+
 export function getAllGameModes(): GameMode[] {
-  return CONTENT.gameModes;
+  return CONTENT.gameModes.filter((g) => !DISABLED_GAME_IDS.has(g.id));
 }
 
 export function getGameMode(id: string): GameMode | undefined {
+  if (DISABLED_GAME_IDS.has(id)) return undefined;
   return CONTENT.gameModes.find((g) => g.id === id);
 }
 
 export function getLocalizedText(
   val: any,
   lang: "hinglish" | "en" = "hinglish",
-  fallback = ""
+  fallback = "",
 ): string {
   if (!val) return fallback;
   if (typeof val === "string") return val;
@@ -181,9 +184,8 @@ export function getContent<T = AnyGameItem>(gameId: string, options: GetContentO
 
 export function getContentItem<T = AnyGameItem>(
   gameId: string,
-  options: GetContentOptions = {}
+  options: GetContentOptions = {},
 ): T | null {
   const bag = getContent<T>(gameId, options);
   return bag.draw();
 }
-

@@ -529,7 +529,7 @@ function Home() {
               🚫 ZERO SIGNUP
             </span>
             <span className="sticker-badge bg-white text-void rotate-[-1deg]">
-              🎮 8 PARTY MODES
+              🎮 {hubGames.length} PARTY MODES
             </span>
           </div>
 
@@ -731,35 +731,44 @@ function Home() {
               <span className="text-lime">//</span>
             </h2>
             <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-lime/10 text-lime border border-lime/30 tracking-wider">
-              8 Offline Modes
+              {hubGames.length} Offline Modes
             </span>
           </div>
 
           {/* Category Filter Chips */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-3 -mx-1 px-1">
             {[
-              { id: "all" as GameCategoryChip, label: "🔥 All", count: 8 },
-              { id: "tea" as GameCategoryChip, label: "🤫 Tea & Roast", count: 3 },
-              { id: "reflexes" as GameCategoryChip, label: "⚡ Fast Reflexes", count: 2 },
-              { id: "debate" as GameCategoryChip, label: "🗣️ Hot Debates", count: 2 },
-              { id: "bluff" as GameCategoryChip, label: "🕵️ Spyfall", count: 1 },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => {
-                  buzz(15);
-                  setActiveGameCategory(cat.id);
-                }}
-                className={`text-xs font-black px-4 py-2.5 min-h-[40px] rounded-full whitespace-nowrap transition-all border shrink-0 ${
-                  activeGameCategory === cat.id
-                    ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10 scale-[1.02]"
-                    : "bg-surface/90 text-muted-foreground border-border hover:text-foreground hover:border-white/20"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+              { id: "all" as GameCategoryChip, label: "🔥 All" },
+              { id: "tea" as GameCategoryChip, label: "🤫 Tea & Roast" },
+              { id: "reflexes" as GameCategoryChip, label: "⚡ Fast Reflexes" },
+              { id: "debate" as GameCategoryChip, label: "🗣️ Hot Debates" },
+              { id: "bluff" as GameCategoryChip, label: "🕵️ Spyfall" },
+            ]
+              .map((cat) => {
+                const count =
+                  cat.id === "all"
+                    ? hubGames.length
+                    : hubGames.filter((g) => g.chipCategory === cat.id).length;
+                return { ...cat, count };
+              })
+              .filter((cat) => cat.count > 0)
+              .map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => {
+                    buzz(15);
+                    setActiveGameCategory(cat.id);
+                  }}
+                  className={`text-xs font-black px-4 py-2.5 min-h-[40px] rounded-full whitespace-nowrap transition-all border shrink-0 ${
+                    activeGameCategory === cat.id
+                      ? "bg-foreground text-background border-foreground shadow-md shadow-foreground/10 scale-[1.02]"
+                      : "bg-surface/90 text-muted-foreground border-border hover:text-foreground hover:border-white/20"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
