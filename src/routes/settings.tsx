@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { buzz } from "@/lib/haptics";
-import { playDiscussionStartSound } from "@/lib/audio";
 import {
   DEFAULT_SETTINGS,
   SETTINGS_PRESETS,
@@ -11,6 +10,23 @@ import {
   type RevealStyle,
   type PresetKey,
 } from "@/lib/settings";
+import {
+  Zap,
+  Target,
+  Flame,
+  Lock,
+  Hand,
+  Clock,
+  Volume2,
+  VolumeX,
+  Smartphone,
+  Sun,
+  Moon,
+  Monitor,
+  RotateCcw,
+  Sliders,
+  Check,
+} from "lucide-react";
 
 export const Route = createFileRoute("/settings")({
   component: Settings,
@@ -26,14 +42,19 @@ export const Route = createFileRoute("/settings")({
 
 const ROUNDS = [3, 5, 7, 10];
 const TIMERS = [15, 30, 45, 60];
-const REVEAL_STYLES: { id: RevealStyle; label: string; blurb: string; emoji: string }[] = [
-  { id: "hold", label: "Hold to Reveal", blurb: "Press & hold 0.5s. Peeker-proof.", emoji: "🔒" },
-  { id: "tap", label: "Tap to Reveal", blurb: "Single tap. Fastest handoff.", emoji: "👆" },
+const REVEAL_STYLES: {
+  id: RevealStyle;
+  label: string;
+  blurb: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+}[] = [
+  { id: "hold", label: "Hold to Reveal", blurb: "Press & hold 0.5s. Peeker-proof.", icon: Lock },
+  { id: "tap", label: "Tap to Reveal", blurb: "Single tap. Fastest handoff.", icon: Hand },
   {
     id: "auto",
     label: "Auto Reveal (3s)",
     blurb: "Countdown, then flip. Hands-free.",
-    emoji: "⏱️",
+    icon: Clock,
   },
 ];
 
@@ -41,12 +62,14 @@ function Settings() {
   const navigate = useNavigate();
   const [s, setS] = useState<MatchSettings>(DEFAULT_SETTINGS);
   const [preset, setPreset] = useState<PresetKey>("standard");
-  const [mounted, setMounted] = useState(false);
+  const [themeMode, setThemeMode] = useState<"auto" | "light" | "dark">("auto");
+  const [keepAwake, setKeepAwake] = useState(true);
 
   useEffect(() => {
     const loaded = loadSettings();
     setS(loaded);
-    // Detect preset match
+
+    // Preset check
     const found = (Object.keys(SETTINGS_PRESETS) as Array<"quick" | "standard" | "chaos">).find(
       (key) =>
         SETTINGS_PRESETS[key].settings.rounds === loaded.rounds &&
@@ -54,7 +77,12 @@ function Settings() {
         SETTINGS_PRESETS[key].settings.revealStyle === loaded.revealStyle,
     );
     setPreset(found || "custom");
-    setMounted(true);
+
+    // Load theme from localStorage
+    const savedTheme = localStorage.getItem("bof_theme") as "auto" | "light" | "dark" | null;
+    if (savedTheme) {
+      setThemeMode(savedTheme);
+    }
   }, []);
 
   const selectPreset = (key: "quick" | "standard" | "chaos") => {
@@ -78,364 +106,309 @@ function Settings() {
     buzz(15);
   };
 
+  const handleThemeChange = (mode: "auto" | "light" | "dark") => {
+    buzz(15);
+    setThemeMode(mode);
+    localStorage.setItem("bof_theme", mode);
+    if (mode === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else if (mode === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  };
+
   const totalTime = Math.round((s.rounds * (s.timerSeconds + 50)) / 60);
 
-  const vibe =
-    s.timerSeconds <= 20 ? "Blitz 🔥" : s.timerSeconds >= 45 ? "Deep Chill 🧘" : "Balanced 🎯";
-
   return (
-    <div className="min-h-dvh bg-void text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-44">
-        <header className="flex items-center justify-between">
-          <Link
-            to="/"
-            onClick={() => buzz(15)}
-            className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-white transition-colors min-h-[44px] px-1"
-          >
-            ← Home
-          </Link>
-          <span className="sticker-badge bg-black text-lime border-2 border-black text-[10px] shadow-[2px_2px_0_0_#000]">
-            PACING & RULES
-          </span>
-        </header>
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)] flex flex-col justify-between selection:bg-[var(--brand-gold)]/20">
+      {/* UNIFORM FRAME: TOP BAR */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--separator)]">
+        <Link
+          to="/"
+          onClick={() => buzz(15)}
+          className="flex items-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-[var(--radius-btn)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--chip)] transition-colors"
+        >
+          ← Home
+        </Link>
 
-        <section className="mt-5">
-          <span className="sticker-badge bg-magenta text-white text-[9px] mb-2">
-            // CUSTOMIZATION
-          </span>
-          <h1
-            className="mt-2 text-4xl sm:text-5xl font-black uppercase leading-[0.9] font-display text-foreground"
-            style={{ textShadow: "3px 3px 0 #000" }}
-          >
-            Tune the
-            <br />
-            <span className="text-lime" style={{ textShadow: "3px 3px 0 var(--color-magenta)" }}>
-              Chaos
-            </span>
-          </h1>
-          <p className="mt-2 text-xs font-bold text-muted-foreground uppercase tracking-wide">
-            Pick a quick preset or fine-tune round count, timer, and reveal security.
-          </p>
-        </section>
+        <span className="text-sm font-bold tracking-tight text-[var(--text)]">Settings</span>
 
+        <button
+          type="button"
+          onClick={() => {
+            buzz(20);
+            setS(DEFAULT_SETTINGS);
+            setPreset("standard");
+            saveSettings(DEFAULT_SETTINGS);
+          }}
+          className="flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] min-h-[44px] px-2"
+        >
+          <RotateCcw className="size-3.5" strokeWidth={1.5} />
+          <span>Reset</span>
+        </button>
+      </header>
+
+      {/* MAIN CONTAINER */}
+      <main className="flex-1 max-w-md w-full mx-auto px-4 py-4 space-y-6">
         {/* Presets */}
-        <section className="mt-6">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <h2 className="text-xs font-black uppercase tracking-widest text-foreground">
-              ⚡ Presets
-            </h2>
-            <span className="text-[10px] font-black uppercase tracking-widest text-lime">
+        <section className="space-y-2.5">
+          <div className="flex items-center justify-between text-xs font-semibold">
+            <span className="text-[var(--text)] flex items-center gap-1.5">
+              <Zap className="size-3.5 text-[var(--gold-text)]" strokeWidth={1.5} />
+              <span>Presets</span>
+            </span>
+            <span className="text-[var(--gold-text)] capitalize">
               {preset === "custom" ? "Custom Config" : `${preset} active`}
             </span>
           </div>
+
           <div className="grid grid-cols-3 gap-2">
-            {(["quick", "standard", "chaos"] as const).map((key) => {
-              const p = SETTINGS_PRESETS[key];
+            {[
+              { key: "quick" as const, name: "Quick Blitz", icon: Zap },
+              { key: "standard" as const, name: "Standard", icon: Target },
+              { key: "chaos" as const, name: "Pure Chaos", icon: Flame },
+            ].map(({ key, name, icon: Icon }) => {
               const active = preset === key;
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => selectPreset(key)}
-                  className={`flex flex-col items-center justify-center rounded-2xl border-2.5 border-black p-3 text-center transition-all min-h-[82px] cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
+                  className={`flex flex-col items-center justify-center rounded-[var(--radius-group)] p-3 border transition-all min-h-[80px] cursor-pointer ${
                     active
-                      ? "border-lime bg-lime/20 shadow-[4px_4px_0_0_#CCFF00]"
-                      : "bg-surface text-muted-foreground hover:border-white/40"
+                      ? "bg-[var(--card)] border-[var(--brand-gold)] shadow-[0_0_16px_rgba(251,191,36,0.15)] text-[var(--gold-text)]"
+                      : "bg-[var(--card)] border-[var(--separator)] text-[var(--text-secondary)] hover:text-[var(--text)]"
                   }`}
                 >
-                  <span className="text-2xl leading-none">{p.emoji}</span>
-                  <span className="mt-1.5 text-xs font-black uppercase tracking-wide text-foreground">
-                    {p.name.split(" ")[0]}
-                  </span>
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                    {p.settings.rounds}R · {p.settings.timerSeconds}s
-                  </span>
+                  <Icon className="size-5 mb-1" strokeWidth={1.5} />
+                  <span className="text-xs font-bold text-[var(--text)]">{name}</span>
                 </button>
               );
             })}
           </div>
         </section>
 
-        {/* Rounds */}
-        <Section label="Rounds per Match" hint="How many words to play">
-          <div className="grid grid-cols-4 gap-2">
-            {ROUNDS.map((n) => (
-              <Chip key={n} active={s.rounds === n} onClick={() => update("rounds", n)}>
-                {n}
-              </Chip>
-            ))}
+        {/* Display / Theme Mode */}
+        <section className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-[var(--text)]">
+            <span className="flex items-center gap-1.5">
+              <Sun className="size-4 text-[var(--gold-text)]" strokeWidth={1.5} />
+              <span>Appearance</span>
+            </span>
+            <span className="text-[var(--text-secondary)] capitalize">{themeMode}</span>
           </div>
-        </Section>
 
-        {/* Timer */}
-        <Section label="Discussion Timer" hint="Timer before voting">
-          <div className="grid grid-cols-4 gap-2">
-            {TIMERS.map((n) => (
-              <Chip key={n} active={s.timerSeconds === n} onClick={() => update("timerSeconds", n)}>
-                {n}s
-              </Chip>
-            ))}
-          </div>
-          <SliderBar value={s.timerSeconds} min={10} max={60} />
-        </Section>
-
-        {/* Reveal Style */}
-        <Section label="Role Reveal Style" hint="How players view secret words">
-          <div className="space-y-2.5">
-            {REVEAL_STYLES.map((r) => {
-              const active = s.revealStyle === r.id;
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { mode: "auto" as const, label: "System", icon: Monitor },
+              { mode: "dark" as const, label: "Dark", icon: Moon },
+              { mode: "light" as const, label: "Light", icon: Sun },
+            ].map(({ mode, label, icon: Icon }) => {
+              const active = themeMode === mode;
               return (
                 <button
-                  key={r.id}
+                  key={mode}
                   type="button"
-                  onClick={() => update("revealStyle", r.id)}
-                  className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
+                  onClick={() => handleThemeChange(mode)}
+                  className={`py-2 px-3 rounded-[var(--radius-btn)] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                     active
-                      ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
-                      : "bg-surface hover:bg-surface/80"
+                      ? "bg-[var(--brand-gold)] text-[var(--on-gold)] border-[var(--brand-gold)] font-bold"
+                      : "bg-[var(--chip)] text-[var(--text-secondary)] border-[var(--separator)] hover:text-[var(--text)]"
                   }`}
                 >
+                  <Icon className="size-3.5" strokeWidth={1.5} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Rounds and Timers */}
+        <section className="space-y-4 p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)]">
+          {/* Rounds */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text)]">
+              <span>Total Rounds</span>
+              <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
+                {s.rounds} Rounds
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {ROUNDS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => update("rounds", r)}
+                  className={`py-2 rounded-[var(--radius-btn)] text-xs font-bold tabular-nums transition-colors cursor-pointer ${
+                    s.rounds === r
+                      ? "bg-[var(--brand-gold)] text-[var(--on-gold)]"
+                      : "bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Timers */}
+          <div className="space-y-2 pt-2 border-t border-[var(--separator)]">
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text)]">
+              <span>Discussion Timer</span>
+              <span className="font-mono text-[var(--gold-text)] font-bold tabular-nums">
+                {s.timerSeconds}s
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {TIMERS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => update("timerSeconds", t)}
+                  className={`py-2 rounded-[var(--radius-btn)] text-xs font-bold tabular-nums transition-colors cursor-pointer ${
+                    s.timerSeconds === t
+                      ? "bg-[var(--brand-gold)] text-[var(--on-gold)]"
+                      : "bg-[var(--chip)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {t}s
+                </button>
+              ))}
+            </div>
+            <span className="text-[10px] text-[var(--text-secondary)] block">
+              Estimated game duration: ~{totalTime} minutes
+            </span>
+          </div>
+        </section>
+
+        {/* Reveal Security Style */}
+        <section className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-3">
+          <span className="text-xs font-semibold text-[var(--text)] block">Role Reveal Style</span>
+          <div className="space-y-2">
+            {REVEAL_STYLES.map(({ id, label, blurb, icon: Icon }) => {
+              const active = s.revealStyle === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => update("revealStyle", id)}
+                  className={`w-full p-3 rounded-[var(--radius-group)] border text-left flex items-center justify-between transition-colors cursor-pointer ${
+                    active
+                      ? "bg-[var(--chip)] border-[var(--brand-gold)] text-[var(--text)]"
+                      : "bg-[var(--card)] border-[var(--separator)] text-[var(--text-secondary)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-[0.5rem] bg-[var(--chip)] grid place-items-center text-[var(--gold-text)]">
+                      <Icon className="size-4" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-[var(--text)]">{label}</div>
+                      <div className="text-[11px] text-[var(--text-secondary)]">{blurb}</div>
+                    </div>
+                  </div>
                   <div
-                    className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
-                      active ? "bg-lime/25" : "bg-void"
+                    className={`size-5 rounded-full border flex items-center justify-center ${
+                      active
+                        ? "bg-[var(--brand-gold)] border-[var(--brand-gold)] text-[var(--on-gold)]"
+                        : "border-[var(--separator)]"
                     }`}
                   >
-                    {r.emoji}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-black uppercase tracking-wide text-foreground">
-                      {r.label}
-                    </div>
-                    <div className="text-xs text-muted-foreground font-medium leading-snug">
-                      {r.blurb}
-                    </div>
-                  </div>
-                  <div
-                    className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
-                      active ? "bg-lime text-void font-black" : "bg-void"
-                    }`}
-                  >
-                    {active && <span className="text-[10px]">✓</span>}
+                    {active && <Check className="size-3 stroke-[3]" />}
                   </div>
                 </button>
               );
             })}
           </div>
-        </Section>
+        </section>
 
-        {/* Content Language */}
-        <Section
-          label="🗣️ Content Language"
-          hint={s.language === "hinglish" ? "Hinglish" : "English"}
-        >
-          <div className="grid grid-cols-2 gap-2">
-            <Chip active={s.language === "hinglish"} onClick={() => update("language", "hinglish")}>
-              Hinglish 🇮🇳
-            </Chip>
-            <Chip active={s.language === "en"} onClick={() => update("language", "en")}>
-              English 🇬🇧
-            </Chip>
-          </div>
-        </Section>
-
-        {/* Content Spice Level */}
-        <Section label="🌶️ Content Spice Level" hint={s.contentLevel?.toUpperCase() || "MILD"}>
-          <div className="grid grid-cols-3 gap-2">
-            <Chip active={s.contentLevel === "mild"} onClick={() => update("contentLevel", "mild")}>
-              Mild 🟢
-            </Chip>
-            <Chip
-              active={s.contentLevel === "spicy"}
-              onClick={() => update("contentLevel", "spicy")}
-            >
-              Spicy 🔥
-            </Chip>
-            <Chip
-              active={s.contentLevel === "unhinged"}
-              onClick={() => update("contentLevel", "unhinged")}
-            >
-              Unhinged 🌶️
-            </Chip>
-          </div>
-        </Section>
-
-        {/* Sound Effects */}
-        <Section label="Audio Synthesizer" hint="In-browser WebAudio FX">
-          <button
-            type="button"
-            onClick={() => {
-              const nextVal = s.soundEnabled === false;
-              update("soundEnabled", nextVal);
-              if (nextVal) {
-                playDiscussionStartSound();
-              }
-            }}
-            className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-              s.soundEnabled !== false
-                ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
-                : "bg-surface hover:bg-surface/80"
-            }`}
-          >
-            <div
-              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
-                s.soundEnabled !== false ? "bg-lime/25" : "bg-void"
-              }`}
-            >
-              {s.soundEnabled !== false ? "🔊" : "🔇"}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-black uppercase tracking-wide text-foreground">
-                {s.soundEnabled !== false ? "Sound FX Enabled" : "Sound Muted"}
-              </div>
-              <div className="text-xs text-muted-foreground font-medium leading-snug">
-                {s.soundEnabled !== false
-                  ? "Cues for secret reveals, timer alert & roasts"
-                  : "Silent gameplay without audio synth"}
+        {/* Sound, Haptics & Screen Awake switches */}
+        <section className="p-4 rounded-[var(--radius-card)] bg-[var(--card)] border border-[var(--separator)] space-y-3">
+          {/* Sound Toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-[var(--text)]">Sound FX</div>
+              <div className="text-[11px] text-[var(--text-secondary)]">
+                Discussion clock, tick, alarms
               </div>
             </div>
-            <div
-              className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
-                s.soundEnabled !== false ? "bg-lime text-void font-black" : "bg-void"
-              }`}
-            >
-              {s.soundEnabled !== false && <span className="text-[10px]">✓</span>}
-            </div>
-          </button>
-        </Section>
-
-        {/* Haptics */}
-        <Section
-          label="📳 Haptic Vibrations"
-          hint={s.hapticsEnabled !== false ? "Active" : "Disabled"}
-        >
-          <button
-            type="button"
-            onClick={() => update("hapticsEnabled", s.hapticsEnabled === false)}
-            className={`flex w-full items-center gap-3.5 rounded-2xl border-2.5 border-black p-3.5 text-left transition-all cursor-pointer shadow-[3px_3px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-              s.hapticsEnabled !== false
-                ? "border-lime bg-lime/15 shadow-[4px_4px_0_0_#CCFF00]"
-                : "bg-surface hover:bg-surface/80"
-            }`}
-          >
-            <div
-              className={`grid size-11 shrink-0 place-items-center rounded-xl text-2xl border-2 border-black shadow-[2px_2px_0_0_#000] ${
-                s.hapticsEnabled !== false ? "bg-lime/25" : "bg-void"
-              }`}
-            >
-              {s.hapticsEnabled !== false ? "📳" : "🔕"}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-black uppercase tracking-wide text-foreground">
-                {s.hapticsEnabled !== false ? "Vibrations On" : "Vibrations Off"}
-              </div>
-              <div className="text-xs text-muted-foreground font-medium leading-snug">
-                Tactile buzz for buttons, reveals & countdowns
-              </div>
-            </div>
-            <div
-              className={`size-6 shrink-0 rounded-full border-2.5 border-black flex items-center justify-center transition-all ${
-                s.hapticsEnabled !== false ? "bg-lime text-void font-black" : "bg-void"
-              }`}
-            >
-              {s.hapticsEnabled !== false && <span className="text-[10px]">✓</span>}
-            </div>
-          </button>
-        </Section>
-      </div>
-
-      {/* Sticky bottom bar with Est. Time + Vibe + Start Game CTA */}
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-gradient-to-t from-void via-void/95 to-transparent pb-safe pt-2">
-        <div className="mx-auto w-full max-w-md px-5 pb-5 pt-2">
-          <div className="rounded-2xl border-3 border-black bg-surface/95 p-4 shadow-[5px_5px_0_0_#000] backdrop-blur-xl space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  Est. Match Time
-                </span>
-                <div className="text-xl font-black font-display text-foreground">
-                  ~{totalTime} min
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  Room Vibe
-                </span>
-                <div className="text-sm font-black uppercase text-lime">{vibe}</div>
-              </div>
-            </div>
-
             <button
               type="button"
-              onClick={() => {
-                saveSettings(s);
-                buzz([30, 20, 40]);
-                navigate({ to: "/play/setup" });
-              }}
-              className="block w-full rounded-2xl bg-lime px-6 py-4 text-center text-base font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[54px] cursor-pointer transition-all"
+              role="switch"
+              aria-checked={s.soundEnabled}
+              aria-label="Sound FX toggle"
+              onClick={() => update("soundEnabled", !s.soundEnabled)}
+              className={`w-12 h-7 rounded-full p-1 transition-colors cursor-pointer ${
+                s.soundEnabled ? "bg-[var(--brand-gold)]" : "bg-[var(--chip)]"
+              }`}
             >
-              Save & Setup Match 🚀 →
+              <div
+                className={`size-5 rounded-full bg-white transition-transform ${
+                  s.soundEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function Section({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mt-6">
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <h2 className="text-xs font-black uppercase tracking-widest text-foreground">{label}</h2>
-        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-          {hint}
-        </span>
-      </div>
-      {children}
-    </section>
-  );
-}
+          {/* Haptics Toggle */}
+          <div className="flex items-center justify-between pt-3 border-t border-[var(--separator)]">
+            <div>
+              <div className="text-xs font-bold text-[var(--text)]">Haptics</div>
+              <div className="text-[11px] text-[var(--text-secondary)]">
+                Vibrations on turns and votes
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={s.hapticsEnabled}
+              aria-label="Haptics toggle"
+              onClick={() => update("hapticsEnabled", !s.hapticsEnabled)}
+              className={`w-12 h-7 rounded-full p-1 transition-colors cursor-pointer ${
+                s.hapticsEnabled ? "bg-[var(--brand-gold)]" : "bg-[var(--chip)]"
+              }`}
+            >
+              <div
+                className={`size-5 rounded-full bg-white transition-transform ${
+                  s.hapticsEnabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
 
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl border-2.5 border-black py-3 text-center font-display text-base font-black transition-all min-h-[48px] cursor-pointer shadow-[2px_2px_0_0_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
-        active
-          ? "border-lime bg-lime text-void shadow-[3px_3px_0_0_#000]"
-          : "bg-surface text-foreground hover:border-white/40"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function SliderBar({ value, min, max }: { value: number; min: number; max: number }) {
-  const pct = Math.max(5, Math.min(100, ((value - min) / (max - min)) * 100));
-  return (
-    <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-void border-2 border-black shadow-inner">
-      <div
-        className="h-full bg-lime transition-all duration-300 rounded-full"
-        style={{ width: `${pct}%` }}
-      />
+          {/* Keep Screen Awake */}
+          <div className="flex items-center justify-between pt-3 border-t border-[var(--separator)]">
+            <div>
+              <div className="text-xs font-bold text-[var(--text)]">Keep Screen Awake</div>
+              <div className="text-[11px] text-[var(--text-secondary)]">
+                Prevent phone from sleeping
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={keepAwake}
+              aria-label="Keep screen awake toggle"
+              onClick={() => {
+                buzz(15);
+                setKeepAwake((v) => !v);
+              }}
+              className={`w-12 h-7 rounded-full p-1 transition-colors cursor-pointer ${
+                keepAwake ? "bg-[var(--brand-gold)]" : "bg-[var(--chip)]"
+              }`}
+            >
+              <div
+                className={`size-5 rounded-full bg-white transition-transform ${
+                  keepAwake ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

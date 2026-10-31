@@ -5,16 +5,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Trash2,
-  Shield,
   Settings,
-  Info,
   User,
   HelpCircle,
   Download,
   Upload,
-  Eye,
-  Volume2,
-  MessageSquare,
+  Users,
+  Lock,
+  ShieldAlert,
+  ArrowLeft,
+  X,
+  Layers,
 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import Papa from "papaparse";
@@ -62,12 +63,15 @@ const FUN_EMOJIS = [
 
 export function renderAvatar(emoji: string, className = "size-5 text-current") {
   const IconComponent = (
-    LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>
+    LucideIcons as unknown as Record<
+      string,
+      React.ComponentType<{ className?: string; strokeWidth?: number }>
+    >
   )[emoji];
   if (IconComponent) {
-    return <IconComponent className={className} />;
+    return <IconComponent className={className} strokeWidth={1.5} />;
   }
-  return <span className="text-lg leading-none">{emoji}</span>;
+  return <User className={className} strokeWidth={1.5} />;
 }
 
 interface Player {
@@ -290,7 +294,7 @@ export function PlaySetup() {
           setNewPackCategory(category);
           setNewPackWords(words.join(", "));
           hapticSuccess();
-        } catch (err) {
+        } catch {
           alert("Invalid JSON format.");
           hapticError();
         }
@@ -465,24 +469,25 @@ export function PlaySetup() {
   };
 
   return (
-    <div className="min-h-dvh bg-void text-foreground">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-6 pb-28">
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)]">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-safe pb-32">
         {/* Header */}
-        <header className="flex items-center justify-between">
+        <header className="flex items-center justify-between pt-4">
           <Link
             to="/"
-            className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1 hover:text-lime transition-colors"
+            className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors min-h-[44px]"
           >
-            ← Home
+            <ArrowLeft size={16} strokeWidth={1.5} />
+            <span>Home</span>
           </Link>
           <Link
             to="/settings"
             onClick={() => buzz(15)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-black bg-surface text-[10px] font-black uppercase tracking-wider text-lime shadow-[2px_2px_0_0_#000] hover:border-lime transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] text-[11px] font-semibold text-[var(--text)] hover:border-[var(--brand-gold)] transition-all min-h-[36px]"
           >
-            <span>
-              ⚙️ {matchSettings.rounds}R · {matchSettings.timerSeconds}s ·{" "}
-              {matchSettings.revealStyle}
+            <Settings size={12} strokeWidth={1.5} />
+            <span className="tabular-nums">
+              {matchSettings.rounds}R · {matchSettings.timerSeconds}s · {matchSettings.revealStyle}
             </span>
           </Link>
         </header>
@@ -490,40 +495,35 @@ export function PlaySetup() {
         {/* Title */}
         <section className="mt-5 flex items-center justify-between">
           <div>
-            <span className="sticker-badge bg-magenta text-white text-[9px] mb-1.5 rotate-[-1deg]">
-              PASS-THE-PHONE CONFIG
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-black uppercase leading-[0.95] select-none">
-              Setup The
-              <br />
-              <span className="text-lime" style={{ textShadow: "3px 3px 0 #000" }}>
-                Session 🎮
-              </span>
-            </h1>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--brand-pink)]">
+              Pass-the-Phone Config
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-0.5">Setup Match</h1>
           </div>
           <button
             onClick={() => {
               buzz(15);
               setShowHelp(true);
             }}
-            className="grid size-12 place-items-center rounded-2xl border-2.5 border-black bg-surface text-lime shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_var(--color-lime)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none cursor-pointer shrink-0 transition-all"
+            className="grid size-11 place-items-center rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--card)] text-[var(--brand-gold)] hover:border-[var(--brand-gold)] active:scale-95 cursor-pointer shrink-0 transition-all min-h-[44px] min-w-[44px]"
             title="How to Play"
+            aria-label="How to Play"
           >
-            <HelpCircle size={24} />
+            <HelpCircle size={22} strokeWidth={1.5} />
           </button>
         </section>
 
         {/* 1. Player Roster Management */}
         <section className="mt-6">
           <div className="mb-2.5 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-1">
-              <span>// Player Roster</span>
-              <span className="text-lime">({players.length}/20)</span>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+              Player Roster{" "}
+              <span className="text-[var(--brand-gold)] tabular-nums">({players.length}/20)</span>
             </h2>
             <button
               onClick={quickAddPlayer}
               disabled={players.length >= 20}
-              className="text-[10px] font-black uppercase tracking-widest text-lime hover:underline disabled:opacity-40"
+              className="text-xs font-semibold text-[var(--brand-gold)] hover:underline disabled:opacity-40 min-h-[44px] flex items-center"
             >
               + Quick Add
             </button>
@@ -534,7 +534,7 @@ export function PlaySetup() {
             {players.map((p, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between rounded-xl border-2 border-black bg-surface px-3 py-2 shadow-[2px_2px_0_0_#000]"
+                className="flex items-center justify-between rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--card)] px-3.5 py-2.5"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
                   <button
@@ -547,10 +547,11 @@ export function PlaySetup() {
                       setPlayers(updated);
                       localStorage.setItem("bof:roster", JSON.stringify(updated));
                     }}
-                    className="grid size-9 place-items-center rounded-lg border-2 border-black bg-void text-lime shrink-0 shadow-[1px_1px_0_0_#000] hover:scale-105 active:scale-95 transition-transform"
+                    className="grid size-9 place-items-center rounded-xl bg-[var(--chip)] text-[var(--brand-gold)] shrink-0 hover:scale-105 active:scale-95 transition-transform cursor-pointer"
                     title="Tap to change avatar"
+                    aria-label="Change avatar"
                   >
-                    {renderAvatar(p.emoji, "size-5")}
+                    {renderAvatar(p.emoji, "size-4.5")}
                   </button>
                   <input
                     type="text"
@@ -558,16 +559,16 @@ export function PlaySetup() {
                     onChange={(e) => updatePlayerName(idx, e.target.value)}
                     maxLength={15}
                     placeholder={`Player ${idx + 1}`}
-                    className="w-full bg-transparent font-black uppercase text-sm text-foreground focus:outline-none focus:text-lime"
+                    className="w-full bg-transparent font-semibold text-base text-[var(--text)] focus:outline-none focus:text-[var(--brand-gold)]"
                   />
                 </div>
                 <button
                   onClick={() => removePlayer(idx)}
                   disabled={players.length <= 3}
-                  className="text-muted-foreground hover:text-magenta disabled:opacity-20 p-1.5 shrink-0 transition-colors"
+                  className="text-[var(--text-secondary)] hover:text-[var(--brand-pink)] disabled:opacity-20 p-2 shrink-0 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label={`Remove ${p.name}`}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} strokeWidth={1.5} />
                 </button>
               </div>
             ))}
@@ -584,44 +585,46 @@ export function PlaySetup() {
                 if (e.key === "Enter") addPlayer(newPlayerName);
               }}
               maxLength={15}
-              className="flex-1 rounded-xl border-2.5 border-black bg-void px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:border-lime focus:outline-none shadow-[2px_2px_0_0_#000]"
+              className="flex-1 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--card)] px-4 py-3 text-base font-semibold text-[var(--text)] placeholder:text-[var(--text-secondary)]/50 focus:border-[var(--brand-gold)] focus:outline-none min-h-[44px]"
             />
             <button
               onClick={() => addPlayer(newPlayerName)}
               disabled={players.length >= 20 || !newPlayerName.trim()}
-              className="grid size-12 place-items-center rounded-xl bg-magenta text-white border-2.5 border-black shadow-[3px_3px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-40 transition-all"
+              className="grid size-12 place-items-center rounded-[var(--radius-group)] bg-[var(--brand-pink)] text-white hover:opacity-90 active:scale-95 disabled:opacity-40 transition-all cursor-pointer min-h-[44px] min-w-[44px]"
+              aria-label="Add Player"
             >
-              <Plus size={22} />
+              <Plus size={20} strokeWidth={1.5} />
             </button>
           </div>
         </section>
 
         {/* 2. Fraud count selector */}
-        <section className="mt-6 rounded-2xl border-2.5 border-black bg-surface p-4 shadow-[3px_3px_0_0_#000]">
+        <section className="mt-6 rounded-[var(--radius-card)] border border-[var(--separator)] bg-[var(--card)] p-4">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-base">🕵️‍♂️</span>
-                <h2 className="text-sm font-black uppercase tracking-wide">Frauds / Impostors</h2>
+                <ShieldAlert size={16} strokeWidth={1.5} className="text-[var(--brand-pink)]" />
+                <h2 className="text-sm font-bold tracking-tight">Frauds / Impostors</h2>
               </div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-0.5">
+              <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">
                 {impostorsCount === 1
                   ? "1 fraud among the bros"
                   : `${impostorsCount} frauds infiltrating`}
               </p>
             </div>
-            <div className="flex items-center gap-3 border-2 border-black rounded-xl bg-void p-1 shadow-[2px_2px_0_0_#000]">
+            <div className="flex items-center gap-3 border border-[var(--separator)] rounded-[var(--radius-group)] bg-[var(--chip)] p-1">
               <button
                 onClick={() => {
                   buzz(15);
                   setImpostorsCount(Math.max(1, impostorsCount - 1));
                 }}
                 disabled={impostorsCount <= 1}
-                className="size-9 rounded-lg bg-surface border-2 border-black text-lg font-black grid place-items-center disabled:opacity-30 active:scale-95 transition-transform"
+                aria-label="Decrease frauds"
+                className="size-8 rounded-lg bg-[var(--card)] text-base font-bold grid place-items-center disabled:opacity-30 active:scale-95 transition-transform cursor-pointer"
               >
                 -
               </button>
-              <span className="w-6 text-center font-display text-xl font-black text-lime">
+              <span className="w-6 text-center text-lg font-bold text-[var(--brand-pink)] tabular-nums">
                 {impostorsCount}
               </span>
               <button
@@ -630,7 +633,8 @@ export function PlaySetup() {
                   setImpostorsCount(Math.min(maxImpostors, impostorsCount + 1));
                 }}
                 disabled={impostorsCount >= maxImpostors}
-                className="size-9 rounded-lg bg-surface border-2 border-black text-lg font-black grid place-items-center disabled:opacity-30 active:scale-95 transition-transform"
+                aria-label="Increase frauds"
+                className="size-8 rounded-lg bg-[var(--card)] text-base font-bold grid place-items-center disabled:opacity-30 active:scale-95 transition-transform cursor-pointer"
               >
                 +
               </button>
@@ -639,29 +643,30 @@ export function PlaySetup() {
         </section>
 
         {/* Voting Mode Selector */}
-        <section className="mt-6 rounded-2xl border-2 border-white/10 bg-surface p-4">
+        <section className="mt-6 rounded-[var(--radius-card)] border border-[var(--separator)] bg-[var(--card)] p-4">
           <div className="flex flex-col gap-3">
             <div>
-              <h2 className="text-sm font-black uppercase tracking-wide">Voting Mechanism</h2>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">
+              <h2 className="text-sm font-bold tracking-tight">Voting Mechanism</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Choose how players cast their votes
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/10 p-1 bg-void">
+            <div className="grid grid-cols-2 gap-2 rounded-[var(--radius-group)] p-1 bg-[var(--chip)]">
               <button
                 type="button"
                 onClick={() => {
                   buzz(15);
                   setVotingMode("pointing");
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[44px] ${
                   votingMode === "pointing"
-                    ? "bg-lime text-void font-bold"
-                    : "text-muted-foreground hover:text-white"
+                    ? "bg-[var(--brand-gold)] text-[var(--btn-text-on-gold)] shadow-sm"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text)]"
                 }`}
               >
-                👉 Show of Hands
+                <Users size={14} strokeWidth={1.5} />
+                <span>Show of Hands</span>
               </button>
               <button
                 type="button"
@@ -669,17 +674,18 @@ export function PlaySetup() {
                   buzz(15);
                   setVotingMode("secret");
                 }}
-                className={`py-2 px-3 rounded-lg text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer min-h-[44px] ${
                   votingMode === "secret"
-                    ? "bg-lime text-void font-bold"
-                    : "text-muted-foreground hover:text-white"
+                    ? "bg-[var(--brand-gold)] text-[var(--btn-text-on-gold)] shadow-sm"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text)]"
                 }`}
               >
-                🤫 Secret Ballot
+                <Lock size={14} strokeWidth={1.5} />
+                <span>Secret Ballot</span>
               </button>
             </div>
 
-            <p className="text-[9px] text-muted-foreground uppercase tracking-wider leading-relaxed">
+            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
               {votingMode === "pointing"
                 ? "Simultaneous pointing on zero. Fast and loud, ideal for large groups."
                 : "Pass the phone secretly to cast individual votes. Maximum deception!"}
@@ -691,8 +697,10 @@ export function PlaySetup() {
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-xs font-black uppercase tracking-[0.2em]">// Select Packs</h2>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                Select Packs
+              </h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Select 1 or more packs to blend word pools
               </p>
             </div>
@@ -701,7 +709,7 @@ export function PlaySetup() {
                 buzz(15);
                 setShowCreatePack(true);
               }}
-              className="text-[10px] font-black uppercase tracking-widest text-lime"
+              className="text-xs font-semibold text-[var(--brand-gold)] hover:underline min-h-[44px] flex items-center cursor-pointer"
             >
               + Create custom
             </button>
@@ -715,27 +723,30 @@ export function PlaySetup() {
                 <div
                   key={pack.id}
                   onClick={() => togglePack(pack.id)}
-                  className={`relative cursor-pointer rounded-xl border-2 p-3 text-left transition-all ${
-                    active ? "border-magenta bg-magenta/10" : "border-white/10 bg-surface"
+                  className={`relative cursor-pointer rounded-[var(--radius-group)] border p-3 text-left transition-all ${
+                    active
+                      ? "border-[var(--brand-gold)] bg-[var(--brand-gold)]/10"
+                      : "border-[var(--separator)] bg-[var(--card)]"
                   }`}
                 >
-                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">
+                  <div className="text-xs font-bold tracking-tight truncate text-[var(--text)]">
                     {pack.title}
                   </div>
-                  <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                    <span className="inline-block size-1.5 rounded-full bg-magenta" />
-                    {pack.words.length} words · Custom
+                  <div className="mt-1 flex items-center gap-1.5 text-[10px] text-[var(--text-secondary)]">
+                    <span className="inline-block size-1.5 rounded-full bg-[var(--brand-pink)]" />
+                    <span className="tabular-nums">{pack.words.length} words</span> · Custom
                   </div>
-                  <div className="absolute bottom-2 right-2 flex gap-1.5">
+                  <div className="absolute bottom-2 right-2 flex gap-1">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleExportPack(pack);
                       }}
-                      className="text-muted-foreground hover:text-lime p-1 opacity-60 hover:opacity-100 cursor-pointer"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text)] p-1 cursor-pointer"
                       title="Export pack as JSON"
+                      aria-label="Export pack"
                     >
-                      <Download size={13} />
+                      <Download size={13} strokeWidth={1.5} />
                     </button>
                     <button
                       onClick={(e) => {
@@ -744,14 +755,15 @@ export function PlaySetup() {
                         if (confirm(`Delete custom pack "${pack.title}"?`)) {
                           deleteCustomPack(pack.id);
                           setCustomPacks(fetchCustomPacks());
-                          setSelectedPacks(["hostel-life"]);
+                          setSelectedPacks(["college-life"]);
                           hapticSuccess();
                         }
                       }}
-                      className="text-muted-foreground hover:text-magenta p-1 opacity-60 hover:opacity-100 cursor-pointer"
+                      className="text-[var(--text-secondary)] hover:text-[var(--brand-pink)] p-1 cursor-pointer"
                       title="Delete pack"
+                      aria-label="Delete pack"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={13} strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
@@ -765,16 +777,18 @@ export function PlaySetup() {
                 <button
                   key={pack.id}
                   onClick={() => togglePack(pack.id)}
-                  className={`rounded-xl border-2 p-3 text-left transition-all tactile ${
-                    active ? "border-lime bg-lime/10" : "border-white/10 bg-surface"
+                  className={`rounded-[var(--radius-group)] border p-3 text-left transition-all cursor-pointer ${
+                    active
+                      ? "border-[var(--brand-gold)] bg-[var(--brand-gold)]/10"
+                      : "border-[var(--separator)] bg-[var(--card)]"
                   }`}
                 >
-                  <div className="text-xs font-black uppercase tracking-wide truncate text-foreground">
+                  <div className="text-xs font-bold tracking-tight truncate text-[var(--text)]">
                     {pack.name}
                   </div>
-                  <div className="mt-1 flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                    <span className="inline-block size-1.5 rounded-full bg-lime" />
-                    {pack.wordCount} words · Default
+                  <div className="mt-1 flex items-center gap-1.5 text-[10px] text-[var(--text-secondary)]">
+                    <span className="inline-block size-1.5 rounded-full bg-[var(--brand-gold)]" />
+                    <span className="tabular-nums">{pack.wordCount} words</span> · Default
                   </div>
                 </button>
               );
@@ -784,22 +798,25 @@ export function PlaySetup() {
       </div>
 
       {/* Sticky Bottom Actions */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-void via-void/90 to-transparent pt-6 pb-safe pointer-events-none">
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/95 to-transparent pt-6 pb-safe pointer-events-none">
         <div className="mx-auto w-full max-w-md px-5 pb-4 pointer-events-auto">
-          <div className="rounded-2xl border-2.5 border-black bg-surface/95 p-3.5 backdrop-blur-md shadow-[4px_4px_0_0_#000]">
-            <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-muted-foreground px-1 pb-2">
-              <span className="flex items-center gap-1.5 text-foreground">
-                <span className="size-2 rounded-full bg-lime animate-ping" />
-                {players.length} Players ({impostorsCount}{" "}
+          <div className="rounded-[var(--radius-card)] border border-[var(--separator)] bg-[var(--card)]/95 p-3.5 backdrop-blur-md shadow-lg">
+            <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-secondary)] px-1 pb-2.5">
+              <span className="flex items-center gap-1.5 text-[var(--text)]">
+                <span className="size-2 rounded-full bg-[var(--brand-gold)] animate-pulse" />
+                <span className="tabular-nums">{players.length}</span> Players (
+                <span className="tabular-nums">{impostorsCount}</span>{" "}
                 {impostorsCount === 1 ? "Fraud" : "Frauds"})
               </span>
-              <span className="text-lime">{selectedPacks.length} Packs Selected</span>
+              <span className="text-[var(--brand-gold)] tabular-nums">
+                {selectedPacks.length} Selected
+              </span>
             </div>
             <button
               onClick={handleStartMatch}
-              className="block w-full rounded-xl bg-lime px-6 py-4.5 text-center text-lg font-black uppercase tracking-wide text-void border-3 border-black shadow-[4px_4px_0_0_var(--color-magenta)] hover:shadow-[6px_6px_0_0_var(--color-magenta)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_0_var(--color-magenta)] transition-all cursor-pointer"
+              className="block w-full rounded-[var(--radius-btn)] bg-[var(--brand-gold)] px-6 py-4 text-center text-base font-bold text-[var(--btn-text-on-gold)] shadow-md hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer min-h-[48px]"
             >
-              Start Local Match 🚀 →
+              Start Local Match →
             </button>
           </div>
         </div>
@@ -808,7 +825,7 @@ export function PlaySetup() {
       {/* Create Custom Pack Drawer */}
       <AnimatePresence>
         {showCreatePack && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end animate-[fade-in_0.2s_ease-out_both]">
+          <div className="fixed inset-0 z-50 flex flex-col justify-end">
             <button
               aria-label="Close"
               onClick={() => setShowCreatePack(false)}
@@ -819,12 +836,12 @@ export function PlaySetup() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="relative mx-auto w-full max-w-md rounded-t-2xl border-t-2 border-x-2 border-border bg-void max-h-[90dvh] flex flex-col p-5 overflow-y-auto"
+              className="relative mx-auto w-full max-w-md rounded-t-[var(--radius-card)] border-t border-x border-[var(--separator)] bg-[var(--card)] max-h-[90dvh] flex flex-col p-5 overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-3 border-b-2 border-border">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--separator)]">
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-wide">Create Custom Pack</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <h3 className="text-base font-bold tracking-tight">Create Custom Pack</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">
                     Add custom words for your party
                   </p>
                 </div>
@@ -833,15 +850,16 @@ export function PlaySetup() {
                     buzz(15);
                     setShowCreatePack(false);
                   }}
-                  className="grid size-9 place-items-center rounded-md border-2 border-border bg-surface text-foreground font-black"
+                  className="grid size-9 place-items-center rounded-xl bg-[var(--chip)] text-[var(--text)] hover:opacity-80 cursor-pointer min-h-[44px] min-w-[44px]"
+                  aria-label="Close"
                 >
-                  ✕
+                  <X size={18} strokeWidth={1.5} />
                 </button>
               </div>
 
               <form onSubmit={handleCreatePack} className="mt-4 space-y-4 pb-6">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)]">
                     Pack Title
                   </label>
                   <input
@@ -851,12 +869,12 @@ export function PlaySetup() {
                     value={newPackTitle}
                     onChange={(e) => setNewPackTitle(e.target.value)}
                     maxLength={30}
-                    className="w-full mt-1.5 rounded-xl border-2 border-white/10 bg-surface px-4 py-3 text-sm font-bold text-foreground focus:border-lime focus:outline-none"
+                    className="w-full mt-1.5 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] px-4 py-3 text-base font-semibold text-[var(--text)] focus:border-[var(--brand-gold)] focus:outline-none min-h-[44px]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)]">
                     Category Name
                   </label>
                   <input
@@ -866,21 +884,21 @@ export function PlaySetup() {
                     value={newPackCategory}
                     onChange={(e) => setNewPackCategory(e.target.value)}
                     maxLength={20}
-                    className="w-full mt-1.5 rounded-xl border-2 border-white/10 bg-surface px-4 py-3 text-sm font-bold text-foreground focus:border-lime focus:outline-none"
+                    className="w-full mt-1.5 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] px-4 py-3 text-base font-semibold text-[var(--text)] focus:border-[var(--brand-gold)] focus:outline-none min-h-[44px]"
                   />
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    <label className="text-xs font-semibold text-[var(--text-secondary)]">
                       Word List (Comma or Newline separated)
                     </label>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-[9px] font-black uppercase tracking-wider text-lime bg-lime/10 border border-lime/20 px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-semibold text-[var(--brand-gold)] hover:underline flex items-center gap-1 cursor-pointer min-h-[44px]"
                     >
-                      <Upload size={10} /> Import CSV/JSON
+                      <Upload size={12} strokeWidth={1.5} /> Import CSV/JSON
                     </button>
                     <input
                       type="file"
@@ -890,7 +908,7 @@ export function PlaySetup() {
                       className="hidden"
                     />
                   </div>
-                  <p className="text-[9px] text-muted-foreground mt-0.5">
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
                     Min 5 words. (e.g. Chai, Maggi, Warden, Attendant, Bunk Bed)
                   </p>
                   <textarea
@@ -899,14 +917,14 @@ export function PlaySetup() {
                     value={newPackWords}
                     onChange={(e) => setNewPackWords(e.target.value)}
                     rows={4}
-                    className="w-full mt-1.5 rounded-xl border-2 border-white/10 bg-surface px-4 py-3 text-sm font-semibold text-foreground focus:border-lime focus:outline-none"
+                    className="w-full mt-1.5 rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] px-4 py-3 text-base font-medium text-[var(--text)] focus:border-[var(--brand-gold)] focus:outline-none"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={creatingPack}
-                  className="w-full rounded-xl bg-lime px-6 py-4 text-center text-md font-black uppercase tracking-wide text-void border-2 border-void brutal-shadow-magenta disabled:opacity-50"
+                  className="w-full rounded-[var(--radius-btn)] bg-[var(--brand-gold)] px-6 py-4 text-center text-sm font-bold text-[var(--btn-text-on-gold)] shadow-md hover:brightness-105 disabled:opacity-50 min-h-[48px] cursor-pointer"
                 >
                   {creatingPack ? "Creating..." : "Save Custom Pack"}
                 </button>
@@ -919,7 +937,7 @@ export function PlaySetup() {
       {/* How to Play Help Modal */}
       <AnimatePresence>
         {showHelp && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end animate-[fade-in_0.2s_ease-out_both]">
+          <div className="fixed inset-0 z-50 flex flex-col justify-end">
             <button
               aria-label="Close"
               onClick={() => setShowHelp(false)}
@@ -930,82 +948,86 @@ export function PlaySetup() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="relative mx-auto w-full max-w-md rounded-t-2xl border-t-2 border-x-2 border-border bg-void max-h-[85dvh] flex flex-col p-5 overflow-y-auto"
+              className="relative mx-auto w-full max-w-md rounded-t-[var(--radius-card)] border-t border-x border-[var(--separator)] bg-[var(--card)] max-h-[85dvh] flex flex-col p-5 overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-3 border-b-2 border-border">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--separator)]">
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-wide">How To Play</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    The 3-Step Simple Rulebook
-                  </p>
+                  <h3 className="text-base font-bold tracking-tight">How To Play</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">The 3-Step Simple Rulebook</p>
                 </div>
                 <button
                   onClick={() => {
                     buzz(15);
                     setShowHelp(false);
                   }}
-                  className="grid size-9 place-items-center rounded-md border-2 border-border bg-surface text-foreground font-black cursor-pointer"
+                  className="grid size-9 place-items-center rounded-xl bg-[var(--chip)] text-[var(--text)] hover:opacity-80 cursor-pointer min-h-[44px] min-w-[44px]"
+                  aria-label="Close"
                 >
-                  ✕
+                  <X size={18} strokeWidth={1.5} />
                 </button>
               </div>
 
               {/* 3 Rule Cards */}
-              <div className="mt-5 space-y-4 pb-8">
+              <div className="mt-5 space-y-3 pb-8">
                 {/* Step 1 */}
-                <div className="rounded-xl border-2 border-magenta bg-magenta/5 p-4 brutal-shadow-pink">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-8 place-items-center rounded-lg bg-magenta text-white font-mono text-sm font-black">
+                <div className="rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] p-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid size-7 place-items-center rounded-lg bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-bold tabular-nums">
                       1
                     </span>
-                    <h4 className="text-sm font-black uppercase tracking-wider text-off-white">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text)]">
                       Rule 1: Get Secret Word
                     </h4>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                    Everyone gets the <strong className="text-lime">same secret word</strong> (e.g.{" "}
-                    <code className="text-lime">MAGGI</code>), except the{" "}
-                    <strong className="text-magenta">Fraud</strong>, who gets a{" "}
-                    <strong className="text-magenta">different decoy word</strong> (e.g.{" "}
-                    <code className="text-magenta">MESS</code>) or no word.
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Everyone gets the{" "}
+                    <strong className="text-[var(--brand-gold)] font-bold">same secret word</strong>{" "}
+                    (e.g. MAGGI), except the{" "}
+                    <strong className="text-[var(--brand-pink)] font-bold">Fraud</strong>, who gets
+                    a{" "}
+                    <strong className="text-[var(--brand-pink)] font-bold">
+                      different decoy word
+                    </strong>{" "}
+                    (e.g. MESS) or no word.
                   </p>
                 </div>
 
                 {/* Step 2 */}
-                <div className="rounded-xl border-2 border-lime bg-lime/5 p-4 brutal-shadow-yellow">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-8 place-items-center rounded-lg bg-lime text-void font-mono text-sm font-black">
+                <div className="rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] p-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid size-7 place-items-center rounded-lg bg-[var(--brand-gold)]/20 text-[var(--brand-gold)] text-xs font-bold tabular-nums">
                       2
                     </span>
-                    <h4 className="text-sm font-black uppercase tracking-wider text-off-white">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text)]">
                       Rule 2: Say 1-Word Clues
                     </h4>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
                     Go around in a circle. Everyone says{" "}
-                    <strong className="text-lime">ONE WORD ONLY</strong> related to their secret
-                    word.
+                    <strong className="text-[var(--brand-gold)] font-bold">ONE WORD ONLY</strong>{" "}
+                    related to their secret word.
                     <br />
-                    <span className="italic mt-1 block text-muted-foreground/80">
-                      Example: Bro says "Noodles". Fraud (who has MESS) says "Food".
+                    <span className="text-[11px] text-[var(--text-secondary)]/80 mt-1 block">
+                      Example: Bro says &quot;Noodles&quot;. Fraud (who has MESS) says
+                      &quot;Food&quot;.
                     </span>
                   </p>
                 </div>
 
                 {/* Step 3 */}
-                <div className="rounded-xl border-2 border-magenta bg-magenta/5 p-4 brutal-shadow-pink">
-                  <div className="flex items-center gap-3">
-                    <span className="grid size-8 place-items-center rounded-lg bg-magenta text-white font-mono text-sm font-black">
+                <div className="rounded-[var(--radius-group)] border border-[var(--separator)] bg-[var(--chip)] p-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid size-7 place-items-center rounded-lg bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-bold tabular-nums">
                       3
                     </span>
-                    <h4 className="text-sm font-black uppercase tracking-wider text-off-white">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text)]">
                       Rule 3: Vote Out The Fraud
                     </h4>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                  <p className="mt-2 text-xs text-[var(--text-secondary)] leading-relaxed">
                     After one round of clues, debate for{" "}
-                    <strong className="text-magenta">60 seconds</strong> and vote on who gave the
-                    most sus clue. Find the impostor before they blend in!
+                    <strong className="text-[var(--brand-pink)] font-bold">60 seconds</strong> and
+                    vote on who gave the most sus clue. Find the impostor before they blend in!
                   </p>
                 </div>
               </div>
