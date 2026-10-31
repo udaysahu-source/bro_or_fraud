@@ -16,7 +16,7 @@ import {
   playVerdictSound,
   playSuspenseHeartbeatSound,
 } from "@/lib/audio";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   HelpCircle,
   User,
@@ -161,11 +161,74 @@ export function PassPhoneGame() {
   const [pendingSuspectVote, setPendingSuspectVote] = useState<number | null>(null);
 
   // Dramatic Suspense Reveal
+  const shouldReduceMotion = useReducedMotion();
+  const suspenseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [suspenseStep, setSuspenseStep] = useState<"tally" | "accused" | "verdict">("tally");
   const [votedPlayerIndex, setVotedPlayerIndex] = useState<number | null>(null);
   const [broWon, setBroWon] = useState(false);
   const [roastCopy, setRoastCopy] = useState("");
   const [scoreChanges, setScoreChanges] = useState<Record<string, number>>({});
+
+  const clearSuspenseTimer = () => {
+    if (suspenseTimerRef.current) {
+      clearTimeout(suspenseTimerRef.current);
+      suspenseTimerRef.current = null;
+    }
+  };
+
+  const advanceSuspenseSequence = () => {
+    buzz(20);
+    clearSuspenseTimer();
+    if (suspenseStep === "tally") {
+      stepToAccused();
+    } else if (suspenseStep === "accused") {
+      stepToVerdict();
+    } else if (suspenseStep === "verdict") {
+      finishSuspense();
+    }
+  };
+
+  const stepToAccused = () => {
+    clearSuspenseTimer();
+    setSuspenseStep("accused");
+    playSuspenseHeartbeatSound();
+    buzz([30, 30]);
+    suspenseTimerRef.current = setTimeout(() => {
+      stepToVerdict();
+    }, 1600);
+  };
+
+  const stepToVerdict = () => {
+    clearSuspenseTimer();
+    setSuspenseStep("verdict");
+    const isVotedFraud =
+      votedPlayerIndex !== null &&
+      config !== null &&
+      config.fraudsIndices.includes(votedPlayerIndex);
+    setBroWon(isVotedFraud);
+    playVerdictSound(isVotedFraud);
+    if (isVotedFraud) {
+      hapticSuccess();
+    } else {
+      hapticError();
+    }
+    suspenseTimerRef.current = setTimeout(() => {
+      finishSuspense();
+    }, 2200);
+  };
+
+  const finishSuspense = () => {
+    clearSuspenseTimer();
+    if (currentRound >= totalRounds) {
+      setPhase("game_over");
+    } else {
+      setPhase("verdict");
+    }
+  };
+
+  useEffect(() => {
+    return () => clearSuspenseTimer();
+  }, []);
 
   // Next round candidate choices
   const [customPacks, setCustomPacks] = useState<CustomPack[]>([]);
@@ -497,74 +560,53 @@ export function PassPhoneGame() {
     setSuspenseStep("tally");
     playSuspenseHeartbeatSound();
 
-    // Stage 1: Tallying
-    setTimeout(() => {
-      setSuspenseStep("accused");
-      playSuspenseHeartbeatSound();
-      buzz([30, 30]);
+    if (!config) return;
+    const isVotedFraud = fraudsIndices.includes(accusedIdx);
+    setBroWon(isVotedFraud);
 
-      // Stage 2: Verdict
-      setTimeout(() => {
-        setSuspenseStep("verdict");
-        const isVotedFraud = fraudsIndices.includes(accusedIdx);
-        setBroWon(isVotedFraud);
-        playVerdictSound(isVotedFraud);
+    const roasts = isVotedFraud ? ROASTS_WIN : ROASTS_LOSE;
+    const roast = roasts[Math.floor(Math.random() * roasts.length)];
+    setRoastCopy(roast);
 
-        if (isVotedFraud) {
-          hapticSuccess();
-        } else {
-          hapticError();
+    // Update scores and awards immediately
+    const changes: Record<string, number> = {};
+    const updatedScores = { ...scores };
+    const fraudEscapes = { ...(config.fraudEscapes || {}) };
+    const innocentAccusations = { ...(config.innocentAccusations || {}) };
+
+    players.forEach((p, idx) => {
+      const isPlayerFraud = fraudsIndices.includes(idx);
+      if (isVotedFraud) {
+        changes[p.name] = isPlayerFraud ? 0 : 100;
+      } else {
+        changes[p.name] = isPlayerFraud ? 150 : 0;
+        if (isPlayerFraud) {
+          fraudEscapes[p.name] = (fraudEscapes[p.name] || 0) + 1;
         }
+      }
+      if (!isPlayerFraud && idx === accusedIdx) {
+        innocentAccusations[p.name] = (innocentAccusations[p.name] || 0) + 1;
+      }
+      updatedScores[p.name] = (updatedScores[p.name] || 0) + (changes[p.name] || 0);
+    });
 
-        const roasts = isVotedFraud ? ROASTS_WIN : ROASTS_LOSE;
-        const roast = roasts[Math.floor(Math.random() * roasts.length)];
-        setRoastCopy(roast);
+    setScoreChanges(changes);
+    const updatedConfig: MatchConfig = {
+      ...config,
+      scores: updatedScores,
+      fraudEscapes,
+      innocentAccusations,
+    };
+    setConfig(updatedConfig);
+    sessionStorage.setItem("bof_match_config", JSON.stringify(updatedConfig));
 
-        // Update scores and awards
-        const changes: Record<string, number> = {};
-        const updatedScores = { ...scores };
-        const fraudEscapes = { ...(config.fraudEscapes || {}) };
-        const innocentAccusations = { ...(config.innocentAccusations || {}) };
+    const cands = generateCandidates(updatedConfig);
+    setWordCandidates(cands);
+    if (cands.length > 0) setSelectedCandidateIdx(0);
 
-        players.forEach((p, idx) => {
-          const isPlayerFraud = fraudsIndices.includes(idx);
-          if (isVotedFraud) {
-            changes[p.name] = isPlayerFraud ? 0 : 100;
-          } else {
-            changes[p.name] = isPlayerFraud ? 150 : 0;
-            if (isPlayerFraud) {
-              fraudEscapes[p.name] = (fraudEscapes[p.name] || 0) + 1;
-            }
-          }
-          if (!isPlayerFraud && idx === accusedIdx) {
-            innocentAccusations[p.name] = (innocentAccusations[p.name] || 0) + 1;
-          }
-          updatedScores[p.name] = (updatedScores[p.name] || 0) + (changes[p.name] || 0);
-        });
-
-        setScoreChanges(changes);
-        const updatedConfig: MatchConfig = {
-          ...config,
-          scores: updatedScores,
-          fraudEscapes,
-          innocentAccusations,
-        };
-        setConfig(updatedConfig);
-        sessionStorage.setItem("bof_match_config", JSON.stringify(updatedConfig));
-
-        const cands = generateCandidates(updatedConfig);
-        setWordCandidates(cands);
-        if (cands.length > 0) setSelectedCandidateIdx(0);
-
-        // Advance to game_over or verdict
-        setTimeout(() => {
-          if (currentRound >= totalRounds) {
-            setPhase("game_over");
-          } else {
-            setPhase("verdict");
-          }
-        }, 2200);
-      }, 1600);
+    clearSuspenseTimer();
+    suspenseTimerRef.current = setTimeout(() => {
+      stepToAccused();
     }, 1400);
   };
 
@@ -1273,9 +1315,24 @@ export function PassPhoneGame() {
 
         {/* DRAMATIC SUSPENSE SEQUENCE */}
         {phase === "suspense" && (
-          <div className="flex flex-1 flex-col items-center justify-center text-center my-auto py-12 animate-[fade-in_0.2s_ease-out_both]">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={advanceSuspenseSequence}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                advanceSuspenseSequence();
+              }
+            }}
+            className="flex flex-1 flex-col items-center justify-center text-center my-auto py-12 cursor-pointer select-none animate-[fade-in_0.2s_ease-out_both]"
+            aria-label="Tap to skip suspense sequence"
+          >
             {suspenseStep === "tally" && (
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <motion.div
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              >
                 <span className="text-xs font-black uppercase tracking-[0.4em] text-muted-foreground animate-pulse">
                   // locking in votes
                 </span>
@@ -1287,8 +1344,8 @@ export function PassPhoneGame() {
 
             {suspenseStep === "accused" && votedPlayerIndex !== null && (
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1.05, opacity: 1 }}
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1.05, opacity: 1 }}
               >
                 <span className="text-xs font-black uppercase tracking-[0.4em] text-magenta">
                   // the accused player is
@@ -1303,7 +1360,10 @@ export function PassPhoneGame() {
             )}
 
             {suspenseStep === "verdict" && votedPlayerIndex !== null && (
-              <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <motion.div
+                initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
+                animate={shouldReduceMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              >
                 <div className="text-6xl mb-2">{broWon ? "🚨" : "🤡"}</div>
                 <h1
                   className={`text-5xl font-black uppercase font-display tracking-tight ${
@@ -1316,6 +1376,10 @@ export function PassPhoneGame() {
                 </h1>
               </motion.div>
             )}
+
+            <p className="mt-8 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+              Tap anywhere to skip →
+            </p>
           </div>
         )}
 

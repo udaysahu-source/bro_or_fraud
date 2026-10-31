@@ -6,7 +6,7 @@ This guide documents the data schema (v1.1.0) and instructions for expanding and
 
 ## 1. Schema Overview (`schemaVersion: "1.1.0"`)
 
-All game modes and content live locally in [`src/content/game-modes.json`](file:///home/uday/Downloads/bro_or_fraud-main/src/content/game-modes.json). Every game works **100% offline**.
+All game modes and content live locally in [`src/content/game-modes.json`](../src/content/game-modes.json). Every game works **100% offline**.
 
 ### Key Fields & Enums
 - **`LocalizedText`**: `{ "hinglish": string, "en": string }`
@@ -38,7 +38,7 @@ All game modes and content live locally in [`src/content/game-modes.json`](file:
 
 ## 3. How to Add a New Content Pack
 
-1. Open [`src/content/game-modes.json`](file:///home/uday/Downloads/bro_or_fraud-main/src/content/game-modes.json).
+1. Open [`src/content/game-modes.json`](../src/content/game-modes.json).
 2. Locate the target `gameMode` object by `id`.
 3. Add a new pack inside the `contentPacks` array:
    ```json
@@ -63,7 +63,7 @@ All game modes and content live locally in [`src/content/game-modes.json`](file:
 5. Always mark items with `"reviewStatus": "needs-human-review"`.
 6. Run the content validator:
    ```bash
-   bun run content:check
+   npm run content:check
    ```
 
 ---
@@ -72,7 +72,7 @@ All game modes and content live locally in [`src/content/game-modes.json`](file:
 
 Run the automated verification suite anytime:
 ```bash
-bun run content:check
+npm run content:check
 ```
 Checks:
 - Schema conformance for all 7 game modes and 23 packs.

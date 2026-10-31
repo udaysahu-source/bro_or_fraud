@@ -17,6 +17,18 @@ dist-ssr
 .vercel/
 *.local
 
+# Environment variables & secrets
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+
+# Agent & AI artifacts
+.agent/.agents/
+.agent/skills/SKILL.md
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

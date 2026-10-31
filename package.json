@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "content:check": "bun scripts/check-content.ts"
+    "content:check": "npx -y tsx scripts/check-content.ts"
   },
   "allowScripts": {
     "esbuild": true,
